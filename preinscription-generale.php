@@ -1298,6 +1298,9 @@ select option[value=""]{
                   <?php if ((int)$pnv['tarif_presentiel'] > 0): ?>
                   <div style="font-size:.78rem;color:rgba(229,231,235,.65)">🏛️ Présentiel : <?= number_format((int)$pnv['tarif_presentiel'], 0, ',', ' ') ?> F CFA</div>
                   <?php endif; ?>
+                  <?php if ((int)($pnv['tarif_hybride'] ?? 0) > 0): ?>
+                  <div style="font-size:.78rem;color:rgba(229,231,235,.65)">🔀 Hybride : <?= number_format((int)$pnv['tarif_hybride'], 0, ',', ' ') ?> F CFA</div>
+                  <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
               </div>
@@ -1323,7 +1326,11 @@ select option[value=""]{
 
             <div class="field">
               <label>Téléphone (WhatsApp) <span class="req">*</span></label>
-              <input class="input" name="telephone" required value="<?= h($old['telephone']); ?>" placeholder="Ex : +225 07 00 00 00 00">
+              <div style="display:flex;gap:0;align-items:stretch">
+                <span id="pi-dial" style="display:flex;align-items:center;padding:0 10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-right:0;border-radius:10px 0 0 10px;font-size:.88rem;color:rgba(229,231,235,.75);white-space:nowrap;min-width:52px">+__</span>
+                <input class="input" name="telephone" required value="<?= h($old['telephone']); ?>" placeholder="07 00 00 00 00" style="border-radius:0 10px 10px 0;flex:1">
+              </div>
+              <div class="hint">L'indicatif se remplit automatiquement selon le pays.</div>
             </div>
 
             <div class="field">
@@ -1409,7 +1416,50 @@ select option[value=""]{
 
             <div class="field">
               <label>Pays</label>
-              <input class="input" name="pays" value="<?= h($old['pays']); ?>" placeholder="Côte d'Ivoire">
+              <select class="input" name="pays" id="pi-pays">
+                <option value="">— Sélectionnez votre pays —</option>
+                <optgroup label="🌍 Espace OHADA">
+                  <option value="Bénin" data-dial="+229" <?= ($old['pays']==='Bénin')?'selected':''; ?>>🇧🇯 Bénin (+229)</option>
+                  <option value="Burkina Faso" data-dial="+226" <?= ($old['pays']==='Burkina Faso')?'selected':''; ?>>🇧🇫 Burkina Faso (+226)</option>
+                  <option value="Cameroun" data-dial="+237" <?= ($old['pays']==='Cameroun')?'selected':''; ?>>🇨🇲 Cameroun (+237)</option>
+                  <option value="Centrafrique" data-dial="+236" <?= ($old['pays']==='Centrafrique')?'selected':''; ?>>🇨🇫 Centrafrique (+236)</option>
+                  <option value="Comores" data-dial="+269" <?= ($old['pays']==='Comores')?'selected':''; ?>>🇰🇲 Comores (+269)</option>
+                  <option value="Congo" data-dial="+242" <?= ($old['pays']==='Congo')?'selected':''; ?>>🇨🇬 Congo (+242)</option>
+                  <option value="Côte d'Ivoire" data-dial="+225" <?= ($old['pays']==="Côte d'Ivoire"||$old['pays']==='')?'selected':''; ?>>🇨🇮 Côte d'Ivoire (+225)</option>
+                  <option value="Gabon" data-dial="+241" <?= ($old['pays']==='Gabon')?'selected':''; ?>>🇬🇦 Gabon (+241)</option>
+                  <option value="Guinée" data-dial="+224" <?= ($old['pays']==='Guinée')?'selected':''; ?>>🇬🇳 Guinée (+224)</option>
+                  <option value="Guinée Équatoriale" data-dial="+240" <?= ($old['pays']==='Guinée Équatoriale')?'selected':''; ?>>🇬🇶 Guinée Équatoriale (+240)</option>
+                  <option value="Guinée-Bissau" data-dial="+245" <?= ($old['pays']==='Guinée-Bissau')?'selected':''; ?>>🇬🇼 Guinée-Bissau (+245)</option>
+                  <option value="Mali" data-dial="+223" <?= ($old['pays']==='Mali')?'selected':''; ?>>🇲🇱 Mali (+223)</option>
+                  <option value="Niger" data-dial="+227" <?= ($old['pays']==='Niger')?'selected':''; ?>>🇳🇪 Niger (+227)</option>
+                  <option value="RD Congo" data-dial="+243" <?= ($old['pays']==='RD Congo')?'selected':''; ?>>🇨🇩 RD Congo (+243)</option>
+                  <option value="Sénégal" data-dial="+221" <?= ($old['pays']==='Sénégal')?'selected':''; ?>>🇸🇳 Sénégal (+221)</option>
+                  <option value="Tchad" data-dial="+235" <?= ($old['pays']==='Tchad')?'selected':''; ?>>🇹🇩 Tchad (+235)</option>
+                  <option value="Togo" data-dial="+228" <?= ($old['pays']==='Togo')?'selected':''; ?>>🇹🇬 Togo (+228)</option>
+                </optgroup>
+                <optgroup label="🌍 Afrique francophone">
+                  <option value="Algérie" data-dial="+213" <?= ($old['pays']==='Algérie')?'selected':''; ?>>🇩🇿 Algérie (+213)</option>
+                  <option value="Burundi" data-dial="+257" <?= ($old['pays']==='Burundi')?'selected':''; ?>>🇧🇮 Burundi (+257)</option>
+                  <option value="Djibouti" data-dial="+253" <?= ($old['pays']==='Djibouti')?'selected':''; ?>>🇩🇯 Djibouti (+253)</option>
+                  <option value="Madagascar" data-dial="+261" <?= ($old['pays']==='Madagascar')?'selected':''; ?>>🇲🇬 Madagascar (+261)</option>
+                  <option value="Maroc" data-dial="+212" <?= ($old['pays']==='Maroc')?'selected':''; ?>>🇲🇦 Maroc (+212)</option>
+                  <option value="Mauritanie" data-dial="+222" <?= ($old['pays']==='Mauritanie')?'selected':''; ?>>🇲🇷 Mauritanie (+222)</option>
+                  <option value="Rwanda" data-dial="+250" <?= ($old['pays']==='Rwanda')?'selected':''; ?>>🇷🇼 Rwanda (+250)</option>
+                  <option value="Tunisie" data-dial="+216" <?= ($old['pays']==='Tunisie')?'selected':''; ?>>🇹🇳 Tunisie (+216)</option>
+                </optgroup>
+                <optgroup label="🌍 Reste de l'Afrique">
+                  <option value="Angola" data-dial="+244" <?= ($old['pays']==='Angola')?'selected':''; ?>>🇦🇴 Angola (+244)</option>
+                  <option value="Ghana" data-dial="+233" <?= ($old['pays']==='Ghana')?'selected':''; ?>>🇬🇭 Ghana (+233)</option>
+                  <option value="Kenya" data-dial="+254" <?= ($old['pays']==='Kenya')?'selected':''; ?>>🇰🇪 Kenya (+254)</option>
+                  <option value="Nigeria" data-dial="+234" <?= ($old['pays']==='Nigeria')?'selected':''; ?>>🇳🇬 Nigeria (+234)</option>
+                </optgroup>
+                <optgroup label="🌍 Europe / Diaspora">
+                  <option value="Belgique" data-dial="+32" <?= ($old['pays']==='Belgique')?'selected':''; ?>>🇧🇪 Belgique (+32)</option>
+                  <option value="Canada" data-dial="+1" <?= ($old['pays']==='Canada')?'selected':''; ?>>🇨🇦 Canada (+1)</option>
+                  <option value="France" data-dial="+33" <?= ($old['pays']==='France')?'selected':''; ?>>🇫🇷 France (+33)</option>
+                  <option value="Suisse" data-dial="+41" <?= ($old['pays']==='Suisse')?'selected':''; ?>>🇨🇭 Suisse (+41)</option>
+                </optgroup>
+              </select>
             </div>
 
             <div class="field">
@@ -1479,6 +1529,18 @@ select option[value=""]{
           card.classList.add('selected');
           document.getElementById('selected_niveau_id').value = card.getAttribute('data-niv-id');
         }
+        (function() {
+          var sel = document.getElementById('pi-pays');
+          var dial = document.getElementById('pi-dial');
+          if (!sel || !dial) return;
+          function updateDial() {
+            var opt = sel.options[sel.selectedIndex];
+            var d = opt ? opt.getAttribute('data-dial') : null;
+            dial.textContent = d || '+__';
+          }
+          sel.addEventListener('change', updateDial);
+          updateDial();
+        })();
         </script>
 
       <?php endif; ?>
