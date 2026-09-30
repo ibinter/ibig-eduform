@@ -660,6 +660,7 @@ if (function_exists('is_post') && is_post()) {
     <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#0a1733">📋 Récapitulatif de votre demande</p>
     <table style="width:100%;font-size:12px;border-collapse:collapse">
       <tr><td style="padding:4px 8px;color:#6b7280;width:160px">Formation</td><td style="padding:4px 8px;font-weight:700;color:#0a1733">' . $nomFormH . '</td></tr>
+      ' . ($catalogue_niveau !== '' ? '<tr><td style="padding:4px 8px;color:#6b7280">Niveau</td><td style="padding:4px 8px;font-weight:700;color:#1e40af">' . htmlspecialchars(['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'][$catalogue_niveau] ?? $catalogue_niveau, ENT_QUOTES, 'UTF-8') . '</td></tr>' : '') . '
       <tr><td style="padding:4px 8px;color:#6b7280">Modalité</td><td style="padding:4px 8px">' . $modeH . '</td></tr>
       <tr><td style="padding:4px 8px;color:#6b7280">Format</td><td style="padding:4px 8px">' . $fmtH . '</td></tr>
       ' . ($dateEmail !== '' ? '<tr><td style="padding:4px 8px;color:#6b7280">Date souhaitée</td><td style="padding:4px 8px">' . $dateH . '</td></tr>' : '') . '
@@ -732,6 +733,7 @@ if (function_exists('is_post') && is_post()) {
                 $_SESSION['last_tdr_email']    = $email;
                 $_SESSION['last_tdr_prix']     = $prixE;
                 $_SESSION['last_tdr_tranche']  = $tranche1;
+                $_SESSION['last_tdr_niveau']   = $catalogue_niveau;
             }
             $redirect = strtok($_SERVER['REQUEST_URI'], '?');
             header('Location: '.$redirect.'?success=1');
@@ -1126,10 +1128,13 @@ select option[value=""]{
           $sTdrEmail    = (string)($_SESSION['last_tdr_email']    ?? '');
           $sTdrPrix     = (int)($_SESSION['last_tdr_prix']        ?? 0);
           $sTdrTranche  = (int)($_SESSION['last_tdr_tranche']     ?? 0);
+          $sTdrNiveau   = (string)($_SESSION['last_tdr_niveau']   ?? '');
           $sFcfa = fn(int $v): string => number_format($v, 0, ',', ' ') . ' FCFA';
+          $sNivLabels = ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'];
           // Efface après lecture pour éviter réaffichage sur refresh
           unset($_SESSION['last_tdr_link'],$_SESSION['last_tdr_nom'],$_SESSION['last_tdr_prospect'],
-                $_SESSION['last_tdr_email'],$_SESSION['last_tdr_prix'],$_SESSION['last_tdr_tranche']);
+                $_SESSION['last_tdr_email'],$_SESSION['last_tdr_prix'],$_SESSION['last_tdr_tranche'],
+                $_SESSION['last_tdr_niveau']);
       ?>
 
         <div class="alert success">
@@ -1144,7 +1149,8 @@ select option[value=""]{
         <!-- Bloc TDR download -->
         <div style="background:linear-gradient(135deg,#0a1733,#1d4ed8);border-radius:16px;padding:22px 24px;margin:18px 0;color:#fff">
           <p style="margin:0 0 6px;font-size:1rem;font-weight:900">📄 Votre programme de formation (TDR) est prêt</p>
-          <?php if ($sTdrNom !== ''): ?><p style="margin:0 0 14px;opacity:.8;font-size:.92rem"><?= h($sTdrNom) ?></p><?php endif; ?>
+          <?php if ($sTdrNom !== ''): ?><p style="margin:0 0 6px;opacity:.8;font-size:.92rem"><?= h($sTdrNom) ?></p><?php endif; ?>
+          <?php if ($sTdrNiveau !== ''): ?><p style="margin:0 0 14px;font-size:.82rem"><span style="background:rgba(255,255,255,.15);padding:3px 10px;border-radius:999px"><?= h($sNivLabels[$sTdrNiveau] ?? $sTdrNiveau) ?></span></p><?php endif; ?>
           <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
             <a href="<?= h($sTdrLink) ?>" target="_blank" rel="noopener"
                style="background:#f59e0b;color:#0a1733;font-weight:900;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:.97rem;display:inline-flex;align-items:center;gap:8px">
