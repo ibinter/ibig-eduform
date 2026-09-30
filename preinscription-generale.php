@@ -146,6 +146,20 @@ $catalogue_nom    = isset($_GET['catalogue_nom'])    ? trim(strip_tags((string)$
 $catalogue_domaine= isset($_GET['domaine'])           ? trim(strip_tags((string)$_GET['domaine']))          : '';
 $catalogue_slug   = isset($_GET['formation_slug'])   ? trim(strip_tags((string)$_GET['formation_slug']))   : '';
 $catalogue_prix   = isset($_GET['catalogue_prix'])   ? (int)$_GET['catalogue_prix']                        : 0;
+$catalogue_niveau_id = isset($_GET['niveau_id'])     ? (int)$_GET['niveau_id']                             : 0;
+
+// Lookup du niveau depuis formation_niveaux si niveau_id fourni
+$catalogue_niveau = 'debutant';
+if ($catalogue_niveau_id > 0) {
+    try {
+        $niv_lk = $pdo->prepare("SELECT niveau FROM formation_niveaux WHERE id = ? AND statut = 'actif' LIMIT 1");
+        $niv_lk->execute([$catalogue_niveau_id]);
+        $niv_lk_row = $niv_lk->fetchColumn();
+        if ($niv_lk_row !== false && in_array($niv_lk_row, ['debutant','intermediaire','expert'], true)) {
+            $catalogue_niveau = (string)$niv_lk_row;
+        }
+    } catch (Throwable $ignore) {}
+}
 
 // Sticky values (pour éviter champs vides en cas d'erreur)
 $old = [
@@ -403,7 +417,7 @@ if (function_exists('is_post') && is_post()) {
                 'statut_professionnel' => $statutPro,
                 'objectif'             => $objectif,
                 'disponibilite'        => $dispoDb,
-                'niveau'               => 'debutant',
+                'niveau'               => $catalogue_niveau,
 
                 'ville'                => $ville !== '' ? $ville : null,
                 'pays'                 => $pays !== '' ? $pays : "Côte d'Ivoire",
@@ -546,6 +560,7 @@ if (function_exists('is_post') && is_post()) {
                     'cren'     => $creneauEmail,
                     'prospect' => $nomProspect,
                     'pid'      => (int)$id,
+                    'nid'      => $catalogue_niveau_id > 0 ? $catalogue_niveau_id : null,
                     'exp'      => $tdrExp,
                     'sig'      => $tdrSig,
                 ]));

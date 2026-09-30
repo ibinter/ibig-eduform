@@ -125,13 +125,28 @@ if (!$f) {
             // Charger les niveaux actifs de cette formation
             try {
                 $niv_stmt = $pdo->prepare("
-                    SELECT niveau, duree_heures, tarif_en_ligne, tarif_presentiel, tarif_hybride, ordre_affichage
+                    SELECT id AS niveau_id, niveau, duree_heures, tarif_en_ligne, tarif_presentiel, tarif_hybride, ordre_affichage
                     FROM formation_niveaux
                     WHERE formation_id = :fid AND statut = 'actif'
                     ORDER BY ordre_affichage ASC
                 ");
                 $niv_stmt->execute([':fid' => (int)$row['id']]);
                 $f['_niveaux'] = $niv_stmt->fetchAll(PDO::FETCH_ASSOC);
+                // Charger les modules pour chaque niveau
+                if (!empty($f['_niveaux'])) {
+                    $nids = array_column($f['_niveaux'], 'niveau_id');
+                    $phs2 = implode(',', array_fill(0, count($nids), '?'));
+                    $mod2 = $pdo->prepare("SELECT niveau_id, ordre, titre, contenus, duree_heures FROM formation_niveau_modules WHERE niveau_id IN ($phs2) ORDER BY niveau_id ASC, ordre ASC");
+                    $mod2->execute($nids);
+                    $mods_map = [];
+                    foreach ($mod2->fetchAll(PDO::FETCH_ASSOC) as $mr) {
+                        $mods_map[(int)$mr['niveau_id']][] = $mr;
+                    }
+                    foreach ($f['_niveaux'] as &$nv_ref) {
+                        $nv_ref['_modules'] = $mods_map[(int)$nv_ref['niveau_id']] ?? [];
+                    }
+                    unset($nv_ref);
+                }
             } catch (\Exception $_e) { $f['_niveaux'] = []; }
         }
     } catch (\Exception $e) { /* silence */ }
@@ -283,6 +298,17 @@ require_once __DIR__ . '/partials/header.php';
 .fd-niv-tab.fd-niv-expert.active{background:#fce7f3;color:#9d174d;border-color:#f9a8d4}
 .fd-niv-panel{display:none}.fd-niv-panel.active{display:block}
 .fd-niv-dur{font-size:.75rem;color:var(--muted);margin-bottom:8px}
+.fd-modules-toggle{margin-top:10px}
+.fd-modules-btn{width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:.75rem;font-weight:700;color:#475569;cursor:pointer;text-align:left}
+.fd-modules-btn:hover{background:#f1f5f9}
+.fd-modules-list{margin-top:6px;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden}
+.fd-module-row{display:flex;gap:8px;align-items:flex-start;padding:7px 10px;border-bottom:1px solid #f1f5f9;font-size:.75rem}
+.fd-module-row:last-child{border-bottom:none}
+.fd-module-num{width:20px;height:20px;background:#1e40af;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0;margin-top:1px}
+.fd-module-info{flex:1}
+.fd-module-titre{font-weight:700;color:#1e293b;margin-bottom:2px}
+.fd-module-contenus{color:#64748b;font-size:.7rem;line-height:1.4}
+.fd-module-dur{font-size:.7rem;font-weight:700;color:#1e40af;white-space:nowrap;flex-shrink:0}
 
 /* TDR */
 .fd-tdr-card{background:#f0fdf4;border:1px solid #86efac;border-radius:var(--radius);padding:18px}
@@ -554,7 +580,14 @@ function fdToggleFaq(btn) {
     <div class="fd-cta-card">
       <h3>✍️ Vous êtes intéressé(e) ?</h3>
       <p>Inscrivez-vous en 2 minutes. Notre équipe vous recontacte sous 24h.</p>
-      <a class="fd-btn-primary" href="<?= htmlspecialchars($inscUrl, ENT_QUOTES, 'UTF-8') ?>">S'inscrire maintenant</a>
+      <?php
+      $firstNiv = !empty($f['_niveaux']) ? $f['_niveaux'][0] : null;
+      $inscUrlBase = $inscUrl;
+      if ($firstNiv) {
+          $inscUrlBase = '/preinscription-generale.php?catalogue_nom=' . urlencode($nom) . '&formation_slug=' . urlencode($slug) . '&domaine=' . urlencode($cat) . '&catalogue_prix=' . (int)$firstNiv['tarif_en_ligne'] . '&niveau_id=' . (int)$firstNiv['niveau_id'];
+      }
+      ?>
+      <a class="fd-btn-primary" id="fd-insc-btn" href="<?= htmlspecialchars($inscUrlBase, ENT_QUOTES, 'UTF-8') ?>">S'inscrire maintenant</a>
       <a class="fd-btn-sec" href="https://wa.me/2250778882592?text=<?= urlencode('Bonjour, je suis intéressé(e) par la formation : ' . $nom) ?>" target="_blank" rel="noopener">💬 Demander via WhatsApp</a>
     </div>
 
@@ -573,8 +606,12 @@ function fdToggleFaq(btn) {
         <?php endforeach; ?>
       </div>
       <?php endif; ?>
-      <?php foreach ($niveaux_fd as $i => $nv): ?>
-      <div class="fd-niv-panel<?= $i === 0 ? ' active' : '' ?>" data-niv-idx="<?= $i ?>">
+      <?php foreach ($niveaux_fd as $i => $nv):
+        $niv_insc_url = '/preinscription-generale.php?catalogue_nom=' . urlencode($nom) . '&formation_slug=' . urlencode($slug) . '&domaine=' . urlencode($cat) . '&catalogue_prix=' . (int)$nv['tarif_en_ligne'] . '&niveau_id=' . (int)$nv['niveau_id'];
+      ?>
+      <div class="fd-niv-panel<?= $i === 0 ? ' active' : '' ?>" data-niv-idx="<?= $i ?>"
+           data-niveau-id="<?= (int)$nv['niveau_id'] ?>"
+           data-insc-url="<?= htmlspecialchars($niv_insc_url, ENT_QUOTES, 'UTF-8') ?>">
         <div class="fd-niv-dur">⏱️ <?= (int)$nv['duree_heures'] ?> heures</div>
         <table class="fd-tbl">
           <thead>
@@ -589,6 +626,25 @@ function fdToggleFaq(btn) {
             <tr class="fd-intra"><td colspan="2">👥 Groupe &amp; intra-entreprise — <strong>Sur devis</strong></td></tr>
           </tbody>
         </table>
+        <?php if (!empty($nv['_modules'])): ?>
+        <div class="fd-modules-toggle">
+          <button type="button" class="fd-modules-btn" onclick="fdToggleModules(this)">📋 Voir les modules (<?= count($nv['_modules']) ?>)</button>
+          <div class="fd-modules-list" style="display:none">
+            <?php foreach ($nv['_modules'] as $mi => $mod): ?>
+            <div class="fd-module-row">
+              <div class="fd-module-num"><?= $mi + 1 ?></div>
+              <div class="fd-module-info">
+                <div class="fd-module-titre"><?= htmlspecialchars($mod['titre'], ENT_QUOTES, 'UTF-8') ?></div>
+                <?php if (!empty($mod['contenus'])): ?>
+                <div class="fd-module-contenus"><?= htmlspecialchars($mod['contenus'], ENT_QUOTES, 'UTF-8') ?></div>
+                <?php endif; ?>
+              </div>
+              <div class="fd-module-dur"><?= (int)$mod['duree_heures'] ?>h</div>
+            </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <?php endif; ?>
       </div>
       <?php endforeach; ?>
       <p class="fd-tbl-note">Tarifs en F CFA, indicatifs. Prix par personne.</p>
@@ -615,7 +671,7 @@ function fdToggleFaq(btn) {
     <div class="fd-tdr-card">
       <h3>📄 Programme complet (TDR)</h3>
       <p>Le document de référence (TDR) avec tous les modules, objectifs détaillés et planning vous est transmis après votre inscription.</p>
-      <a class="fd-tdr-btn" href="<?= htmlspecialchars($inscUrl, ENT_QUOTES, 'UTF-8') ?>">🔒 S'inscrire pour recevoir le TDR</a>
+      <a class="fd-tdr-btn" id="fd-tdr-btn" href="<?= htmlspecialchars($inscUrlBase, ENT_QUOTES, 'UTF-8') ?>">🔒 S'inscrire pour recevoir le TDR</a>
     </div>
 
     <!-- Contact -->
@@ -671,7 +727,23 @@ function fdToggleFaq(btn) {
       card.querySelectorAll('.fd-niv-panel').forEach(function(p){ p.classList.remove('active'); });
       btn.classList.add('active');
       var panel = card.querySelector('[data-niv-idx="'+idx+'"]');
-      if (panel) panel.classList.add('active');
+      if (panel) {
+        panel.classList.add('active');
+        var url = panel.getAttribute('data-insc-url');
+        if (url) {
+          var inscBtn = document.getElementById('fd-insc-btn');
+          if (inscBtn) inscBtn.href = url;
+          var tdrBtn = document.getElementById('fd-tdr-btn');
+          if (tdrBtn) tdrBtn.href = url;
+        }
+      }
+    }
+    function fdToggleModules(btn){
+      var list = btn.nextElementSibling;
+      if (!list) return;
+      var open = list.style.display !== 'none';
+      list.style.display = open ? 'none' : 'block';
+      btn.textContent = open ? btn.textContent.replace('▲','').trim().replace('📋 Masquer','📋 Voir') : btn.textContent.replace('Voir','Masquer');
     }
     function fdCopyLink(btn, url){
       try {

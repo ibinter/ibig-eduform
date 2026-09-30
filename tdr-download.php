@@ -42,6 +42,7 @@ $formation = [
     'slug'        => (string)($data['slug']  ?? ''),
     'price'       => (int)($data['prix']     ?? 0),
     'description' => (string)($data['desc'] ?? ''),
+    'niveau_id'   => isset($data['nid']) && (int)$data['nid'] > 0 ? (int)$data['nid'] : null,
 ];
 $opts = [
     'mode_formation'   => (string)($data['mode'] ?? 'en_ligne'),
