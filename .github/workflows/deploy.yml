@@ -17,23 +17,6 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: 📝 Créer core/secrets.php depuis les secrets GitHub
-        run: |
-          cat > core/secrets.php << 'SECRETS'
-          <?php
-          define('DB_HOST',     getenv('DB_HOST')     ?: '${{ secrets.DB_HOST }}');
-          define('DB_NAME',     getenv('DB_NAME')     ?: '${{ secrets.DB_NAME }}');
-          define('DB_USER',     getenv('DB_USER')     ?: '${{ secrets.DB_USER }}');
-          define('DB_PASS',     getenv('DB_PASS')     ?: '${{ secrets.DB_PASS }}');
-          define('WHATSAPP_CALLMEBOT_APIKEY',  getenv('WHATSAPP_CALLMEBOT_APIKEY')  ?: '${{ secrets.WHATSAPP_CALLMEBOT_APIKEY }}');
-          define('MONEROO_SECRET_KEY',         getenv('MONEROO_SECRET_KEY')         ?: '${{ secrets.MONEROO_SECRET_KEY }}');
-          define('MONEROO_WEBHOOK_SECRET',     getenv('MONEROO_WEBHOOK_SECRET')     ?: '${{ secrets.MONEROO_WEBHOOK_SECRET }}');
-          define('PARTNERS_REGISTER_SECRET',   getenv('PARTNERS_REGISTER_SECRET')   ?: '${{ secrets.PARTNERS_REGISTER_SECRET }}');
-          define('SUPABASE_URL',               getenv('SUPABASE_URL')               ?: '${{ secrets.SUPABASE_URL }}');
-          define('SUPABASE_SERVICE_KEY',       getenv('SUPABASE_SERVICE_KEY')       ?: '${{ secrets.SUPABASE_SERVICE_KEY }}');
-          define('ANTHROPIC_API_KEY',          getenv('ANTHROPIC_API_KEY')          ?: '${{ secrets.ANTHROPIC_API_KEY }}');
-          SECRETS
-
       - name: 📦 FTP Deploy
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -49,3 +32,4 @@ jobs:
             **/vendor/**
             uploads/**
             !uploads/.gitkeep
+            core/secrets.php
