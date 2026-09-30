@@ -657,11 +657,49 @@ function tdr_modules(string $nom, string $cat, int $heures, string $desc = '', s
         // Logistique / Supply Chain
         ['/logistique|supply\s+chain|approvisionnement|gestion\s+(des\s+)?stocks?/ui', 22, 22, 25],
     ];
+    $_nh_matched = false;
     foreach ($_nh as [$_pat, $_d, $_i, $_e]) {
         if (preg_match($_pat, $nom)) {
             $heures = ['debutant' => $_d, 'intermediaire' => $_i, 'expert' => $_e][$niveau] ?? $_d;
+            $_nh_matched = true;
             break;
         }
+    }
+
+    /* ── Fallback catégorie : si aucun pattern spécifique ne correspond,
+       on utilise des heures naturelles par domaine × niveau pour casser
+       la dépendance circulaire sur les valeurs par défaut de la DB.     ── */
+    if (!$_nh_matched) {
+        $_cat_nh = [
+            'Comptabilité & Finance'          => [30, 25, 22],
+            'GRH'                             => [25, 22, 20],
+            'Management & Leadership'         => [20, 22, 25],
+            'Gestion Commerciale & Marketing' => [20, 20, 22],
+            'Informatique & Tech'             => [20, 25, 30],
+            'IA & Digitalisation'             => [18, 22, 28],
+            'Logistique & Supply Chain'       => [22, 22, 25],
+            'Droit & Juridique'               => [25, 22, 20],
+            'QHSE'                            => [20, 20, 22],
+            'Immobilier'                      => [25, 22, 20],
+            'Entrepreneuriat'                 => [20, 20, 22],
+            'Banque & Assurance'              => [25, 22, 20],
+            'Communication Professionnelle'   => [18, 18, 20],
+            'Développement Personnel'         => [15, 15, 18],
+            'Éducation & Formation'           => [20, 20, 22],
+            'Direction & Administration'      => [22, 22, 25],
+            'BTP & Construction'              => [22, 22, 25],
+            'Santé & Pharmacie'               => [20, 22, 25],
+            'Agriculture'                     => [20, 20, 22],
+            'Mines, Énergie & Pétrole'        => [22, 22, 25],
+            'Tourisme & Hôtellerie'           => [20, 20, 22],
+            'Infographie & Design'            => [18, 20, 22],
+        ];
+        if (isset($_cat_nh[$cat])) {
+            [$_d, $_i, $_e] = $_cat_nh[$cat];
+        } else {
+            [$_d, $_i, $_e] = [20, 22, 25];
+        }
+        $heures = ['debutant' => $_d, 'intermediaire' => $_i, 'expert' => $_e][$niveau] ?? $_d;
     }
 
     /* ─────────────────────────────────────────────────────────────────────
