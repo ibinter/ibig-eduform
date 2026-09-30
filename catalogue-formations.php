@@ -286,6 +286,26 @@ try {
         ORDER BY titre ASC
     ")->fetchAll(PDO::FETCH_ASSOC);
 
+    // Charger les niveaux actifs par formation (pour les pills catalogue)
+    $niveaux_map = [];
+    try {
+        $niv_rows = $pdo_cat->query("
+            SELECT formation_id, niveau, duree_heures, tarif_en_ligne, tarif_presentiel, tarif_hybride
+            FROM formation_niveaux
+            WHERE statut = 'actif'
+            ORDER BY ordre_affichage ASC
+        ")->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($niv_rows as $nr) {
+            $niveaux_map[(int)$nr['formation_id']][] = [
+                'n'  => $nr['niveau'],
+                'h'  => (int)$nr['duree_heures'],
+                'ol' => (int)$nr['tarif_en_ligne'],
+                'pr' => (int)$nr['tarif_presentiel'],
+                'hy' => (int)$nr['tarif_hybride'],
+            ];
+        }
+    } catch (Throwable $_e) {}
+
     // Mapping domaine local → catégorie catalogue
     $DOM_MAP = [
         'QHSE'                              => 'QHSE',
@@ -440,6 +460,7 @@ try {
             '_duree'      => $duree_val,
             '_samedi_pro' => !empty($r['is_samedi_pro']),
             '_tarif_pres' => (int)($r['tarif_presentiel'] ?? 0),
+            '_niveaux'    => $niveaux_map[(int)$r['id']] ?? [],
         ];
     }
     $all_formations = array_merge($all_formations, $local_formations);
@@ -551,6 +572,7 @@ foreach ($all_formations as $f) {
         'ins'    => $insUrl,
         'lien'   => $lien,
         'tdr'    => $tdrUrl,
+        'niveaux'=> $f['_niveaux'] ?? [],
     ];
 }
 $json_encoded = json_encode($json_data, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP);
@@ -1081,6 +1103,16 @@ function showToast(msg){
     var modeLabel = f.mode === 'en_ligne' ? 'En ligne' : (f.mode === 'hybride' ? 'Hybride' : 'Présentiel');
     if (!f.local) modeLabel = 'En ligne · Présentiel · Hybride';
     var durHtml = f.duree ? '<div class="cg-dur-inline"><span class="cg-dur-badge">⏱️ '+esc(f.duree)+'</span></div>' : '';
+    var niveauxHtml = '';
+    if (f.niveaux && f.niveaux.length > 0) {
+      var nivLabels = {debutant:'Débutant',intermediaire:'Intermédiaire',expert:'Expert'};
+      niveauxHtml = '<div class="cg-niveaux">';
+      for (var ni=0; ni<f.niveaux.length; ni++) {
+        var nv = f.niveaux[ni];
+        niveauxHtml += '<span class="cg-niv cg-niv-'+nv.n+'" title="'+nv.h+'h — '+fcfaJs(nv.ol)+'">'+nivLabels[nv.n]+'</span>';
+      }
+      niveauxHtml += '</div>';
+    }
     var prixHtml = '';
     if (f.prix > 0) {
       prixHtml = '<button class="cg-tarif-toggle" onclick="this.classList.toggle(\'open\');this.nextElementSibling.classList.toggle(\'visible\')" aria-expanded="false">'
@@ -1106,6 +1138,7 @@ function showToast(msg){
       + '<div class="cg-card-body">'
       + '<h3 class="cg-card-name">'+esc(f.name)+'</h3>'
       + durHtml
+      + niveauxHtml
       + (f.desc ? '<p class="cg-card-pitch">'+esc(f.desc.substring(0,120))+(f.desc.length>120?'…':'')+'</p>' : '')
       + prixHtml
       + '<div class="cg-card-ctas">'
@@ -1123,6 +1156,16 @@ function showToast(msg){
     var modeLabel = f.mode === 'en_ligne' ? 'En ligne' : (f.mode === 'hybride' ? 'Hybride' : 'Présentiel');
     if (!f.local) modeLabel = 'En ligne · Présentiel · Hybride';
     var durHtml = f.duree ? '<span class="cg-dur-badge cg-dur-list">⏱️ '+esc(f.duree)+'</span>' : '';
+    var niveauxListHtml = '';
+    if (f.niveaux && f.niveaux.length > 0) {
+      var nivLabels2 = {debutant:'Débutant',intermediaire:'Intermédiaire',expert:'Expert'};
+      niveauxListHtml = '<div class="cg-niveaux cg-niveaux-list">';
+      for (var ni2=0; ni2<f.niveaux.length; ni2++) {
+        var nv2 = f.niveaux[ni2];
+        niveauxListHtml += '<span class="cg-niv cg-niv-'+nv2.n+'" title="'+nv2.h+'h — '+fcfaJs(nv2.ol)+'">'+nivLabels2[nv2.n]+'</span>';
+      }
+      niveauxListHtml += '</div>';
+    }
     var pricesHtml = '';
     if (f.prix > 0) {
       pricesHtml = '<div class="cg-list-prices">'
@@ -1142,6 +1185,7 @@ function showToast(msg){
       + durHtml
       + '</div>'
       + '<h3 class="cg-list-name">'+esc(f.name)+'</h3>'
+      + niveauxListHtml
       + (f.desc ? '<p class="cg-list-desc">'+esc(f.desc.substring(0,180))+(f.desc.length>180?'…':'')+'</p>' : '')
       + '</div>'
       + pricesHtml
@@ -1714,6 +1758,12 @@ function showToast(msg){
 .cg-mod-badge{font-size:.67rem;font-weight:600;color:rgba(255,255,255,.75);background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:3px 9px;border-radius:999px;white-space:nowrap}
 .cg-dur-inline{margin-bottom:2px}
 .cg-dur-badge{display:inline-block;font-size:.68rem;font-weight:700;color:#1e40af;background:#eff6ff;border:1px solid #bfdbfe;padding:2px 10px;border-radius:999px;white-space:nowrap}
+.cg-niveaux{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 6px}
+.cg-niveaux-list{margin:4px 0}
+.cg-niv{display:inline-block;font-size:.65rem;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;cursor:default}
+.cg-niv-debutant{background:#dcfce7;color:#166534;border:1px solid #86efac}
+.cg-niv-intermediaire{background:#dbeafe;color:#1e40af;border:1px solid #93c5fd}
+.cg-niv-expert{background:#fce7f3;color:#9d174d;border:1px solid #f9a8d4}
 .cg-dur-list{display:inline-block;font-size:.7rem;font-weight:700;color:#1e40af;background:#eff6ff;border:1px solid #bfdbfe;padding:2px 8px;border-radius:999px;white-space:nowrap}
 .cg-card-body{padding:14px 16px 16px;display:flex;flex-direction:column;flex:1;gap:10px}
 .cg-card-name{font-size:.9rem;font-weight:900;line-height:1.3;color:var(--cg-text);margin:0}
