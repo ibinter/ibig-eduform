@@ -132,21 +132,7 @@ if (!$f) {
                 ");
                 $niv_stmt->execute([':fid' => (int)$row['id']]);
                 $f['_niveaux'] = $niv_stmt->fetchAll(PDO::FETCH_ASSOC);
-                // Charger les modules pour chaque niveau
-                if (!empty($f['_niveaux'])) {
-                    $nids = array_column($f['_niveaux'], 'niveau_id');
-                    $phs2 = implode(',', array_fill(0, count($nids), '?'));
-                    $mod2 = $pdo->prepare("SELECT niveau_id, ordre, titre, contenus, duree_heures FROM formation_niveau_modules WHERE niveau_id IN ($phs2) ORDER BY niveau_id ASC, ordre ASC");
-                    $mod2->execute($nids);
-                    $mods_map = [];
-                    foreach ($mod2->fetchAll(PDO::FETCH_ASSOC) as $mr) {
-                        $mods_map[(int)$mr['niveau_id']][] = $mr;
-                    }
-                    foreach ($f['_niveaux'] as &$nv_ref) {
-                        $nv_ref['_modules'] = $mods_map[(int)$nv_ref['niveau_id']] ?? [];
-                    }
-                    unset($nv_ref);
-                }
+                /* Les modules ne sont pas chargés ici — TDR réservé aux inscrits */
             } catch (\Exception $_e) { $f['_niveaux'] = []; }
         }
     } catch (\Exception $e) { /* silence */ }
@@ -454,58 +440,9 @@ function fdToggleFaq(btn) {
       <p style="margin-top:10px;font-size:.8rem;color:#64748b">* Prérequis spécifiques précisés dans le TDR de la formation.</p>
     </div>
 
-    <!-- Programme / Modules -->
+    <!-- Programme / Modules — verrouillé : TDR transmis après inscription -->
     <div class="fd-card">
       <h2><span class="fd-ico">📚</span> Programme &amp; Modules</h2>
-      <?php
-      $niveaux_prog = $f['_niveaux'] ?? [];
-      $has_real_modules = !empty($niveaux_prog) && !empty($niveaux_prog[0]['_modules']);
-      $niv_labels_prog = ['debutant'=>'🟢 Débutant','intermediaire'=>'🔵 Intermédiaire','expert'=>'🔴 Expert'];
-      if ($has_real_modules):
-      ?>
-      <?php if (count($niveaux_prog) > 1): ?>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-        <?php foreach ($niveaux_prog as $pi => $pnv): ?>
-        <button type="button"
-                class="fd-prog-tab<?= $pi === 0 ? ' active' : '' ?> fd-niv-<?= $pnv['niveau'] ?>"
-                onclick="fdProgTab(this,<?= $pi ?>)">
-          <?= $niv_labels_prog[$pnv['niveau']] ?? $pnv['niveau'] ?>
-          <span style="font-size:.68rem;font-weight:500;opacity:.8;margin-left:4px"><?= (int)$pnv['duree_heures'] ?>h</span>
-        </button>
-        <?php endforeach; ?>
-      </div>
-      <?php endif; ?>
-      <?php foreach ($niveaux_prog as $pi => $pnv): ?>
-      <div class="fd-prog-panel<?= $pi === 0 ? ' active' : '' ?>" data-prog-idx="<?= $pi ?>">
-        <?php if (!empty($pnv['_modules'])): ?>
-        <ol class="fd-prog-list">
-          <?php foreach ($pnv['_modules'] as $mi => $mod): ?>
-          <li class="fd-prog-item">
-            <div class="fd-prog-titre"><?= htmlspecialchars($mod['titre'], ENT_QUOTES, 'UTF-8') ?></div>
-            <?php if (!empty($mod['contenus'])): ?>
-            <div class="fd-prog-contenus"><?= htmlspecialchars($mod['contenus'], ENT_QUOTES, 'UTF-8') ?></div>
-            <?php endif; ?>
-            <div class="fd-prog-dur">⏱️ <?= (int)$mod['duree_heures'] ?>h</div>
-          </li>
-          <?php endforeach; ?>
-        </ol>
-        <?php endif; ?>
-        <div class="fd-prog-cta">
-          <a href="<?= htmlspecialchars($inscUrlBase, ENT_QUOTES, 'UTF-8') ?>">✍️ S'inscrire à ce niveau — recevoir le TDR complet</a>
-        </div>
-      </div>
-      <?php endforeach; ?>
-      <script>
-      function fdProgTab(btn, idx){
-        var wrap = btn.closest('.fd-card');
-        wrap.querySelectorAll('.fd-prog-tab').forEach(function(t){ t.classList.remove('active'); });
-        wrap.querySelectorAll('.fd-prog-panel').forEach(function(p){ p.classList.remove('active'); });
-        btn.classList.add('active');
-        var panel = wrap.querySelector('[data-prog-idx="'+idx+'"]');
-        if (panel) panel.classList.add('active');
-      }
-      </script>
-      <?php else: ?>
       <div class="fd-locked">
         <ul class="fd-modules fd-locked-inner">
           <li class="fd-module">Module 1 — Introduction et fondamentaux</li>
@@ -520,7 +457,6 @@ function fdToggleFaq(btn) {
           <a href="<?= htmlspecialchars($inscUrl, ENT_QUOTES, 'UTF-8') ?>">✍️ S'inscrire pour accéder</a>
         </div>
       </div>
-      <?php endif; ?>
     </div>
 
     <!-- Méthodologie -->
@@ -539,34 +475,16 @@ function fdToggleFaq(btn) {
     <div class="fd-card">
       <h2><span class="fd-ico">💡</span> Ce que vous allez apprendre</h2>
       <?php
-        /* Extraire les titres de modules depuis la BD (tous niveaux confondus, max 8) */
-        $skill_items = [];
-        if (!empty($f['_niveaux'])) {
-            $seen = [];
-            foreach ($f['_niveaux'] as $_nv_s) {
-                foreach (($_nv_s['_modules'] ?? []) as $_mod_s) {
-                    $t = trim((string)$_mod_s['titre']);
-                    $key = mb_strtolower($t, 'UTF-8');
-                    if ($t !== '' && !isset($seen[$key])) {
-                        $seen[$key] = true;
-                        $skill_items[] = $t;
-                    }
-                    if (count($skill_items) >= 8) break 2;
-                }
-            }
-        }
-        if (empty($skill_items)) {
-            $skill_items = [
-                'Maîtriser les concepts fondamentaux du domaine',
-                'Utiliser les outils et méthodes professionnels',
-                'Analyser et résoudre des problèmes réels',
-                'Communiquer efficacement dans le contexte métier',
-                'Piloter des projets et des équipes',
-                'Produire des livrables conformes aux standards',
-                "S'adapter aux évolutions du secteur",
-                'Valoriser votre profil sur le marché africain',
-            ];
-        }
+        $skill_items = [
+            'Maîtriser les concepts fondamentaux du domaine',
+            'Utiliser les outils et méthodes professionnels',
+            'Analyser et résoudre des problèmes réels',
+            'Communiquer efficacement dans le contexte métier',
+            'Piloter des projets et des équipes',
+            'Produire des livrables conformes aux standards',
+            "S'adapter aux évolutions du secteur",
+            'Valoriser votre profil sur le marché africain',
+        ];
       ?>
       <div class="fd-skills-grid">
         <?php foreach ($skill_items as $_sk): ?>
@@ -718,25 +636,6 @@ function fdToggleFaq(btn) {
             <tr class="fd-intra"><td colspan="2">👥 Groupe &amp; intra-entreprise — <strong>Sur devis</strong></td></tr>
           </tbody>
         </table>
-        <?php if (!empty($nv['_modules'])): ?>
-        <div class="fd-modules-toggle">
-          <button type="button" class="fd-modules-btn" onclick="fdToggleModules(this)">📋 Voir les modules (<?= count($nv['_modules']) ?>)</button>
-          <div class="fd-modules-list" style="display:none">
-            <?php foreach ($nv['_modules'] as $mi => $mod): ?>
-            <div class="fd-module-row">
-              <div class="fd-module-num"><?= $mi + 1 ?></div>
-              <div class="fd-module-info">
-                <div class="fd-module-titre"><?= htmlspecialchars($mod['titre'], ENT_QUOTES, 'UTF-8') ?></div>
-                <?php if (!empty($mod['contenus'])): ?>
-                <div class="fd-module-contenus"><?= htmlspecialchars($mod['contenus'], ENT_QUOTES, 'UTF-8') ?></div>
-                <?php endif; ?>
-              </div>
-              <div class="fd-module-dur"><?= (int)$mod['duree_heures'] ?>h</div>
-            </div>
-            <?php endforeach; ?>
-          </div>
-        </div>
-        <?php endif; ?>
       </div>
       <?php endforeach; ?>
       <p class="fd-tbl-note">Tarifs en F CFA, indicatifs. Prix par personne.</p>
