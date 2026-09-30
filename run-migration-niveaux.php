@@ -79,18 +79,17 @@ const COEFF = [
     'expert'        => 1.35,
 ];
 
-// Durées par niveau (heures) selon durée de base
+// Durées par niveau (heures) selon durée de base.
+// Règle pédagogique correcte : Débutant a le plus d'heures (fondations),
+// Expert le moins (ciblé, focalisé). La base correspond à la durée originale
+// de la formation, assignée au niveau Expert.
+// Débutant = base × 1,00 · Intermédiaire = base × 0,80 · Expert = base × 0,60
 function durees_par_niveau(int $heures_base): array {
-    // Normalise la durée de base vers un palier connu
     if ($heures_base <= 0) $heures_base = 20;
-
-    // Niveau débutant : toujours la plus courte (min 20h)
-    // Niveau intermédiaire : + 50 % du débutant
-    // Niveau expert : + 100 % du débutant
-    $debut = max(20, (int)(round($heures_base / 5) * 5));
-    $inter = max(25, (int)(round($debut * 1.5 / 5) * 5));
-    $exper = max(35, (int)(round($debut * 2.0 / 5) * 5));
-
+    $base  = max(10, (int)(round($heures_base / 5) * 5));
+    $debut = max(20, (int)(round($base * 1.00 / 5) * 5));
+    $inter = max(15, (int)(round($base * 0.80 / 5) * 5));
+    $exper = max(10, (int)(round($base * 0.60 / 5) * 5));
     return [
         'debutant'      => $debut,
         'intermediaire' => $inter,

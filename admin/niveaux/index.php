@@ -110,6 +110,7 @@ ob_start();
       <a href="bulk-activate.php" style="padding:6px 14px;background:#166534;color:#fff;border-radius:6px;font-size:.8rem;font-weight:700;text-decoration:none">⚡ Activation en masse</a>
       <a href="seed-modules.php" style="padding:6px 14px;background:#0369a1;color:#fff;border-radius:6px;font-size:.8rem;font-weight:700;text-decoration:none">⚡ Seeder modules</a>
       <a href="audit-niveaux.php" style="padding:6px 14px;background:#7c3aed;color:#fff;border-radius:6px;font-size:.8rem;font-weight:700;text-decoration:none">🔍 Audit niveaux</a>
+      <a href="audit-heures.php" style="padding:6px 14px;background:#d97706;color:#fff;border-radius:6px;font-size:.8rem;font-weight:700;text-decoration:none">📊 Audit heures</a>
       <a href="generate-modules.php" style="padding:6px 14px;background:#7c3aed;color:#fff;border-radius:6px;font-size:.8rem;font-weight:700;text-decoration:none">🤖 Générer modules IA</a>
     </div>
     <form method="get" class="filters">
