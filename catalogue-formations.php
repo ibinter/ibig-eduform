@@ -1048,9 +1048,10 @@ function showToast(msg){
     if (cur.cat && f.cat !== cur.cat) return false;
     if (cur.mode){
       var fm = (f.mode||'hybride').toLowerCase();
-      if (cur.mode === 'en_ligne'    && fm !== 'en_ligne')    return false;
-      if (cur.mode === 'presentiel'  && fm !== 'presentiel')  return false;
-      if (cur.mode === 'hybride'     && fm !== 'hybride')     return false;
+      /* hybride = disponible en ligne ET présentiel → inclus dans les 2 filtres */
+      if (cur.mode === 'en_ligne'   && fm === 'presentiel') return false;
+      if (cur.mode === 'presentiel' && fm === 'en_ligne')   return false;
+      if (cur.mode === 'hybride'    && fm !== 'hybride')    return false;
     }
     if (cur.prix){
       var p = f.prix||0;
@@ -1118,28 +1119,37 @@ function showToast(msg){
 
   /* ── Rendu carte grille ── */
   function cardGrid(f){
-    var modeLabel = f.mode === 'en_ligne' ? 'En ligne' : (f.mode === 'hybride' ? 'Hybride' : 'Présentiel');
-    if (!f.local) modeLabel = 'En ligne · Présentiel · Hybride';
-    var durHtml = f.duree ? '<div class="cg-dur-inline"><span class="cg-dur-badge">⏱️ '+esc(f.duree)+'</span></div>' : '';
+    var modeLabel = f.mode === 'en_ligne' ? '💻 En ligne' : (f.mode === 'presentiel' ? '🏛️ Présentiel' : '🔀 En ligne + Présentiel');
+    if (!f.local) modeLabel = '🔀 En ligne · Présentiel · Hybride';
+    var nivLabels = {debutant:'Débutant',intermediaire:'Intermédiaire',expert:'Expert'};
+    /* Niveau actif par défaut : premier niveau disponible */
+    var aN = f.niveaux && f.niveaux.length > 0 ? f.niveaux[0] : null;
+    var tPrix = aN && aN.ol > 0 ? aN.ol : f.prix;
+    var tPres = aN && aN.pr > 0 ? aN.pr : f.pres;
+    var tHyb  = aN && aN.hy > 0 ? aN.hy : (f.hyb || Math.round((tPrix + tPres) / 10000) * 5000);
+    var tDur  = aN && aN.h > 0 ? aN.h + 'H' : (f.duree || '');
+    var durHtml = tDur ? '<div class="cg-dur-inline"><span class="cg-dur-badge cg-niv-dur">⏱️ '+esc(tDur)+'</span></div>' : '';
     var niveauxHtml = '';
     if (f.niveaux && f.niveaux.length > 0) {
-      var nivLabels = {debutant:'Débutant',intermediaire:'Intermédiaire',expert:'Expert'};
       niveauxHtml = '<div class="cg-niveaux">';
       for (var ni=0; ni<f.niveaux.length; ni++) {
         var nv = f.niveaux[ni];
-        niveauxHtml += '<span class="cg-niv cg-niv-'+nv.n+'" title="'+nv.h+'h — '+fcfaJs(nv.ol)+'">'+nivLabels[nv.n]+'</span>';
+        var actCls = ni === 0 ? ' cg-niv-active' : '';
+        niveauxHtml += '<span class="cg-niv cg-niv-'+nv.n+actCls+'" onclick="cgPickNiv(this)"'
+          +' data-h="'+nv.h+'" data-ol="'+nv.ol+'" data-pr="'+nv.pr+'" data-hy="'+nv.hy+'"'
+          +' title="Cliquez pour voir les tarifs '+nivLabels[nv.n]+'">'+nivLabels[nv.n]+'</span>';
       }
       niveauxHtml += '</div>';
     }
     var prixHtml = '';
-    if (f.prix > 0) {
+    if (tPrix > 0 || (f.niveaux && f.niveaux.length > 0)) {
       prixHtml = '<button class="cg-tarif-toggle" onclick="this.classList.toggle(\'open\');this.nextElementSibling.classList.toggle(\'visible\')" aria-expanded="false">'
         + '💰 Tarifs &amp; Modalités <span class="cg-tarif-arrow">▾</span></button>'
-        + '<div class="cg-table-wrap"><table class="cg-tbl"><thead>'
+        + '<div class="cg-table-wrap cg-tarif-zone"><table class="cg-tbl"><thead>'
         + '<tr><th class="cg-th-m">Modalité</th><th class="cg-th-p">💻 En ligne</th><th class="cg-th-p">🏛️ Présentiel</th></tr>'
         + '</thead><tbody>'
-        + '<tr><td>👤 Individuel (en direct)</td><td>'+fcfaJs(f.prix)+'</td><td>'+fcfaJs(f.pres)+'</td></tr>'
-        + '<tr><td>🔀 Hybride (En ligne et en présentiel)</td><td colspan="2" style="text-align:center">'+fcfaJs(f.hyb)+'</td></tr>'
+        + '<tr><td>👤 Individuel (en direct)</td><td data-niv-cell="ol">'+fcfaJs(tPrix)+'</td><td data-niv-cell="pr">'+fcfaJs(tPres)+'</td></tr>'
+        + '<tr><td>🔀 Hybride (En ligne et en présentiel)</td><td colspan="2" style="text-align:center" data-niv-cell="hy">'+fcfaJs(tHyb)+'</td></tr>'
         + '<tr class="cg-intra-row"><td colspan="3">👥 Formation groupe &amp; intra-entreprise — <strong>Sur devis</strong></td></tr>'
         + '</tbody></table>'
         + '<p class="cg-tbl-note">* Tarifs indicatifs. Contactez-nous pour un devis personnalisé selon votre profil et le nombre de participants.</p>'
@@ -1157,7 +1167,7 @@ function showToast(msg){
       + '<h3 class="cg-card-name">'+esc(f.name)+'</h3>'
       + durHtml
       + niveauxHtml
-      + (f.desc ? '<p class="cg-card-pitch">'+esc(f.desc.substring(0,120))+(f.desc.length>120?'…':'')+'</p>' : '')
+      + (f.desc ? '<p class="cg-card-pitch">'+esc(f.desc.substring(0,160))+(f.desc.length>160?'…':'')+'</p>' : '')
       + prixHtml
       + '<div class="cg-card-ctas">'
       + '<a href="'+esc(f.ins)+'" class="cg-btn-p" style="background:'+esc(f.colD)+'">✍️ S\'inscrire</a>'
@@ -1171,27 +1181,35 @@ function showToast(msg){
 
   /* ── Rendu carte liste ── */
   function cardList(f){
-    var modeLabel = f.mode === 'en_ligne' ? 'En ligne' : (f.mode === 'hybride' ? 'Hybride' : 'Présentiel');
-    if (!f.local) modeLabel = 'En ligne · Présentiel · Hybride';
-    var durHtml = f.duree ? '<span class="cg-dur-badge cg-dur-list">⏱️ '+esc(f.duree)+'</span>' : '';
+    var modeLabel = f.mode === 'en_ligne' ? '💻 En ligne' : (f.mode === 'presentiel' ? '🏛️ Présentiel' : '🔀 En ligne + Présentiel');
+    if (!f.local) modeLabel = '🔀 En ligne · Présentiel · Hybride';
+    var nivLabels2 = {debutant:'Débutant',intermediaire:'Intermédiaire',expert:'Expert'};
+    var aN2 = f.niveaux && f.niveaux.length > 0 ? f.niveaux[0] : null;
+    var tPrix2 = aN2 && aN2.ol > 0 ? aN2.ol : f.prix;
+    var tPres2 = aN2 && aN2.pr > 0 ? aN2.pr : f.pres;
+    var tHyb2  = aN2 && aN2.hy > 0 ? aN2.hy : f.hyb;
+    var tDur2  = aN2 && aN2.h > 0 ? aN2.h + 'H' : (f.duree || '');
+    var durHtml = tDur2 ? '<span class="cg-dur-badge cg-dur-list cg-niv-dur">⏱️ '+esc(tDur2)+'</span>' : '';
     var niveauxListHtml = '';
     if (f.niveaux && f.niveaux.length > 0) {
-      var nivLabels2 = {debutant:'Débutant',intermediaire:'Intermédiaire',expert:'Expert'};
       niveauxListHtml = '<div class="cg-niveaux cg-niveaux-list">';
       for (var ni2=0; ni2<f.niveaux.length; ni2++) {
         var nv2 = f.niveaux[ni2];
-        niveauxListHtml += '<span class="cg-niv cg-niv-'+nv2.n+'" title="'+nv2.h+'h — '+fcfaJs(nv2.ol)+'">'+nivLabels2[nv2.n]+'</span>';
+        var actCls2 = ni2 === 0 ? ' cg-niv-active' : '';
+        niveauxListHtml += '<span class="cg-niv cg-niv-'+nv2.n+actCls2+'" onclick="cgPickNiv(this)"'
+          +' data-h="'+nv2.h+'" data-ol="'+nv2.ol+'" data-pr="'+nv2.pr+'" data-hy="'+nv2.hy+'"'
+          +' title="Cliquez pour voir les tarifs '+nivLabels2[nv2.n]+'">'+nivLabels2[nv2.n]+'</span>';
       }
       niveauxListHtml += '</div>';
     }
     var pricesHtml = '';
-    if (f.prix > 0) {
-      pricesHtml = '<div class="cg-list-prices">'
-        + '<div class="cg-lp-item"><span class="cg-lp-lbl">💻 En ligne</span><strong class="cg-lp-val" style="color:'+esc(f.colD)+'">'+fcfaJs(f.prix)+'</strong><span class="cg-lp-sub">individuel</span></div>'
+    if (tPrix2 > 0 || (f.niveaux && f.niveaux.length > 0)) {
+      pricesHtml = '<div class="cg-list-prices cg-tarif-zone">'
+        + '<div class="cg-lp-item"><span class="cg-lp-lbl">💻 En ligne</span><strong class="cg-lp-val" style="color:'+esc(f.colD)+'" data-niv-cell="ol">'+fcfaJs(tPrix2)+'</strong><span class="cg-lp-sub">individuel</span></div>'
         + '<div class="cg-lp-sep"></div>'
-        + '<div class="cg-lp-item"><span class="cg-lp-lbl">🔀 Hybride</span><strong class="cg-lp-val" style="color:'+esc(f.colD)+'">'+fcfaJs(f.hyb)+'</strong><span class="cg-lp-sub">En ligne et présentiel</span></div>'
+        + '<div class="cg-lp-item"><span class="cg-lp-lbl">🔀 Hybride</span><strong class="cg-lp-val" style="color:'+esc(f.colD)+'" data-niv-cell="hy">'+fcfaJs(tHyb2)+'</strong><span class="cg-lp-sub">En ligne et présentiel</span></div>'
         + '<div class="cg-lp-sep"></div>'
-        + '<div class="cg-lp-item"><span class="cg-lp-lbl">🏛️ Présentiel</span><strong class="cg-lp-val" style="color:'+esc(f.colD)+'">'+fcfaJs(f.pres)+'</strong><span class="cg-lp-sub">individuel</span></div>'
+        + '<div class="cg-lp-item"><span class="cg-lp-lbl">🏛️ Présentiel</span><strong class="cg-lp-val" style="color:'+esc(f.colD)+'" data-niv-cell="pr">'+fcfaJs(tPres2)+'</strong><span class="cg-lp-sub">individuel</span></div>'
         + '</div>';
     }
     return '<div class="cg-list-item" role="listitem">'
@@ -1327,6 +1345,31 @@ function showToast(msg){
     } catch(e){
       var ta=document.createElement('textarea'); ta.value=url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
       btn.textContent='✅'; setTimeout(function(){ btn.textContent='📋'; }, 2000);
+    }
+  };
+
+  /* ── Sélection de niveau : mise à jour des tarifs et durée ── */
+  window.cgPickNiv = function(pill){
+    var card = pill.closest('.cg-card, .cg-list-item');
+    if (!card) return;
+    card.querySelectorAll('.cg-niv').forEach(function(p){ p.classList.remove('cg-niv-active'); });
+    pill.classList.add('cg-niv-active');
+    var h  = parseInt(pill.getAttribute('data-h')  || 0, 10);
+    var ol = parseInt(pill.getAttribute('data-ol') || 0, 10);
+    var pr = parseInt(pill.getAttribute('data-pr') || 0, 10);
+    var hy = parseInt(pill.getAttribute('data-hy') || 0, 10);
+    if (hy <= 0 && ol > 0 && pr > 0) hy = Math.round((ol + pr) / 10000) * 5000;
+    var zone = card.querySelector('.cg-tarif-zone');
+    if (zone) {
+      zone.querySelectorAll('[data-niv-cell]').forEach(function(cell){
+        var t = cell.getAttribute('data-niv-cell');
+        if (t === 'ol' && ol > 0) cell.textContent = fcfaJs(ol);
+        if (t === 'pr' && pr > 0) cell.textContent = fcfaJs(pr);
+        if (t === 'hy' && hy > 0) cell.textContent = fcfaJs(hy);
+      });
+    }
+    if (h > 0) {
+      card.querySelectorAll('.cg-niv-dur').forEach(function(b){ b.textContent = '⏱️ ' + h + 'H'; });
     }
   };
 
@@ -1784,7 +1827,9 @@ function showToast(msg){
 .cg-dur-badge{display:inline-block;font-size:.68rem;font-weight:700;color:#1e40af;background:#eff6ff;border:1px solid #bfdbfe;padding:2px 10px;border-radius:999px;white-space:nowrap}
 .cg-niveaux{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 6px}
 .cg-niveaux-list{margin:4px 0}
-.cg-niv{display:inline-block;font-size:.65rem;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;cursor:default}
+.cg-niv{display:inline-block;font-size:.65rem;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;cursor:pointer;transition:box-shadow .15s,transform .1s}
+.cg-niv:hover{transform:scale(1.06)}
+.cg-niv-active{box-shadow:0 0 0 2px currentColor;outline:none}
 .cg-niv-debutant{background:#dcfce7;color:#166534;border:1px solid #86efac}
 .cg-niv-intermediaire{background:#dbeafe;color:#1e40af;border:1px solid #93c5fd}
 .cg-niv-expert{background:#fce7f3;color:#9d174d;border:1px solid #f9a8d4}
