@@ -18,6 +18,31 @@ function generate_tdr_html(array $f, string $nomProspect = '', array $opts = [])
     $prix       = (int)($f['price'] ?? 0);
     $slug       = (string)($f['slug'] ?? '');
     $prixPresDB = (int)($f['prix_pres'] ?? 0);
+
+    /* ── Niveau (optionnel) ──────────────────────────────────────────── */
+    $niveau_code = trim(strtolower((string)($f['niveau'] ?? '')));
+    $niveau_labels = ['debutant' => 'Débutant', 'intermediaire' => 'Intermédiaire', 'expert' => 'Expert'];
+    $niveau_label  = $niveau_labels[$niveau_code] ?? '';
+    $niveau_emojis = ['debutant' => '🟢', 'intermediaire' => '🔵', 'expert' => '🟣'];
+    $niveau_emoji  = $niveau_emojis[$niveau_code] ?? '';
+
+    /* Modules depuis la base si un niveau_id est fourni */
+    $_niveau_modules_db = [];
+    if (!empty($f['niveau_id'])) {
+        try {
+            require_once __DIR__ . '/database.php';
+            $_pdo_tdr = Database::connect();
+            $_niveau_modules_db = $_pdo_tdr->prepare(
+                "SELECT titre, contenus, duree_heures FROM formation_niveau_modules WHERE niveau_id = :nid ORDER BY ordre ASC"
+            );
+            $_niveau_modules_db->execute([':nid' => (int)$f['niveau_id']]);
+            $_niveau_modules_db = $_niveau_modules_db->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Throwable $_e) { /* silencieux */ }
+    }
+    /* Prérequis et objectifs niveau si fournis */
+    $prerequis_niveau  = trim((string)($f['prerequis_niveau'] ?? ''));
+    $objectifs_niveau  = trim((string)($f['objectifs_niveau'] ?? ''));
+    $public_niveau     = trim((string)($f['public_niveau'] ?? ''));
     $dureeDB    = (string)($f['duree'] ?? '');
 
     /* Options inscrit */
@@ -128,9 +153,27 @@ function generate_tdr_html(array $f, string $nomProspect = '', array $opts = [])
     $contexte = str_replace('{NOM}', $nomCourt, $data['contexte']);
     $objGen   = str_replace('{NOM}', $nomCourt, $data['objectif_general']);
     $objSpec  = $data['objectifs_specifiques'];
-    $public   = $data['public_cible'];
-    $prereqs  = $data['prerequis'];
-    $modules  = tdr_modules($nom, $cat, $heures, $desc);
+    $public   = $public_niveau !== '' ? $public_niveau : $data['public_cible'];
+    $prereqs  = $prerequis_niveau !== '' ? $prerequis_niveau : $data['prerequis'];
+    /* Modules : priorité aux modules DB du niveau, sinon génération auto */
+    if (!empty($_niveau_modules_db)) {
+        $modules = array_map(fn($m) => [
+            'titre'    => $m['titre'],
+            'contenus' => $m['contenus'] ?? '',
+            'duree'    => (int)$m['duree_heures'],
+        ], $_niveau_modules_db);
+    } else {
+        $modules = tdr_modules($nom, $cat, $heures, $desc);
+    }
+    /* Surcharger objectifs spécifiques avec ceux du niveau si dispo */
+    if ($objectifs_niveau !== '') {
+        $objSpec = array_map('trim', explode("\n", $objectifs_niveau));
+        $objSpec = array_filter($objSpec);
+    }
+    /* Ajouter le niveau au titre affiché si applicable */
+    if ($niveau_label !== '') {
+        $nom = $nom . ' — Niveau ' . $niveau_label;
+    }
     $methodo  = $data['methodologie'];
     $debouches= str_replace('{NOM}', $nomCourt, $data['debouches']);
 
