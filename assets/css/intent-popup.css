@@ -1,0 +1,30 @@
+#wa-popup{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  z-index:9999;
+}
+.wa-box{
+  background:#ffffff;
+  border-radius:14px;
+  padding:16px;
+  width:260px;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+.wa-box a{
+  display:block;
+  margin-top:10px;
+  background:#22c55e;
+  color:#000;
+  text-align:center;
+  padding:10px;
+  border-radius:999px;
+  font-weight:800;
+  text-decoration:none;
+}
+#wa-close{
+  position:absolute;
+  top:8px;
+  right:12px;
+  cursor:pointer;
+}

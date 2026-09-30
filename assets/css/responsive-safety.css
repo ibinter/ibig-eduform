@@ -1,0 +1,40 @@
+/* =========================================================
+   RESPONSIVE SAFETY NET — IBIG EDUFORM
+   Garde-fous globaux : empêchent les débordements horizontaux
+   et rendent médias/tableaux fluides. N'altère pas le design.
+   ========================================================= */
+
+/* Empêche le défilement horizontal parasite.
+   On n'agit que sur l'axe X : le header sticky vertical reste intact. */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Médias toujours fluides */
+img, svg, video, canvas, iframe, embed, object {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Les mots/URL très longs ne cassent plus la mise en page */
+p, li, h1, h2, h3, h4, a, span, td, th, .cms-content {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* Blocs de code lisibles sur mobile */
+pre, code {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Tableaux : ne débordent pas ; sinon défilement interne propre.
+   (Les conteneurs .table-wrap existants conservent leur scroll.) */
+table { max-width: 100%; }
+
+/* Très petits écrans : on resserre légèrement la typo de base
+   pour éviter les textes trop à l'étroit (< iPhone SE). */
+@media (max-width: 380px) {
+  html { font-size: 94%; }
+}

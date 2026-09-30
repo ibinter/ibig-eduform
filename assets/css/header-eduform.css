@@ -1,0 +1,842 @@
+/* =========================================
+   HEADER EDUFORM — VERSION SAINE & STABLE
+========================================= */
+
+/* ===== HEADER ===== */
+.header-eduform{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 10000;
+  background: linear-gradient(135deg,#0b3c5d,#1e40af);
+  box-shadow: 0 8px 30px rgba(2,6,23,.25);
+  font-family: "Inter","Poppins",system-ui,sans-serif;
+}
+
+/* Espace sous header */
+body{
+  padding-top: 78px;
+}
+
+/* ===== NAV ===== */
+.nav-eduform{
+  max-width: 1400px;
+  margin: auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* ===== LOGO ===== */
+.logo-eduform img{
+  height: 48px;
+  display: block;
+}
+
+/* ===== MENU DESKTOP ===== */
+.menu-eduform{
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+
+.menu-eduform a,
+.menu-more button{
+  color: #fff;
+  font-size: 14.8px;
+  font-weight: 700;
+  text-decoration: none;
+  letter-spacing: .15px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+}
+
+.menu-eduform a::after{
+  content:'';
+  position:absolute;
+  left:0;
+  bottom:-6px;
+  width:0;
+  height:2px;
+  background:#f5a623;
+  transition:.3s ease;
+}
+
+.menu-eduform a:hover::after{
+  width:100%;
+}
+
+/* ===== MENU PLUS ===== */
+.menu-more{
+  position: relative;
+}
+
+.menu-more-dropdown{
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 240px;
+  background: #0b3c5d;
+  border-radius: 12px;
+  padding: 10px 0;
+  box-shadow: 0 18px 35px rgba(0,0,0,.45);
+  display: none;
+}
+
+.menu-more:hover .menu-more-dropdown{
+  display: block;
+}
+
+.menu-more-dropdown a{
+  display: block;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+}
+
+.menu-more-dropdown a:hover{
+  background: rgba(255,255,255,.08);
+}
+
+/* ===== CTA DESKTOP ===== */
+.cta-eduform a{
+  background: #f5a623;
+  color: #000;
+  font-size: 14.6px;
+  font-weight: 800;
+  padding: 10px 22px;
+  border-radius: 14px;
+  text-decoration: none;
+  box-shadow: 0 8px 20px rgba(245,166,35,.35);
+}
+
+.cta-eduform a:hover{
+  background: #ffd166;
+}
+
+/* ===== BURGER ===== */
+.burger-eduform{
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.burger-eduform span{
+  display: block;
+  width: 26px;
+  height: 3px;
+  background: #fff;
+  margin: 5px 0;
+  border-radius: 2px;
+}
+
+/* =========================================
+   MENU MOBILE
+========================================= */
+
+.menu-mobile-eduform{
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: linear-gradient(180deg,#081a33,#0b3c5d);
+  padding: 90px 22px 140px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  transform: translateX(100%);
+  transition: transform .35s ease;
+
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.menu-mobile-eduform.open{
+  transform: translateX(0);
+}
+
+.menu-mobile-eduform a{
+  color: #fff;
+  font-size: 15.5px;
+  font-weight: 600;
+  padding: 10px 0;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+/* Séparateur */
+.mobile-divider{
+  height:1px;
+  background:rgba(255,255,255,.2);
+  margin:14px 0;
+}
+
+/* CTA MOBILE */
+.menu-mobile-eduform .mobile-cta{
+  margin-top: 24px;
+  background: #f5a623;
+  color: #000;
+  padding: 14px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 900;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(245,166,35,.45);
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px){
+
+  .menu-eduform,
+  .cta-eduform{
+    display: none;
+  }
+
+  .burger-eduform{
+    display: block;
+  }
+}
+
+@media (max-width: 900px){
+  .menu-mobile-eduform{
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    background: linear-gradient(180deg,#081a33,#0b3c5d);
+    padding: 90px 22px 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    transform: translateX(100%);
+    transition: transform .35s ease;
+
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .menu-mobile-eduform.open{
+    transform: translateX(0);
+  }
+
+  .burger-eduform{
+    display:block;
+    position: relative;
+    z-index: 10002;
+  }
+
+  .menu-eduform,
+  .cta-eduform{ display:none; }
+}
+
+/* =====================================
+   BURGER → CROIX (ANIMATION)
+===================================== */
+
+.burger-eduform{
+  width: 32px;
+  height: 26px;
+  position: relative;
+}
+
+.burger-eduform span{
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #fff;
+  border-radius: 3px;
+  transition: transform .35s ease, opacity .25s ease;
+}
+
+.burger-eduform span:nth-child(1){ top: 0; }
+.burger-eduform span:nth-child(2){ top: 11px; }
+.burger-eduform span:nth-child(3){ bottom: 0; }
+
+/* ÉTAT OUVERT → CROIX */
+.burger-eduform.active span:nth-child(1){
+  transform: translateY(11px) rotate(45deg);
+}
+
+.burger-eduform.active span:nth-child(2){
+  opacity: 0;
+}
+
+.burger-eduform.active span:nth-child(3){
+  transform: translateY(-11px) rotate(-45deg);
+}
+
+/* =====================================
+   BURGER → CROIX (VERSION FONCTIONNELLE)
+===================================== */
+
+.burger-eduform{
+  width: 32px;
+  height: 24px;
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* LIGNES */
+.burger-eduform span{
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #fff;
+  border-radius: 3px;
+  transition: transform .35s ease, opacity .25s ease;
+}
+
+/* Positions initiales */
+.burger-eduform span:nth-child(1){ top: 0; }
+.burger-eduform span:nth-child(2){ top: 10px; }
+.burger-eduform span:nth-child(3){ top: 20px; }
+
+/* ÉTAT OUVERT → CROIX */
+.burger-eduform.active span:nth-child(1){
+  transform: translateY(10px) rotate(45deg);
+}
+
+.burger-eduform.active span:nth-child(2){
+  opacity: 0;
+}
+
+.burger-eduform.active span:nth-child(3){
+  transform: translateY(-10px) rotate(-45deg);
+}
+
+/* =====================================================
+   HEADER IBIG EDUFORM — PREMIUM FIX
+===================================================== */
+
+.header-eduform{
+  position:sticky;
+  top:0;
+  z-index:9999;
+  background:#ffffff;
+  box-shadow:0 8px 30px rgba(0,0,0,.06);
+}
+
+.header-inner{
+  max-width:1280px;
+  margin:auto;
+  padding:14px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+}
+
+/* LOGO */
+.logo-eduform img{
+  height:46px;
+  width:auto;
+  display:block;
+}
+
+/* =========================
+   MENU DESKTOP
+========================= */
+.menu-eduform{
+  display:flex;
+  align-items:center;
+  gap:22px;
+}
+
+.menu-eduform a{
+  font-size:14.5px;
+  font-weight:600;
+  color:#0f172a;
+  text-decoration:none;
+  position:relative;
+  padding:6px 0;
+}
+
+.menu-eduform a::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-4px;
+  width:0;
+  height:2px;
+  background:#0b5ed7;
+  transition:.25s;
+}
+
+.menu-eduform a:hover::after{
+  width:100%;
+}
+
+/* =========================
+   MENU PLUS
+========================= */
+.menu-more{
+  position:relative;
+}
+
+.menu-more > button{
+  background:none;
+  border:0;
+  font-size:14.5px;
+  font-weight:600;
+  color:#0f172a;
+  cursor:pointer;
+  padding:6px 0;
+}
+
+.menu-more-dropdown{
+  position:absolute;
+  top:130%;
+  right:0;
+  min-width:240px;
+  background:#ffffff;
+  border-radius:14px;
+  box-shadow:0 20px 40px rgba(0,0,0,.15);
+  padding:10px;
+  display:none;
+}
+
+.menu-more:hover .menu-more-dropdown{
+  display:block;
+}
+
+.menu-more-dropdown a{
+  display:block;
+  padding:10px 14px;
+  border-radius:10px;
+  font-size:14px;
+  font-weight:500;
+  color:#0f172a;
+  text-decoration:none;
+}
+
+.menu-more-dropdown a:hover{
+  background:#f1f5f9;
+}
+
+.menu-more-dropdown hr{
+  border:0;
+  border-top:1px solid #e5e7eb;
+  margin:8px 0;
+}
+
+/* =========================
+   CTA DESKTOP
+========================= */
+.cta-eduform a{
+  background:#0b5ed7;
+  color:#fff;
+  padding:12px 18px;
+  border-radius:14px;
+  font-weight:700;
+  font-size:14px;
+  text-decoration:none;
+  box-shadow:0 10px 25px rgba(11,94,215,.35);
+  transition:.25s;
+}
+
+.cta-eduform a:hover{
+  transform:translateY(-2px);
+  box-shadow:0 14px 30px rgba(11,94,215,.45);
+}
+
+/* =========================
+   BURGER MOBILE
+========================= */
+.burger-eduform{
+  display:none;
+  flex-direction:column;
+  gap:6px;
+  background:none;
+  border:0;
+  cursor:pointer;
+}
+
+.burger-eduform span{
+  width:26px;
+  height:3px;
+  background:#0f172a;
+  border-radius:3px;
+}
+
+/* =========================
+   MENU MOBILE
+========================= */
+.menu-mobile-eduform{
+  position:fixed;
+  inset:0;
+  background:#ffffff;
+  padding:90px 26px 30px;
+  display:none;
+  flex-direction:column;
+  gap:16px;
+  z-index:9998;
+}
+
+.menu-mobile-eduform a{
+  font-size:16px;
+  font-weight:600;
+  color:#0f172a;
+  text-decoration:none;
+}
+
+.menu-mobile-eduform hr{
+  border:0;
+  border-top:1px solid #e5e7eb;
+  margin:14px 0;
+}
+
+.menu-mobile-eduform .mobile-cta{
+  margin-top:20px;
+  background:#0b5ed7;
+  color:#fff;
+  text-align:center;
+  padding:14px;
+  border-radius:14px;
+  font-weight:800;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width:1024px){
+
+  .menu-eduform,
+  .cta-eduform{
+    display:none;
+  }
+
+  .burger-eduform{
+    display:flex;
+  }
+
+  body.menu-open .menu-mobile-eduform{
+    display:flex;
+  }
+
+  body.menu-open{
+    overflow:hidden;
+  }
+}
+
+/* ===============================
+   HEADER FIX – ANTI COMPRESSION
+=============================== */
+
+/* Header principal */
+.header-eduform{
+  background:#ffffff;
+  border-bottom:1px solid #e5e7eb;
+}
+
+/* Conteneur interne */
+.header-inner{
+  max-width:1400px;
+  margin:auto;
+  padding:14px 24px;            /* ðÂÂ¥ ESSENTIEL */
+  display:flex;
+  align-items:center;           /* ðÂÂ¥ CENTRAGE VERTICAL */
+  justify-content:space-between;
+  min-height:78px;              /* ðÂÂ¥ HAUTEUR STABLE */
+}
+
+/* Logo */
+.logo-eduform img{
+  height:48px;                  /* ðÂÂ¥ TAILLE LOGO FIXE */
+  width:auto;
+  display:block;
+}
+
+/* Menu desktop */
+.menu-eduform{
+  display:flex;
+  align-items:center;
+  gap:26px;
+}
+
+.menu-eduform a{
+  font-size:14.5px;
+  font-weight:600;
+  color:#0f172a;
+  text-decoration:none;
+  line-height:1;
+}
+
+/* Bouton PLUS */
+.menu-more > button{
+  background:none;
+  border:none;
+  font-size:14.5px;
+  font-weight:600;
+  cursor:pointer;
+  padding:6px 4px;
+}
+
+/* Dropdown PLUS */
+.menu-more{
+  position:relative;
+}
+.menu-more-dropdown{
+  position:absolute;
+  top:130%;
+  right:0;
+  background:#fff;
+  min-width:240px;
+  border-radius:14px;
+  box-shadow:0 18px 40px rgba(0,0,0,.15);
+  padding:14px;
+  display:none;
+  z-index:1000;
+}
+.menu-more:hover .menu-more-dropdown{
+  display:block;
+}
+.menu-more-dropdown a{
+  display:block;
+  padding:10px 12px;
+  border-radius:10px;
+  font-size:14px;
+}
+.menu-more-dropdown a:hover{
+  background:#f1f5f9;
+}
+
+/* CTA */
+.cta-eduform a{
+  background:#ef4444;
+  color:#fff;
+  padding:12px 18px;
+  border-radius:14px;
+  font-weight:800;
+  font-size:14px;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+}
+
+/* Burger */
+.burger-eduform{
+  display:none;
+}
+
+/* ===============================
+   MOBILE
+=============================== */
+@media (max-width:1024px){
+
+  .menu-eduform,
+  .cta-eduform{
+    display:none;
+  }
+
+  .burger-eduform{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    background:none;
+    border:none;
+    cursor:pointer;
+  }
+
+  .burger-eduform span{
+    width:26px;
+    height:3px;
+    background:#0f172a;
+    border-radius:3px;
+    transition:.3s;
+  }
+}
+
+/* ===============================
+   RESET ESPACES HAUT DE PAGE
+=============================== */
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Empêcher tout décalage vertical */
+body {
+  line-height: 1.4;
+}
+
+/* Top bar collée en haut */
+.topbar-eduform,
+.topbar-scroll,
+body > div:first-child {
+  margin: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Header collé à la top bar */
+.header-eduform {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.topbar-eduform{
+  height:32px;
+  margin:0;
+  padding:0;
+  display:flex;
+  align-items:center;
+  background:#081a33;
+  border-bottom:1px solid rgba(255,255,255,.15);
+}
+
+/* ===============================
+   HEADER MOBILE — ALIGNEMENT
+=============================== */
+@media (max-width: 1024px){
+
+  .header-inner{
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* LOGO GAUCHE / BURGER DROITE */
+  }
+
+  /* Logo bien à gauche */
+  .logo-eduform{
+    order: 1;
+    margin-right: auto;
+  }
+
+  /* Burger bien à droite */
+  .burger-eduform{
+    order: 3;
+    margin-left: auto;
+  }
+
+  /* Masquer éléments desktop */
+  .menu-eduform,
+  .cta-eduform{
+    display: none !important;
+  }
+}
+
+@media (max-width: 1024px){
+  .header-inner{
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+  }
+
+  .logo-eduform{ grid-column: 1; }
+  .burger-eduform{ grid-column: 3; }
+}
+
+/* ===============================
+   MENU MOBILE — VERSION STABLE
+=============================== */
+
+.menu-mobile-eduform{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+
+  background: #ffffff;
+  z-index: 9999;
+
+  padding: 90px 22px 100px; /* espace sous widget chat mobile */
+
+  display: flex;               /* â JAMAIS display:none */
+  flex-direction: column;
+  gap: 16px;
+
+  transform: translateX(100%);
+  transition: transform .35s ease;
+}
+
+/* MENU OUVERT */
+.menu-mobile-eduform.open{
+  transform: translateX(0);
+}
+
+/* LIENS */
+.menu-mobile-eduform a{
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* CTA MOBILE */
+.menu-mobile-eduform .mobile-cta{
+  margin-top: 20px;
+  background: #ef4444;
+  color: #fff !important;
+  padding: 14px;
+  border-radius: 14px;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* HR */
+.menu-mobile-eduform hr{
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 12px 0;
+}
+
+/* BURGER AU-DESSUS */
+.burger-eduform{
+  z-index: 10000;
+}
+
+.has-dropdown {
+  position: relative;
+}
+
+/* caché par défaut */
+.dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 240px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.18);
+  padding: 12px 0;
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
+  transition: all .25s ease;
+  z-index: 99999;
+}
+
+/* ouvert via JS */
+.has-dropdown.open .dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* bouton */
+.dropdown-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

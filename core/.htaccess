@@ -1,0 +1,9 @@
+# =====================================================
+# CORE — IBIG EDUFORM (VERSION STABLE)
+# =====================================================
+
+Options -Indexes
+AddDefaultCharset UTF-8
+
+# Empêcher accès direct au dossier core
+Require all denied

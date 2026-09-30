@@ -1,0 +1,603 @@
+/* =====================================================
+   IBIG EDUFORM — HOME CSS UNIQUE (INSTITUT)
+   Auteur: IBIG
+   Objectif: Lisibilité, crédibilité, cohérence
+===================================================== */
+
+/* ---------- VARIABLES (IDENTITÉ) ---------- */
+:root{
+  --blue-main:#0B4AA6;
+  --blue-dark:#0F2742;
+  --red-main:#FF2E2E;
+  --text-dark:#0f172a;
+  --text-muted:#475569;
+  --bg-light:#f8fafc;
+  --bg-white:#ffffff;
+  --shadow-soft:0 25px 70px rgba(0,0,0,.08);
+}
+
+/* ---------- BASE ---------- */
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:var(--bg-light);
+  color:var(--text-dark);
+}
+a{text-decoration:none}
+img{max-width:100%;display:block}
+
+/* =====================================================
+   HERO — IDENTITÉ & POSITIONNEMENT
+===================================================== */
+.hero-eduform{
+  position:relative;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  overflow:hidden;
+  color:#ffffff;
+  background:var(--blue-dark);
+}
+.hero-bg{
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at top,#1e3a8a,var(--blue-dark)),
+    url("../images/hero/eduform-premium.jpg") center/cover no-repeat;
+  z-index:1;
+}
+.hero-overlay{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(
+    120deg,
+    rgba(15,39,66,.95),
+    rgba(15,39,66,.75),
+    rgba(15,39,66,.55)
+  );
+  z-index:2;
+}
+.hero-inner{
+  position:relative;
+  z-index:3;
+  max-width:1200px;
+  margin:0 auto;
+  padding:140px 24px 90px;
+}
+.hero-kicker{
+  text-transform:uppercase;
+  letter-spacing:.18em;
+  font-size:.8rem;
+  font-weight:700;
+  color:#e5e7eb;
+  margin-bottom:24px;
+}
+.hero-eduform h1{
+  font-size:3.6rem;
+  font-weight:900;
+  line-height:1.1;
+  max-width:980px;
+  margin-bottom:28px;
+}
+.hero-eduform h1 span{color:var(--red-main)}
+.hero-lead{
+  max-width:920px;
+  font-size:1.2rem;
+  line-height:1.9;
+  color:#e5e7eb;
+  margin-bottom:42px;
+}
+
+/* ---------- ACTIONS ---------- */
+.hero-actions{
+  display:flex;
+  gap:18px;
+  flex-wrap:wrap;
+}
+.btn-primary{
+  background:var(--red-main);
+  color:#ffffff;
+  padding:16px 36px;
+  border-radius:6px;
+  font-weight:900;
+}
+.btn-outline{
+  border:2px solid #ffffff;
+  color:#ffffff;
+  padding:16px 36px;
+  border-radius:6px;
+  font-weight:900;
+}
+
+/* ---------- METRICS ---------- */
+.hero-metrics{
+  margin-top:70px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:34px;
+}
+.hero-metrics strong{
+  display:block;
+  font-size:2.8rem;
+  font-weight:900;
+  color:#ffffff;
+}
+.hero-metrics span{
+  font-size:.95rem;
+  color:#cbd5e1;
+}
+
+/* =====================================================
+   INTRO INSTITUTIONNELLE
+===================================================== */
+.intro{
+  max-width:1200px;
+  margin:120px auto;
+  padding:0 24px;
+}
+.intro h2{
+  font-size:2.6rem;
+  font-weight:900;
+  margin-bottom:28px;
+}
+.intro p{
+  max-width:980px;
+  font-size:1.12rem;
+  line-height:1.9;
+  color:var(--text-muted);
+  margin-bottom:22px;
+}
+
+/* =====================================================
+   SECTIONS STRUCTURANTES
+===================================================== */
+.section-eduform{
+  background:var(--bg-white);
+  padding:120px 20px;
+}
+.section-eduform.alt{background:#f1f5f9}
+.section-eduform .container{
+  max-width:1200px;
+  margin:0 auto;
+}
+.section-eduform h2{
+  font-size:2.7rem;
+  font-weight:900;
+  margin-bottom:28px;
+}
+.section-eduform h3{
+  font-size:1.5rem;
+  margin-bottom:12px;
+  color:var(--blue-main);
+}
+.section-eduform p{
+  max-width:1000px;
+  font-size:1.1rem;
+  line-height:1.9;
+  color:var(--text-muted);
+  margin-bottom:22px;
+}
+
+/* ---------- LISTES ---------- */
+.eduform-list{padding-left:22px;margin-top:22px}
+.eduform-list li{
+  margin-bottom:12px;
+  line-height:1.7;
+}
+
+/* ---------- VALEURS ---------- */
+.values-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:36px;
+  margin-top:50px;
+}
+.value-box{
+  background:var(--bg-white);
+  padding:36px;
+  border-left:6px solid var(--red-main);
+  box-shadow:var(--shadow-soft);
+}
+
+/* ---------- PÉDAGOGIE ---------- */
+.pedago-steps{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:36px;
+  margin-top:50px;
+}
+.step{
+  background:var(--bg-white);
+  padding:40px;
+  border-radius:12px;
+  box-shadow:var(--shadow-soft);
+  position:relative;
+}
+.step span{
+  position:absolute;
+  top:-14px;
+  left:24px;
+  background:var(--red-main);
+  color:#ffffff;
+  font-weight:900;
+  padding:6px 12px;
+  border-radius:4px;
+}
+
+/* =====================================================
+   CTA FINAL
+===================================================== */
+.cta-final{
+  margin:140px auto;
+  max-width:1200px;
+  padding:110px 30px;
+  background:linear-gradient(135deg,var(--blue-dark),#020617);
+  color:#ffffff;
+  text-align:center;
+  border-radius:22px;
+}
+.cta-final h2{
+  font-size:3rem;
+  font-weight:900;
+  margin-bottom:24px;
+}
+.cta-final p{
+  max-width:900px;
+  margin:0 auto 34px;
+  font-size:1.15rem;
+}
+.cta-final a{
+  display:inline-block;
+  background:var(--red-main);
+  color:#ffffff;
+  padding:20px 44px;
+  border-radius:6px;
+  font-weight:900;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+@media(max-width:900px){
+  .hero-eduform h1{font-size:2.4rem}
+  .section-eduform h2{font-size:2.1rem}
+  .cta-final h2{font-size:2.3rem}
+}
+
+:root{
+  --blue-dark:#020617;
+  --blue-main:#0b1f3a;
+  --blue-soft:#0f2a4d;
+
+  --red-main:#ff2d2d;
+  --red-soft:#ff4d4d;
+
+  --gray-bg:#f5f7fb;
+  --text-dark:#0f172a;
+}
+
+.hero-eduform{
+  position:relative;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  background:
+    radial-gradient(circle at top,#102c4f,#020617);
+  color:#ffffff;
+}
+
+.hero-kicker{
+  text-transform:uppercase;
+  letter-spacing:.35em;
+  font-size:.72rem;
+  font-weight:700;
+  color:#cbd5f5;
+  margin-bottom:22px;
+}
+
+.hero-eduform h1{
+  font-size:4.8rem;
+  font-weight:900;
+  line-height:1.05;
+  letter-spacing:-1.5px;
+  margin-bottom:30px;
+}
+
+.hero-eduform h1 span{
+  display:block;
+  color:var(--red-main);
+}
+
+.hero-lead{
+  max-width:900px;
+  font-size:1.25rem;
+  line-height:1.9;
+  color:#e5e7eb;
+  margin-bottom:45px;
+}
+
+.section-light{
+  background:#ffffff;
+  padding:120px 20px;
+}
+
+.section-gray{
+  background:var(--gray-bg);
+  padding:120px 20px;
+}
+
+.section-dark{
+  background:linear-gradient(135deg,#020617,#0b1f3a);
+  color:#ffffff;
+  padding:120px 20px;
+}
+
+.card-eduform{
+  background:#ffffff;
+  border-left:5px solid var(--red-main);
+  border-radius:8px;
+  padding:36px 32px;
+  box-shadow:0 25px 60px rgba(0,0,0,.08);
+  transition:.3s;
+}
+
+.card-eduform:hover{
+  transform:translateY(-6px);
+  box-shadow:0 35px 90px rgba(0,0,0,.12);
+}
+
+.card-eduform h3{
+  font-size:1.25rem;
+  font-weight:800;
+  margin-bottom:14px;
+  color:var(--text-dark);
+}
+
+.card-eduform p{
+  line-height:1.8;
+  font-size:.98rem;
+}
+
+.step-number{
+  display:inline-block;
+  background:var(--red-main);
+  color:#ffffff;
+  font-weight:900;
+  font-size:.85rem;
+  padding:6px 10px;
+  border-radius:4px;
+  margin-bottom:18px;
+}
+
+.cta-final{
+  background:linear-gradient(135deg,#020617,#102c4f);
+  color:#ffffff;
+  padding:130px 30px;
+  border-radius:40px;
+  text-align:center;
+}
+
+.cta-final h2{
+  font-size:3.2rem;
+  font-weight:900;
+  margin-bottom:25px;
+}
+
+.cta-final p{
+  font-size:1.2rem;
+  opacity:.95;
+  margin-bottom:40px;
+}
+
+.cta-final a{
+  background:var(--red-main);
+  color:#ffffff;
+  padding:20px 46px;
+  border-radius:8px;
+  font-weight:900;
+  text-decoration:none;
+}
+
+@media(max-width:900px){
+  .hero-eduform h1{
+    font-size:2.8rem;
+  }
+
+  .cta-final h2{
+    font-size:2.2rem;
+  }
+}
+
+/* ===============================
+   INTRO INSTITUTIONNELLE
+================================ */
+
+.intro{
+  max-width:1050px;
+  margin:140px auto;
+  padding:0 20px;
+}
+
+.intro h2{
+  font-size:3.1rem;
+  font-weight:900;
+  line-height:1.15;
+  margin-bottom:35px;
+  color:var(--text-dark);
+}
+
+.intro p{
+  font-size:1.12rem;
+  line-height:1.9;
+  color:#334155;
+  max-width:900px;
+  margin-bottom:26px;
+}
+
+.intro p strong{
+  color:var(--red-main);
+  font-weight:800;
+}
+
+.section-eduform{
+  background:#ffffff;
+  padding:140px 20px;
+}
+
+.section-eduform .container{
+  max-width:1050px;
+  margin:0 auto;
+}
+
+.section-eduform h2{
+  font-size:3rem;
+  font-weight:900;
+  margin-bottom:30px;
+  color:var(--text-dark);
+}
+
+.section-eduform p{
+  font-size:1.15rem;
+  line-height:1.9;
+  color:#334155;
+  max-width:900px;
+}
+
+.section-eduform.alt{
+  background:var(--gray-bg);
+}
+
+.eduform-list{
+  list-style:none;
+  padding:0;
+  margin-top:40px;
+  display:grid;
+  gap:18px;
+}
+
+.eduform-list li{
+  position:relative;
+  padding-left:30px;
+  font-size:1.05rem;
+  line-height:1.8;
+  color:#1e293b;
+}
+
+.eduform-list li::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:10px;
+  width:10px;
+  height:10px;
+  background:var(--red-main);
+  border-radius:2px;
+}
+
+.values-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:40px;
+  margin-top:60px;
+}
+
+.value-box{
+  background:#ffffff;
+  border-left:5px solid var(--red-main);
+  border-radius:8px;
+  padding:36px 32px;
+  box-shadow:0 25px 60px rgba(0,0,0,.08);
+}
+
+.value-box h3{
+  font-size:1.3rem;
+  font-weight:800;
+  margin-bottom:14px;
+  color:var(--text-dark);
+}
+
+.value-box p{
+  font-size:1rem;
+  line-height:1.7;
+  color:#334155;
+}
+
+.pedago-steps{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:40px;
+  margin-top:60px;
+}
+
+.step{
+  background:#ffffff;
+  border-radius:10px;
+  padding:40px 34px;
+  box-shadow:0 30px 80px rgba(0,0,0,.08);
+  position:relative;
+}
+
+.step span{
+  position:absolute;
+  top:-16px;
+  left:30px;
+  background:var(--red-main);
+  color:#ffffff;
+  font-weight:900;
+  font-size:.85rem;
+  padding:6px 10px;
+  border-radius:4px;
+}
+
+.step h3{
+  font-size:1.25rem;
+  font-weight:800;
+  margin-bottom:12px;
+}
+
+.step p{
+  line-height:1.7;
+  color:#334155;
+}
+
+.cta-final{
+  margin:140px auto;
+  background:linear-gradient(135deg,#020617,#0b1f3a);
+  color:#ffffff;
+  padding:140px 30px;
+  text-align:center;
+}
+
+.cta-final h2{
+  font-size:3.3rem;
+  font-weight:900;
+  margin-bottom:25px;
+}
+
+.cta-final p{
+  font-size:1.2rem;
+  opacity:.95;
+  margin-bottom:40px;
+}
+
+.cta-final a{
+  background:var(--red-main);
+  color:#ffffff;
+  padding:20px 46px;
+  border-radius:8px;
+  font-weight:900;
+  text-decoration:none;
+}
+
+@media(max-width:900px){
+  .intro h2,
+  .section-eduform h2,
+  .cta-final h2{
+    font-size:2.2rem;
+  }
+
+  .hero-eduform h1{
+    font-size:2.8rem;
+  }
+}

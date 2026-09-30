@@ -1,0 +1,45 @@
+# =============================================
+# IBIG EDUFORM — .gitignore
+# =============================================
+
+# ── Secrets & credentials (JAMAIS sur GitHub) ──
+core/secrets.php
+core/mail.php
+includes/ibig-affiliate.php
+test_tdr_mail.php
+.env
+.env.*
+*.env
+
+# ── Composer ──
+vendor/
+composer.lock
+
+# ── Uploads utilisateurs ──
+uploads/
+!uploads/.gitkeep
+
+# ── TDR copies PDF ──
+uploads/tdr-copies/
+
+# ── Logs & cache ──
+*.log
+tmp/
+temp/
+cache/
+
+# ── Fichiers système OS & Windows ──
+.DS_Store
+Thumbs.db
+desktop.ini
+nul
+NUL
+
+# ── IDE ──
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── PHP temp ──
+*.tmp

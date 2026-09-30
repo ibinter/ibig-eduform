@@ -1,0 +1,93 @@
+# =========================================================
+# BYPASS BOT-CHECK (Anubis/LWS) — endpoints PDF & outils internes
+# =========================================================
+<FilesMatch "^(tdr-local-pdf|tdr|calendrier-pdf|tdr-local|devis-export-pdf|devis-redownload|devis-liste|devis-migrate)\.php$">
+  Header set X-Anubis-Allow "1"
+  Header set Cache-Control "no-store, no-cache"
+</FilesMatch>
+
+
+# =========================================================
+# SÉCURITÉ — fichiers sensibles
+# =========================================================
+<FilesMatch "(^\.env|\.env\..*|secrets\.php|composer\.(json|lock)|\.zip|\.sql|\.log)$">
+  Require all denied
+</FilesMatch>
+
+# =========================================================
+# COMPRESSION GZIP
+# =========================================================
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+  AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+  AddOutputFilterByType DEFLATE application/json application/xml image/svg+xml
+</IfModule>
+
+# =========================================================
+# CACHE NAVIGATEUR
+# =========================================================
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css                "access plus 1 month"
+  ExpiresByType application/javascript  "access plus 1 month"
+  ExpiresByType image/jpeg              "access plus 1 year"
+  ExpiresByType image/png               "access plus 1 year"
+  ExpiresByType image/webp              "access plus 1 year"
+  ExpiresByType image/svg+xml           "access plus 1 year"
+  ExpiresByType image/x-icon            "access plus 1 year"
+  ExpiresByType application/pdf         "access plus 1 month"
+</IfModule>
+
+RewriteEngine On
+RewriteBase /
+
+# =========================================================
+# VÉRIFICATION DEVIS QR CODE (page publique)
+# =========================================================
+RewriteRule ^verify/devis/([a-f0-9]{64})/?$ verify/devis/index.php [L,QSA]
+RewriteRule ^verify/devis/?$ verify/devis/index.php [L,QSA]
+
+# =========================================================
+# SITEMAP DYNAMIQUE
+# =========================================================
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+# =========================================================
+# FORMATIONS PAR MOIS (SEO)
+# =========================================================
+RewriteRule ^formations/fevrier-2026/?$ /formations.php?mois=2 [L,QSA,NC]
+
+# =========================================================
+# BLOG
+# =========================================================
+RewriteRule ^blog/?$ blog.php [L,QSA]
+RewriteRule ^blog/categorie/([a-zA-Z0-9\-]+)/?$ blog-categorie.php?slug=$1 [L,QSA]
+RewriteRule ^blog/([a-zA-Z0-9\-]+)/?$ article.php?slug=$1 [L,QSA]
+
+# =========================================================
+# OFFRES EMPLOI (SLUG SEO)
+# =========================================================
+RewriteRule ^offre/([a-z0-9\-]+)/?$ offre.php?slug=$1 [L,QSA]
+
+# =========================================================
+# FORMATION PAR SLUG
+# =========================================================
+RewriteRule ^formation/([a-z0-9\-]+)/?$ formation.php?slug=$1 [L,QSA]
+
+# =========================================================
+# FORMATION PAR ID
+# =========================================================
+RewriteRule ^formation/([0-9]+)/?$ formation.php?id=$1 [L,QSA]
+
+# =========================================================
+# PREINSCRIPTION
+# =========================================================
+RewriteRule ^preinscription/([0-9]+)/?$ preinscription.php?formation=$1 [L,QSA]
+
+# =========================================================
+# SUPPRIMER .php
+# =========================================================
+RewriteCond %{REQUEST_URI} !^/formations/
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+)$ $1.php [L]

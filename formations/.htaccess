@@ -1,0 +1,7 @@
+RewriteEngine On
+
+# /formations → catalogue
+RewriteRule ^$ index.php [L,QSA]
+
+# /formations/slug → landing (ex: fevrier-2026)
+RewriteRule ^([a-z0-9-]+)/?$ landing.php?slug=$1 [L,QSA,NC]

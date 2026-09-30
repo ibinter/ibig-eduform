@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Zones privées — ne pas indexer
+Disallow: /admin/
+Disallow: /candidat/
+Disallow: /entreprise/
+Disallow: /core/
+Disallow: /includes/
+Disallow: /partials/
+Disallow: /track.php
+
+# Paramètres inutiles pour le SEO
+Disallow: /*?page=*&q=*
+Disallow: /catalogue-formations.php?page=*&cat=*&q=*
+
+Sitemap: https://ibig-eduform.com/sitemap.xml

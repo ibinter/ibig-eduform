@@ -1,0 +1,20 @@
+@media(max-width:900px){
+
+  .sidebar{
+    position:fixed;
+    left:-260px;
+    top:0;
+    height:100%;
+    z-index:1200;
+    transition:left .25s ease;
+  }
+
+  .sidebar.open{
+    left:0;
+  }
+
+  .content{
+    padding:16px;
+  }
+
+}

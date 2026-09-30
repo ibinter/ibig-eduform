@@ -1,0 +1,193 @@
+{
+  "version": "2026-4",
+  "date_maj": "2026-09-28",
+
+  "tranches_horaires": [
+    { "label": "Parcours initiation",   "duree": "10 à 15 heures",   "seances": "4 à 6",   "en_ligne": 200000, "presentiel": 250000, "hybride": 225000 },
+    { "label": "Parcours court",        "duree": "16 à 25 heures",   "seances": "7 à 10",  "en_ligne": 260000, "presentiel": 320000, "hybride": 290000 },
+    { "label": "Parcours standard",     "duree": "26 à 40 heures",   "seances": "11 à 16", "en_ligne": 350000, "presentiel": 420000, "hybride": 385000 },
+    { "label": "Parcours approfondi",   "duree": "41 à 60 heures",   "seances": "17 à 24", "en_ligne": 480000, "presentiel": 580000, "hybride": 530000 },
+    { "label": "Parcours intensif",     "duree": "61 à 80 heures",   "seances": "25 à 32", "en_ligne": 650000, "presentiel": 780000, "hybride": 715000 },
+    { "label": "Parcours expert",       "duree": "80 heures et plus", "seances": "32+",     "en_ligne": 850000, "presentiel": 1000000, "hybride": 925000 }
+  ],
+
+  "individuel": {
+    "en_ligne":   { "label": "En ligne (classe virtuelle)",    "min": 200000, "note": "Par personne — formateur dédié, séances en visioconférence" },
+    "presentiel": { "label": "Présentiel",                      "min": 250000, "note": "Par personne — en salle Abidjan ou ville convenue" },
+    "hybride":    { "label": "Hybride (en ligne + présentiel)", "min": 225000, "note": "Par personne — combinaison des deux modalités selon programme" }
+  },
+
+  "inter_entreprises": {
+    "description": "Sessions publiques ouvertes à tous — inscriptions individuelles sur calendrier IBIG EDUFORM",
+    "tranches": [
+      { "label": "Parcours court (15–25h)",    "tarif_par_pers": 200000, "nb_max": 12, "note": "Session planifiée — tarif fixe, places limitées" },
+      { "label": "Parcours standard (26–40h)", "tarif_par_pers": 300000, "nb_max": 12, "note": "" },
+      { "label": "Parcours approfondi (50h+)", "tarif_par_pers": 420000, "nb_max": 10, "note": "Format accéléré sur 2–3 semaines" }
+    ],
+    "avantages": "Networking entre participants · Partage d'expériences multi-secteurs · Calendrier fixe et prévisible",
+    "note": "Inscription individuelle — facturation nominative. Minimum 3 inscrits pour ouverture de session."
+  },
+
+  "groupe": {
+    "tranches": [
+      { "label": "2 participants",            "remise_en_ligne": 5,  "remise_presentiel": 5,  "note": "Remise appliquée sur tarif individuel catalogue" },
+      { "label": "3 à 5 participants",        "remise_en_ligne": 7,  "remise_presentiel": 7,  "note": "Remise sur tarif individuel catalogue" },
+      { "label": "6 à 10 participants",       "remise_en_ligne": 10, "remise_presentiel": 10, "note": "" },
+      { "label": "11 participants et plus",   "remise_en_ligne": 12, "remise_presentiel": 12, "note": "Remise maximale sur tarif catalogue — au-delà, intra-entreprise recommandé" },
+      { "label": "21 participants et plus",   "remise_en_ligne": 0,  "remise_presentiel": 0,  "note": "Sur devis personnalisé uniquement" }
+    ],
+    "note_publique": "Les prix groupe ne sont jamais affichés publiquement — TDR sur devis uniquement"
+  },
+
+  "intra_entreprise": {
+    "tranches": [
+      { "label": "≤ 10 pers. — Parcours court (15–25h)",      "forfait_min": 1500000, "forfait_max": 2500000 },
+      { "label": "≤ 10 pers. — Parcours standard (26–40h)",   "forfait_min": 2200000, "forfait_max": 3500000 },
+      { "label": "≤ 10 pers. — Parcours approfondi (50–60h)", "forfait_min": 3000000, "forfait_max": 5000000 },
+      { "label": "11–20 pers. — Parcours court (15–25h)",     "forfait_min": 2500000, "forfait_max": 4000000 },
+      { "label": "11–20 pers. — Parcours standard (26–40h)",  "forfait_min": 3500000, "forfait_max": 6000000 },
+      { "label": "21 pers. et plus — Tout volume horaire",    "forfait_min": 0,       "forfait_max": 0       }
+    ],
+    "inclus": "Analyse des besoins · Ingénierie pédagogique sur mesure · Animation par formateur certifié · Supports et outils numériques · Évaluation individuelle · Certification collective · Rapport de formation",
+    "note": "Organisée dans les locaux du client ou en salle IBIG EDUFORM — déplacement hors Abidjan sur devis"
+  },
+
+  "packs_entreprise": {
+    "description": "Volume d'heures de formation acheté à l'avance par une entreprise — utilisable par plusieurs collaborateurs sur 12 à 24 mois",
+    "tranches": [
+      { "label": "Pack Starter",    "heures": 50,  "tarif_total": 4500000,  "tarif_heure": 90000,  "validite": "12 mois", "note": "Idéal pour 2 à 3 collaborateurs" },
+      { "label": "Pack Business",   "heures": 100, "tarif_total": 8000000,  "tarif_heure": 80000,  "validite": "12 mois", "note": "Économie vs tarif unitaire" },
+      { "label": "Pack Premium",    "heures": 200, "tarif_total": 14000000, "tarif_heure": 70000,  "validite": "18 mois", "note": "Idéal DRH — économie significative" },
+      { "label": "Pack Corporate",  "heures": 500, "tarif_total": 30000000, "tarif_heure": 60000,  "validite": "24 mois", "note": "Contrat cadre — tarif préférentiel" }
+    ],
+    "conditions": "Pack activé à la signature et au versement de 60% du montant. Solde à la 3e utilisation. Non remboursable, non transférable hors groupe."
+  },
+
+  "services_connexes": {
+    "coaching": {
+      "label": "Coaching professionnel individuel (hors formation)",
+      "tarifs": [
+        { "label": "Séance unitaire (2h30)",      "en_ligne": 75000,  "presentiel": 100000 },
+        { "label": "Pack 5 séances",              "en_ligne": 325000, "presentiel": 450000 },
+        { "label": "Pack 10 séances (3 mois)",    "en_ligne": 600000, "presentiel": 850000 }
+      ],
+      "note": "Coaching de carrière, leadership, prise de poste, reconversion — séances de 2h30"
+    },
+    "ingenierie": {
+      "label": "Ingénierie pédagogique sur mesure (conception de programme)",
+      "tarifs": [
+        { "label": "Audit de besoins + rapport",           "tarif": 300000,  "note": "Livrables : rapport complet + recommandations" },
+        { "label": "Conception programme 1 jour (7h)",     "tarif": 500000,  "note": "Contenu + supports + évaluation" },
+        { "label": "Conception programme 3 jours (21h)",   "tarif": 1200000, "note": "" },
+        { "label": "Conception programme 5 jours (35h)",   "tarif": 1800000, "note": "" }
+      ],
+      "note": "Comprend : analyse des besoins, scénarisation, création des supports, fiches formateur, outils d'évaluation"
+    },
+    "audit_competences": {
+      "label": "Audit & Bilan de compétences",
+      "tarifs": [
+        { "label": "Bilan de compétences individuel (12h)", "en_ligne": 350000, "presentiel": 450000 },
+        { "label": "Audit collectif (par service/équipe)",  "en_ligne": 0,      "presentiel": 0 }
+      ],
+      "note": "Livrables : rapport détaillé, carte des compétences, plan de développement individuel"
+    }
+  },
+
+  "international": {
+    "zones": [
+      { "label": "Côte d'Ivoire",                               "majoration": 0,  "devise": "XOF", "note": "Tarif de référence" },
+      { "label": "Afrique francophone OHADA (16 autres pays)",  "majoration": 0,  "devise": "XOF", "note": "En ligne sans surcoût · Présentiel : frais déplacement en sus" },
+      { "label": "Afrique anglophone",                          "majoration": 20, "devise": "USD", "note": "Adaptation linguistique incluse" },
+      { "label": "Europe / Diaspora africaine",                 "majoration": 30, "devise": "EUR", "note": "Facturation en EUR au taux BCEAO officiel" },
+      { "label": "Moyen-Orient / Asie",                        "majoration": 40, "devise": "USD", "note": "Sur devis — nous contacter" },
+      { "label": "Reste du monde",                             "majoration": 0,  "devise": "",    "note": "Sur devis personnalisé" }
+    ],
+    "taux_reference": { "EUR": 655.957, "USD": 610, "note": "Taux indicatifs — taux BCEAO du jour de la facturation applicable" },
+    "note": "Les formations en ligne sont accessibles sans surcoût depuis tous les pays OHADA. Toute intervention présentielle hors Abidjan fait l'objet d'un devis incluant frais de déplacement et d'hébergement du formateur."
+  },
+
+  "remises": [
+    { "type": "Early-bird",                    "valeur": 5,  "condition": "Inscription et acompte versés ≥ 30 jours avant le démarrage", "cumulable": true  },
+    { "type": "Client fidèle",                 "valeur": 8,  "condition": "≥ 2 formations IBIG EDUFORM suivies (attesté par certificat)", "cumulable": true  },
+    { "type": "ONG / Association",             "valeur": 10, "condition": "Sur présentation de statuts ou agrément en cours de validité",  "cumulable": false },
+    { "type": "Partenaire IBIG",               "valeur": 0,  "condition": "Selon convention IBIG Partners — tarif négocié individuellement","cumulable": false },
+    { "type": "Recommandation active",         "valeur": 5,  "condition": "Avoir parrainé un apprenant ayant effectivement démarré",        "cumulable": true  },
+    { "type": "Secteur public / Fonctionnaire","valeur": 5,  "condition": "Sur présentation d'attestation employeur public",                "cumulable": true  }
+  ],
+  "remise_max": 20,
+
+  "annulation_report": {
+    "regles": [
+      { "delai": "Plus de 15 jours avant démarrage",   "penalite": 0,   "note": "Annulation ou report sans frais — acompte intégralement remboursé ou reporté" },
+      { "delai": "Entre 8 et 15 jours avant démarrage","penalite": 25,  "note": "25% de l'acompte retenus à titre d'indemnité" },
+      { "delai": "Entre 3 et 7 jours avant démarrage", "penalite": 50,  "note": "50% de l'acompte retenus" },
+      { "delai": "Moins de 72 heures avant démarrage", "penalite": 75,  "note": "75% de l'acompte retenus" },
+      { "delai": "Absence sans avertissement (no-show)","penalite": 100, "note": "Acompte intégralement acquis — aucun report possible" }
+    ],
+    "force_majeure": "En cas de force majeure dûment justifiée (hospitalisation, décès familial, cas de guerre), report sans frais accepté — aucun remboursement en numéraire.",
+    "report_gratuit": "Tout report demandé ≥ 24h à l'avance (pour une séance isolée) est accepté sans pénalité, sans limite de fois."
+  },
+
+  "cadre_fiscal_legal": {
+    "statut_tva": "IBIG EDUFORM est un organisme de formation professionnelle. Les prestations de formation professionnelle continue sont exonérées de TVA conformément aux dispositions fiscales en vigueur en Côte d'Ivoire.",
+    "convention": "Toute action de formation peut faire l'objet d'une convention de formation professionnelle bipartite (entre IBIG EDUFORM et le bénéficiaire ou son employeur), délivrée sur simple demande.",
+    "attestation_fiscale": "Une attestation fiscale annuelle récapitulant l'ensemble des formations effectuées est délivrée aux entreprises clientes sur demande en début d'exercice.",
+    "rc": "IBIG EDUFORM — INTERMARK BUSINESS INTERNATIONAL GROUP SARL · RC CI-ABJ-2019-B-26342",
+    "note": "Nos tarifs s'entendent hors taxes (HT). Aucune TVA n'est applicable sur les prestations de formation professionnelle."
+  },
+
+  "garanties_qualite": [
+    { "label": "Garantie satisfaction",   "detail": "Si l'évaluation de satisfaction est < 80%, une séance complémentaire de 2h30 est offerte sans frais supplémentaires." },
+    { "label": "Garantie continuité",     "detail": "En cas d'empêchement majeur du formateur, un remplaçant de niveau équivalent est désigné dans les 48h ou la séance est reportée sans perte sur le volume horaire." },
+    { "label": "Coaching post-formation", "detail": "2 séances de coaching de suivi offertes après la fin du parcours, pour consolider les acquis." },
+    { "label": "Certificat vérifiable",   "detail": "Chaque certificat est nominatif, numéroté et doté d'un QR code de vérification en ligne — opposable à tout employeur ou partenaire OHADA." },
+    { "label": "Confidentialité absolue", "detail": "Toutes les situations professionnelles exposées durant le parcours sont couvertes par une clause de confidentialité stricte signée par le formateur." },
+    { "label": "Rattrapage certification","detail": "Si la note finale est < 12/20, une séance de rattrapage est organisée sans frais supplémentaires." }
+  ],
+
+  "paiement": {
+    "tranches": [
+      { "pourcentage": 50, "echeance": "À la signature de la convention — valant confirmation du calendrier" },
+      { "pourcentage": 50, "echeance": "À mi-parcours — après la 5e séance (ou à l'ouverture pour les parcours courts ≤ 15h)" }
+    ],
+    "mensualites": { "nb": 3, "majoration": 0, "condition": "Sur demande expresse, sans frais supplémentaires — applicable aux parcours ≥ 25h" },
+    "modes": ["Virement bancaire", "Mobile Money (Wave · Orange Money · MTN MoMo)", "Espèces contre reçu numéroté", "Chèque certifié"],
+    "devises_acceptees": ["XOF (F CFA)", "EUR (taux BCEAO)", "USD (taux BCEAO)"],
+    "validite_offre_jours": 30,
+    "note": "Tout règlement partiel engage les deux parties sur le calendrier convenu. Aucun remboursement en numéraire — uniquement report ou avoir sur formation."
+  },
+
+  "inclus_forfait": [
+    "Diagnostic préalable des besoins et entretien de cadrage",
+    "Supports de formation personnalisés (PDF + ressources numériques)",
+    "Boîte à outils : modèles, grilles, guides pratiques OHADA",
+    "Évaluation et certification nominative (QR code vérifiable en ligne dans les 17 pays OHADA)",
+    "2 séances de coaching post-formation — OFFERTES",
+    "Rapport de fin de formation (niveau, progression, recommandations)",
+    "Accès à l'espace apprenant en ligne (formations en ligne et hybrides)"
+  ],
+
+  "non_inclus": [
+    "Frais de déplacement et d'hébergement du formateur (présentiel hors Abidjan)",
+    "Matériel informatique ou connexion internet du bénéficiaire",
+    "Droits d'inscription à un examen d'État ou certification externe",
+    "Traduction de documents ou interprétariat",
+    "Location de salle extérieure (si hors locaux IBIG EDUFORM)"
+  ],
+
+  "contact": {
+    "emails": [
+      "formation@ibig-eduform.com",
+      "formation@intermark-business.com"
+    ],
+    "telephones": [
+      { "numero": "+225 27 22 27 60 14", "type": "Fixe" },
+      { "numero": "+225 07 78 88 25 92", "type": "WhatsApp" },
+      { "numero": "+225 05 65 90 47 79", "type": "Mobile" },
+      { "numero": "+225 01 53 59 55 44", "type": "Mobile" }
+    ],
+    "site": "https://ibig-eduform.com",
+    "adresse": "Abidjan, Côte d'Ivoire — INTERMARK BUSINESS INTERNATIONAL GROUP",
+    "horaires": "Lun–Ven : 8h00–18h00 · Sam : 9h00–13h00 (GMT)"
+  }
+}

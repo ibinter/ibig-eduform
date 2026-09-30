@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Générateur TDR — IBIG EDUFORM</title>
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+/* ── Tokens ─────────────────────────────────────────────────── */
+:root {
+  --navy:    #0D1B3E;
+  --blue:    #1B5ED8;
+  --blue-lt: #E8EFFC;
+  --gold:    #F5A51A;
+  --gold-lt: #FEF3DC;
+  --ink:     #1A2540;
+  --muted:   #64748B;
+  --line:    #E2E8F0;
+  --surface: #F4F6FC;
+  --bg:      #FFFFFF;
+  --panel:   #F8FAFF;
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%; overflow: hidden;
+  font-family: var(--font-body);
+  font-size: 14px; line-height: 1.6;
+  color: var(--ink); background: var(--bg);
+}
+
+/* ── Top bar ─────────────────────────────────────────────────── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; gap: 14px;
+  padding: 0 20px; height: 54px;
+  background: var(--navy);
+  border-bottom: 2px solid var(--gold);
+}
+.topbar .lm {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--gold), #e0940f);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 800; font-size: 13px;
+  color: #0D1B3E; flex: 0 0 auto;
+}
+.topbar h1 {
+  font-family: var(--font-display); font-size: 15px; font-weight: 700;
+  color: #fff; flex: 1; letter-spacing: .2px;
+}
+.topbar h1 small {
+  display: block; font-size: 10px; font-weight: 500;
+  opacity: .65; letter-spacing: .5px; text-transform: uppercase;
+}
+.topbar .tabs { display: none; gap: 4px; }
+.tab-btn {
+  padding: 5px 14px; border-radius: 6px; border: 0;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  background: rgba(255,255,255,.12); color: rgba(255,255,255,.7);
+  transition: .15s;
+}
+.tab-btn.active { background: var(--gold); color: #0D1B3E; }
+
+/* ── Layout ──────────────────────────────────────────────────── */
+.layout {
+  position: fixed; top: 54px; bottom: 0; left: 0; right: 0;
+  display: flex;
+}
+
+/* ── Form panel ──────────────────────────────────────────────── */
+.fp {
+  flex: 0 0 370px;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.fs {
+  flex: 1 1 0; overflow-y: auto;
+  padding: 18px 16px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.fs::-webkit-scrollbar { width: 4px; }
+.fs::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
+
+.sl {
+  font-family: var(--font-display);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 8px;
+  padding-bottom: 5px; border-bottom: 1px solid var(--line);
+}
+.fi { display: flex; flex-direction: column; gap: 4px; }
+.fi label { font-size: 12px; font-weight: 600; color: var(--ink); }
+.fi input, .fi select, .fi textarea {
+  width: 100%; padding: 8px 10px;
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: 7px; color: var(--ink);
+  font-family: var(--font-body); font-size: 13px;
+  outline: none; transition: border-color .15s, box-shadow .15s;
+}
+.fi input:focus, .fi select:focus, .fi textarea:focus {
+  border-color: var(--blue); box-shadow: 0 0 0 3px rgba(27,94,216,.12);
+}
+.fi textarea { resize: vertical; min-height: 68px; }
+.fi .hint { font-size: 11px; color: var(--muted); }
+.r2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.g { display: flex; flex-direction: column; gap: 10px; }
+
+/* Form actions */
+.fa {
+  flex: 0 0 auto; padding: 10px 14px;
+  border-top: 1px solid var(--line);
+  display: flex; gap: 8px; align-items: center;
+}
+.btn-pdf {
+  flex: 1; padding: 10px;
+  background: linear-gradient(135deg, #e08010, var(--gold));
+  color: #0d1b3e; border: 0; border-radius: 8px;
+  font-family: var(--font-display); font-size: 13px; font-weight: 800;
+  cursor: pointer; transition: opacity .15s;
+}
+.btn-pdf:hover { opacity: .88; }
+.btn-pdf:disabled { opacity: .5; }
+.btn-copy {
+  padding: 10px 14px; border-radius: 8px;
+  background: var(--blue-lt); border: 1px solid var(--blue);
+  color: var(--blue); font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: background .15s;
+}
+.btn-copy:hover { background: #d2e3fd; }
+.btn-rst {
+  padding: 10px 12px; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--line);
+  color: var(--muted); font-size: 13px; cursor: pointer;
+}
+.btn-rst:hover { background: var(--line); }
+
+/* ── Preview panel ───────────────────────────────────────────── */
+.pp {
+  flex: 1 1 0; overflow-y: auto;
+  background: #d8dff0; padding: 28px 20px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.pp::-webkit-scrollbar { width: 6px; }
+.pp::-webkit-scrollbar-thumb { background: #b0bdd8; border-radius: 3px; }
+
+/* ── TDR Sheet ───────────────────────────────────────────────── */
+#tdrSheet {
+  width: 100%; max-width: 820px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(10,20,50,.22);
+  overflow: hidden;
+  font-family: 'Inter', Arial, sans-serif;
+  color: #1a2540;
+}
+#tdrSheet ul { padding-left: 18px; margin: 4px 0; }
+#tdrSheet ul li { margin: 4px 0; font-size: 13.5px; line-height: 1.55; }
+#tdrSheet .tdr-mod {
+  background: #f8faff; border: 1px solid #e2e8f0;
+  border-left: 4px solid #f5a51a;
+  border-radius: 8px; padding: 12px 14px; margin: 8px 0;
+}
+#tdrSheet .tdr-mod h4 {
+  font-size: 13px; font-weight: 800; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 7px;
+}
+#tdrSheet .tdr-mod h4 .mn {
+  width: 20px; height: 20px; border-radius: 5px;
+  background: #f5a51a; color: #0d1b3e;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; flex: 0 0 auto;
+}
+#tdrSheet .tdr-mod ul { padding-left: 16px; }
+#tdrSheet .tdr-mod ul li { font-size: 12.5px; color: #2a3a5c; margin: 3px 0; }
+#tdrSheet .tdr-tarifs {
+  display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr));
+  gap: 10px; margin-top: 8px;
+}
+#tdrSheet .tdr-tarif {
+  border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 12px; text-align: center; background: #f8faff;
+}
+#tdrSheet .tdr-tarif span {
+  display: block; font-size: 11px; color: #64748b;
+  text-transform: uppercase; letter-spacing: .4px;
+}
+#tdrSheet .tdr-tarif b { display: block; font-size: 16px; font-weight: 800; margin-top: 3px; }
+#tdrSheet .tdr-cert {
+  background: linear-gradient(135deg,rgba(245,165,26,.12),rgba(27,94,216,.06));
+  border: 1px solid rgba(245,165,26,.35);
+  border-radius: 10px; padding: 14px; margin-top: 8px;
+}
+#tdrSheet .tdr-cert .ttl { font-weight: 800; }
+
+/* PDF mode */
+body.pdf-mode { overflow: auto; }
+body.pdf-mode .topbar, body.pdf-mode .fp,
+body.pdf-mode .pp { padding: 0; }
+body.pdf-mode .layout { position: static; }
+body.pdf-mode .pp { display: block; background: #fff; padding: 0; }
+body.pdf-mode #tdrSheet {
+  max-width: none; border-radius: 0;
+  box-shadow: none; margin: 0;
+}
+
+/* ── Toast ───────────────────────────────────────────────────── */
+#toast {
+  position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+  background: #1a2540; color: #fff;
+  padding: 10px 20px; border-radius: 8px;
+  font-size: 13px; font-weight: 600; z-index: 999;
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+#toast.show { opacity: 1; }
+
+/* ── Mobile ──────────────────────────────────────────────────── */
+@media (max-width: 680px) {
+  html, body { overflow: auto; height: auto; }
+  .layout { position: static; flex-direction: column; }
+  .fp { flex: 0 0 auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  .fs { overflow: visible; }
+  .pp { min-height: 600px; }
+  .topbar .tabs { display: flex; }
+  .fp[data-tab="hidden"] { display: none; }
+  .pp[data-tab="hidden"] { display: none; }
+  #tdrSheet .tdr-runhead,
+  #tdrSheet .tdr-toc,
+  #tdrSheet .tdr-body,
+  #tdrSheet .tdr-footer,
+  #tdrSheet .tdr-runfoot { padding-left: 22px !important; padding-right: 22px !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="lm">IE</div>
+  <h1>Générateur TDR <small>IBIG EDUFORM — Termes de Référence</small></h1>
+  <div class="tabs">
+    <button class="tab-btn active" id="tabF" onclick="switchTab('form')">Formulaire</button>
+    <button class="tab-btn"        id="tabP" onclick="switchTab('preview')">Aperçu</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- Form -->
+  <div class="fp" id="panelForm">
+    <div class="fs">
+
+      <div>
+        <div class="sl">Identité de la formation</div>
+        <div class="g">
+          <div class="fi">
+            <label for="titre">Intitulé *</label>
+            <input id="titre" type="text" placeholder="Ex : Gestion des Ressources Humaines (35h)">
+          </div>
+          <div class="fi">
+            <label for="domaine">Domaine *</label>
+            <select id="domaine">
+              <option value="">— Sélectionner —</option>
+              <option value="GRH">Ressources Humaines (GRH)</option>
+              <option value="Comptabilité & Finance">Comptabilité &amp; Finance</option>
+              <option value="Informatique & Tech">Informatique &amp; Tech</option>
+              <option value="Gestion Commerciale & Marketing">Gestion Commerciale &amp; Marketing</option>
+              <option value="Management & Leadership">Management &amp; Leadership</option>
+              <option value="Immobilier">Immobilier</option>
+              <option value="Logistique & Supply Chain">Logistique &amp; Supply Chain</option>
+              <option value="Droit & Juridique">Droit &amp; Juridique</option>
+              <option value="BTP & Construction">BTP &amp; Construction</option>
+              <option value="Entrepreneuriat">Entrepreneuriat</option>
+              <option value="IA & Digitalisation">IA &amp; Digitalisation</option>
+              <option value="QHSE">QHSE</option>
+              <option value="Agriculture">Agriculture</option>
+              <option value="Autres">Autres</option>
+            </select>
+          </div>
+          <div class="fi">
+            <label for="description">Description / Pitch</label>
+            <textarea id="description" rows="3" placeholder="Décrivez brièvement la formation…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="sl">Durée &amp; Tarifs</div>
+        <div class="g">
+          <div class="r2">
+            <div class="fi">
+              <label for="heures">Durée (heures)</label>
+              <input id="heures" type="number" min="4" max="300" value="35">
+            </div>
+            <div class="fi">
+              <label for="frais">Frais inscription (FCFA)</label>
+              <input id="frais" type="number" min="0" value="50000">
+            </div>
+          </div>
+          <div class="r2">
+            <div class="fi">
+              <label for="prix_online">Prix en ligne (FCFA)</label>
+              <input id="prix_online" type="number" min="0" placeholder="Ex : 350000">
+            </div>
+            <div class="fi">
+              <label for="prix_pres">Prix présentiel (FCFA)</label>
+              <input id="prix_pres" type="number" min="0" placeholder="Ex : 450000">
+            </div>
+          </div>
+          <div class="fi">
+            <label for="date_debut">Date de début (optionnel)</label>
+            <input id="date_debut" type="date">
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="sl">Contenu (optionnel — auto si vide)</div>
+        <div class="g">
+          <div class="fi">
+            <label for="objectif">Objectif général</label>
+            <textarea id="objectif" rows="2" placeholder="Auto-généré selon le domaine…"></textarea>
+          </div>
+          <div class="fi">
+            <label for="public_cible">Public cible</label>
+            <textarea id="public_cible" rows="2" placeholder="Auto-généré selon le domaine…"></textarea>
+          </div>
+          <div class="fi">
+            <label for="programme">Programme / Modules</label>
+            <textarea id="programme" rows="5" placeholder="MODULE 1 — Titre&#10;• Point 1&#10;• Point 2&#10;MODULE 2 — …"></textarea>
+            <span class="hint">Format : MODULE N — Titre puis bullets. Vide = génération auto.</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="sl">Contacts</div>
+        <div class="g">
+          <div class="fi">
+            <label for="contact_tel">Téléphone</label>
+            <input id="contact_tel" type="text" value="+225 27 22 27 60 14">
+          </div>
+          <div class="fi">
+            <label for="contact_email">Email</label>
+            <input id="contact_email" type="email" value="formation@intermark-business.com">
+          </div>
+          <div class="fi">
+            <label for="contact_web">Site web</label>
+            <input id="contact_web" type="text" value="ibig-eduform.com">
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /fs -->
+    <div class="fa">
+      <button class="btn-pdf" id="btnPdf" onclick="exportPDF()">⬇ Télécharger PDF</button>
+      <button class="btn-copy" onclick="copyHTML()" title="Copier le HTML">📋</button>
+      <button class="btn-rst" onclick="resetForm()" title="Réinitialiser">↺</button>
+    </div>
+  </div><!-- /fp -->
+
+  <!-- Preview -->
+  <div class="pp" id="panelPreview">
+    <div id="tdrSheet"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   CONTENT MAPS — portés depuis core/tdr_generator.php & tdr.php
+════════════════════════════════════════════════════════════════ */
+const OBJECTIFS = {
+  'GRH': "Prendre en main la fonction RH avec méthode : gérer les dossiers du personnel, rédiger les documents contractuels, assurer les déclarations sociales obligatoires et appliquer le droit du travail ivoirien au quotidien.",
+  'Comptabilité & Finance': "Produire une comptabilité fiable et à jour, établir les déclarations fiscales dans les délais, lire les états financiers et alerter la direction sur les indicateurs clés de la santé financière de l'entreprise.",
+  'Informatique & Tech': "Concevoir, déployer ou maintenir des solutions informatiques adaptées aux besoins réels des entreprises africaines, en appliquant les standards techniques et les bonnes pratiques de sécurité du secteur.",
+  'Gestion Commerciale & Marketing': "Structurer et développer son activité commerciale : prospecter avec méthode, convaincre en entretien, fidéliser ses clients et piloter ses résultats à travers des indicateurs concrets.",
+  'Management & Leadership': "Diriger une équipe avec clarté, gérer les situations difficiles sans improviser et construire un environnement de travail dans lequel les collaborateurs sont responsabilisés et performants.",
+  'Immobilier': "Exercer le métier de l'immobilier en toute sécurité juridique : évaluer les biens, rédiger les documents contractuels, maîtriser la réglementation foncière et accompagner les clients jusqu'à la finalisation des transactions.",
+  'Logistique & Supply Chain': "Organiser et piloter une chaîne logistique sans rupture : gérer les stocks, coordonner les approvisionnements, maîtriser les documents de transport et optimiser les coûts de la fonction.",
+  'Droit & Juridique': "Identifier les risques juridiques, rédiger ou relire des contrats courants, conseiller efficacement et orienter vers les bons dispositifs légaux dans le contexte OHADA.",
+  'Entrepreneuriat': "Lancer et structurer son projet d'entreprise avec une base solide : valider son modèle économique, lever les financements nécessaires, gérer les premières opérations et construire sa clientèle.",
+  'IA & Digitalisation': "Intégrer l'intelligence artificielle et les outils numériques dans son activité professionnelle pour gagner en efficacité, automatiser les tâches répétitives et prendre de meilleures décisions.",
+  'QHSE': "Déployer et maintenir un système de management QHSE : identifier les risques, animer la démarche qualité, préparer les audits et construire une culture de la sécurité dans l'entreprise.",
+  'Agriculture': "Gérer une exploitation agricole ou un projet agro-industriel avec les outils du praticien : planification des cultures, gestion des intrants, maîtrise des coûts et accès aux marchés et aux financements.",
+  'BTP & Construction': "Gérer un chantier ou un projet de construction de bout en bout : planification, suivi des coûts, coordination des corps de métier, contrôle qualité et respect des normes en vigueur.",
+};
+
+const PUBLIC_CIBLE = {
+  'GRH': "Responsables et directeurs RH, gestionnaires de personnel, managers d'équipe, responsables de formation.",
+  'Comptabilité & Finance': "Comptables, contrôleurs de gestion, responsables financiers, DAF, auditeurs internes et externes, analystes financiers.",
+  'Informatique & Tech': "Développeurs, chefs de projet IT, ingénieurs systèmes, administrateurs réseau, techniciens informatique et toute personne souhaitant évoluer dans le secteur technologique.",
+  'Gestion Commerciale & Marketing': "Commerciaux, responsables marketing, chefs de produit, directeurs commerciaux, entrepreneurs et toute personne en lien avec la fonction commerciale.",
+  'Management & Leadership': "Dirigeants, managers, chefs de projet, cadres supérieurs, entrepreneurs souhaitant renforcer leur leadership et leur performance managériale.",
+  'Immobilier': "Agents immobiliers, promoteurs, gestionnaires de patrimoine, responsables fonciers, notaires, banquiers spécialisés.",
+  'Logistique & Supply Chain': "Responsables logistique, acheteurs, gestionnaires de stock, directeurs supply chain, responsables planification.",
+  'Droit & Juridique': "Juristes, avocats, responsables juridiques, dirigeants d'entreprise, cadres administratifs exposés aux enjeux réglementaires.",
+  'Entrepreneuriat': "Entrepreneurs en démarrage ou en développement, porteurs de projets, dirigeants de PME/startups, intrapreneurs.",
+  'IA & Digitalisation': "Managers, chefs de projets digitaux, data analysts, responsables IT, entrepreneurs souhaitant intégrer l'IA et le numérique dans leur activité.",
+  'QHSE': "Responsables QHSE, animateurs sécurité, directeurs développement durable, ingénieurs HSE, responsables RSE.",
+  'Agriculture': "Agriculteurs, agripreneurs, responsables de coopératives, agents de terrain, porteurs de projets agro-industriels.",
+  'BTP & Construction': "Ingénieurs, techniciens BTP, conducteurs de travaux, architectes, chefs de chantier, maîtres d'ouvrage.",
+};
+
+const RESULTATS = {
+  'GRH': ["Gérer un dossier du personnel de A à Z sans erreur","Rédiger et suivre les contrats, avenants et procédures disciplinaires","Produire les déclarations sociales (CNPS, CMU, DISA) dans les délais","Conseiller les managers sur les règles du droit du travail ivoirien","Certificat professionnel IBIG EDUFORM reconnu dans les 17 pays membres de l'OHADA"],
+  'Comptabilité & Finance': ["Saisir, lettrer et justifier les écritures comptables courantes","Produire le bilan, le compte de résultat et les déclarations fiscales","Lire et commenter les états financiers pour la direction","Construire un budget et suivre les écarts mois par mois","Certificat professionnel IBIG EDUFORM — reconnu dans les 17 pays membres de l'OHADA"],
+  'Informatique & Tech': ["Concevoir, développer ou administrer une solution informatique opérationnelle","Appliquer les bonnes pratiques de sécurité et de gestion des accès","Documenter, tester et déployer en environnement de production","Résoudre les incidents courants de manière autonome et structurée","Certificat professionnel IBIG EDUFORM — reconnu dans les 17 pays membres de l'OHADA"],
+  'Gestion Commerciale & Marketing': ["Prospecter, convaincre et fidéliser une clientèle cible","Rédiger des propositions commerciales et conduire des négociations","Mettre en place et suivre un plan d'action commercial","Mesurer ses résultats et ajuster la stratégie en cours d'année","Certificat professionnel IBIG EDUFORM — reconnu dans les 17 pays membres de l'OHADA"],
+  'Management & Leadership': ["Fixer des objectifs clairs et suivre les résultats de son équipe","Conduire des entretiens (évaluation, recadrage, développement)","Gérer les conflits et les situations difficiles sans perdre l'autorité","Piloter un projet et rendre compte à la direction","Certificat professionnel IBIG EDUFORM — reconnu dans les 17 pays membres de l'OHADA"],
+  'Immobilier': ["Évaluer un bien immobilier et rédiger le rapport d'expertise","Rédiger les mandats, promesses de vente, baux et actes courants","Maîtriser la réglementation foncière ivoirienne et OHADA","Conduire une transaction de bout en bout en sécurité juridique","Certificat professionnel IBIG EDUFORM — reconnu dans les 17 pays membres de l'OHADA"],
+  'Entrepreneuriat': ["Formaliser et valider son modèle économique","Rédiger un business plan convaincant pour les financeurs","Structurer les premières opérations et gérer la trésorerie de démarrage","Constituer et animer une équipe de démarrage performante","Certificat professionnel IBIG EDUFORM — reconnu dans les 17 pays membres de l'OHADA"],
+};
+
+const CONTEXTE = {
+  'GRH': "La gestion administrative du personnel est souvent assurée par des collaborateurs formés sur le tas, sans méthode ni outils structurés. Les erreurs de procédure, les dossiers incomplets et les retards de déclaration sociale coûtent cher aux entreprises — en redressements, en litiges et en temps perdu. Cette formation transmet les méthodes concrètes, les documents types et les réflexes professionnels pour gérer cette fonction avec rigueur.",
+  'Comptabilité & Finance': "Une comptabilité mal tenue ou des déclarations fiscales en retard exposent l'entreprise à des pénalités, des redressements et une perte de crédibilité auprès des partenaires et des banques. En Côte d'Ivoire comme dans tout l'espace OHADA, la maîtrise du SYSCOHADA et des obligations fiscales est une compétence non négociable pour tout professionnel de la finance.",
+  'Informatique & Tech': "Les entreprises africaines investissent massivement dans les outils numériques, mais manquent de techniciens et de développeurs capables de les déployer et de les maintenir localement. Cette formation répond à ce déficit en transmettant des compétences directement applicables, sur des outils réellement utilisés dans les entreprises de la place.",
+  'Gestion Commerciale & Marketing': "Sur les marchés africains, la concurrence s'intensifie et les clients sont de plus en plus informés. Prospecter au hasard, négocier sans méthode et ne pas suivre ses chiffres ne suffit plus. Cette formation structure la démarche commerciale de A à Z pour que chaque heure de travail commercial se transforme en résultat mesurable.",
+  'Management & Leadership': "Beaucoup de managers ont été promus pour leur expertise technique, sans formation au management. Résultat : des équipes peu mobilisées, des conflits non résolus et des objectifs manqués. Cette formation donne les outils pour exercer l'autorité avec méthode, sans improviser face aux situations difficiles.",
+  'Entrepreneuriat': "Créer une entreprise sans préparation expose à des erreurs coûteuses : modèle économique non validé, trésorerie mal gérée, équipe mal choisie. Cette formation accompagne les porteurs de projet dans la structuration de leur démarche, pour augmenter significativement les chances de succès au démarrage.",
+  'IA & Digitalisation': "L'intelligence artificielle et la transformation numérique ne sont plus réservées aux grandes entreprises — elles touchent tous les secteurs, y compris en Afrique. Les professionnels qui ne s'y adaptent pas rapidement risquent d'être dépassés. Cette formation rend le numérique accessible et actionnable, sans jargon technique inutile.",
+  'Agriculture': "L'agriculture africaine souffre d'un déficit de professionnalisation : accès limité aux financements, pertes post-récolte, faible valorisation des productions. Cette formation donne aux agripreneurs et aux professionnels du secteur les outils de gestion, de financement et de commercialisation pour rendre leur exploitation rentable et durable.",
+};
+
+const FILLERS = {
+  'GRH': [
+    {t:"Législation sociale et droit du travail appliqué", b:["Code du travail ivoirien : contrats, durée légale et congés payés","Déclarations sociales obligatoires : CNPS, CMU, DISA — qui fait quoi","Procédure disciplinaire, licenciement et rupture conventionnelle"]},
+    {t:"Paie et gestion des rémunérations", b:["Structure d'un bulletin de paie : éléments fixes, variables et retenues","Calcul des charges sociales patronales et salariales","Traitement des absences, heures supplémentaires et primes"]},
+    {t:"Recrutement et intégration", b:["Rédiger une fiche de poste et un appel à candidatures efficace","Conduire un entretien de recrutement structuré","Parcours d'intégration, période d'essai et suivi du nouveau collaborateur"]},
+    {t:"GPEC et développement des compétences", b:["Cartographie des compétences et détection des besoins en formation","Plan de formation annuel : construction, budget et suivi","Entretien annuel d'évaluation et entretien professionnel"]},
+  ],
+  'Comptabilité & Finance': [
+    {t:"Comptabilité courante et journaux comptables", b:["Saisie des pièces comptables : achats, ventes, banque, caisse","Lettrage des comptes, rapprochement bancaire et pointage","Clôture mensuelle et préparation des états de rapprochement"]},
+    {t:"Fiscalité des entreprises — SYSCOHADA", b:["TVA, BIC, patente et taxes locales : calcul et déclaration","Délais légaux, pénalités et relations avec l'administration fiscale","Optimisation fiscale dans le cadre légal en vigueur"]},
+    {t:"Analyse financière et ratios de gestion", b:["Lire et commenter un bilan et un compte de résultat","Calcul des ratios de liquidité, solvabilité et rentabilité","Tableau de flux de trésorerie et prévisions de trésorerie"]},
+    {t:"Contrôle de gestion et reporting", b:["Budget prévisionnel : construction et méthodes de chiffrage","Tableaux de bord de gestion et indicateurs de performance","Analyse des écarts et présentation des résultats à la direction"]},
+  ],
+  'Management & Leadership': [
+    {t:"Animation d'équipe au quotidien", b:["Fixer des objectifs clairs et suivre les résultats individuels","Conduire des réunions efficaces : préparation, animation, compte-rendu","Déléguer avec méthode et accompagner sans micro-manager"]},
+    {t:"Gestion des situations difficiles", b:["Identifier et désamorcer un conflit avant qu'il ne s'envenime","Recadrer un collaborateur sans briser la relation de confiance","Gérer les périodes de changement organisationnel et les résistances"]},
+  ],
+};
+
+const FILLERS_GEN = [
+  {t:"Organisation du travail et gestion des priorités", b:["Identifier ce qui est urgent, important et ce qui peut être délégué","Outils de planification : agenda, to-do list et tableaux de suivi","Gérer les interruptions, les imprévus et les délais serrés"]},
+  {t:"Communication professionnelle écrite et orale", b:["Rédiger des emails, notes et rapports clairs et bien structurés","Prendre la parole en réunion et défendre ses idées avec méthode","Adapter son discours selon l'interlocuteur — direction, collègues, clients"]},
+  {t:"Réglementation applicable et obligations légales", b:["Textes de référence, autorités de tutelle et jurisprudence récente","Obligations déclaratives, délais et sanctions en cas de manquement","Veille réglementaire : comment se tenir informé des évolutions"]},
+  {t:"Outils numériques du praticien", b:["Logiciels métiers de référence utilisés par les entreprises de la place","Excel avancé appliqué au domaine : tableaux, formules et graphiques utiles","Automatiser les tâches répétitives pour gagner du temps"]},
+  {t:"Lecture et production de documents professionnels", b:["Identifier les documents clés et savoir les lire rapidement","Rédiger les documents types du métier sans erreur","Archivage, classement et traçabilité des dossiers"]},
+  {t:"Suivi, reporting et amélioration continue", b:["Construire un tableau de bord simple et lisible pour son activité","Identifier les dysfonctionnements récurrents et leurs causes racines","Proposer et mettre en place des améliorations concrètes"]},
+];
+
+const BSETS = [
+  ["Les documents et formulaires associés, comment les lire et les produire","Étapes de traitement, circuits de validation et acteurs impliqués","Cas pratiques sur dossiers simulés et corrections commentées"],
+  ["Réglementation en vigueur, obligations et délais à respecter","Erreurs fréquentes constatées en entreprise et points de vigilance","Exercices pratiques avec mise en situation professionnelle"],
+  ["Outils, logiciels et tableaux de suivi utilisés dans les entreprises","Organisation, archivage et traçabilité des dossiers","Retours d'expérience d'entreprises ivoiriennes et de l'espace OHADA"],
+  ["Principes clés, définitions et ce que le praticien doit savoir en priorité","Mise en pratique guidée sur cas réels issus du terrain africain","Points de contrôle, indicateurs de qualité et critères de conformité"],
+  ["Procédures internes types et comment les adapter à son entreprise","Communication inter-services, reporting et présentation des résultats","Simulation complète avec correction et plan d'amélioration individuel"],
+];
+
+/* ── Helpers ─────────────────────────────────────────────────── */
+const fcfa = n => new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' F CFA';
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const hash = s => { let h=0; for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;} return Math.abs(h); };
+
+function extractTopics(desc) {
+  const m = desc.match(/:\s*(.+)$/s); if (!m) return [];
+  let raw = m[1].split(/\.\s+[A-ZÀÂÉÈÊÙÛÎÏ]/u)[0];
+  raw = raw.replace(/\s*\([^)]*\)/g,'');
+  return raw.split(/[,;]\s*/u).map(t=>t.trim()).filter(t=>t.length>=8&&t.length<=90);
+}
+
+function buildModules(name, heures, cat, desc) {
+  let nb = 5;
+  if(heures>=25)nb=6; if(heures>=30)nb=7; if(heures>=35)nb=8;
+  if(heures>=45)nb=9; if(heures>=65)nb=10;
+
+  let topics = extractTopics(desc);
+  if(topics.length<2) {
+    topics = name.replace(/\s*\([^)]*\)/g,'').split(/\s*[&,]\s*|\s+[eé]t\s+/ui).map(t=>t.trim()).filter(t=>t.length>4);
+  }
+  const fillers = [...(FILLERS[cat]||[]), ...FILLERS_GEN];
+  const mods = [];
+  let bi=0;
+
+  mods.push({t:`${name} : périmètre, enjeux et positionnement professionnel`, b:[
+    "Ce que recouvre exactement ce domaine et où s'arrête la responsabilité du praticien",
+    "Acteurs en présence, textes de référence et pratiques du marché en Afrique francophone",
+    "Autodiagnostic et identification des axes prioritaires de progression",
+  ]});
+
+  let idx=2;
+  for(const topic of topics){
+    if(idx>nb-2) break;
+    const t=topic.charAt(0).toUpperCase()+topic.slice(1).toLowerCase();
+    mods.push({t, b:BSETS[bi%BSETS.length]}); bi++; idx++;
+  }
+  let fi=0;
+  while(idx<=nb-2&&fi<fillers.length){ mods.push(fillers[fi]); fi++; idx++; }
+
+  mods.push({t:"Mise en pratique : cas d'entreprises et travaux dirigés", b:[
+    "Traitement de dossiers et scénarios tirés d'entreprises réelles (Côte d'Ivoire, Afrique de l'Ouest)",
+    "Travaux individuels et en binôme avec correction commentée par le formateur",
+    "Projet de synthèse : production d'un livrable professionnel complet",
+  ]});
+  mods.push({t:"Évaluation finale et remise du certificat", b:[
+    "Évaluation écrite et pratique couvrant l'ensemble du programme",
+    "Présentation et défense du projet de synthèse devant le formateur",
+    "Remise du certificat IBIG EDUFORM et construction du plan de développement post-formation",
+  ]});
+  return mods;
+}
+
+function getTheme(titre) {
+  const seed = hash(titre||'default');
+  const hue = seed%360, ha=(hue+38)%360, ha2=(hue+205)%360;
+  return {
+    pr: `hsl(${hue},72%,44%)`,
+    dk: `hsl(${hue},52%,11%)`,
+    go: `hsl(${ha},90%,60%)`,
+    a2: `hsl(${ha2},82%,62%)`,
+    ga: [120,135,160,205][(seed>>2)%4],
+    nr: ['8px','50%','45% 55% 50% 50%'][seed%3],
+  };
+}
+
+/* ── Build TDR HTML string ───────────────────────────────────── */
+function buildTDR(f) {
+  const {titre,cat,desc,heures,prixOnline,prixPres,frais,dateDebut,
+         objCust,pubCust,progCust,tel,email,web} = f;
+
+  const obj = objCust || OBJECTIFS[cat] ||
+    `Être capable d'exercer la fonction ${titre} avec autonomie et rigueur, en appliquant les méthodes reconnues dans le secteur.`;
+  const pub = pubCust || PUBLIC_CIBLE[cat] ||
+    `Tout professionnel souhaitant acquérir des compétences certifiées en ${cat||titre} et développer son employabilité dans l'espace OHADA.`;
+  const res = RESULTATS[cat] ||
+    [`Exercer la fonction ${titre} de façon autonome`,
+     `Produire les livrables et documents attendus dans le métier`,
+     `Appliquer la réglementation en vigueur sans risque d'erreur`,
+     `Contribuer directement à la performance de son organisation`,
+     `Certificat professionnel IBIG EDUFORM — reconnu dans les 17 pays membres de l'OHADA`];
+  const ctx = CONTEXTE[cat] ||
+    `Les entreprises qui recrutent sur le profil ${titre} attendent des candidats capables de produire des résultats dès les premières semaines. Cette formation comble l'écart entre la formation initiale et les exigences réelles du terrain.`;
+
+  const theme = getTheme(titre);
+  const ref = 'TDR-' + hash(titre+cat).toString(16).toUpperCase().slice(0,8);
+  const today = new Date().toLocaleDateString('fr-FR');
+  const seances = Math.ceil(heures/2.5);
+
+  // Programme HTML
+  let progHtml = '';
+  if(progCust.trim()) {
+    const lines=progCust.split('\n').map(l=>l.trim()).filter(Boolean);
+    let open=false,k=0;
+    for(const ln of lines){
+      if(/^MODULE\s+\d+/i.test(ln)){
+        if(open) progHtml+='</ul></div>'; k++;
+        progHtml+=`<div class="tdr-mod"><h4><span class="mn">${k}</span> ${esc(ln)}</h4><ul>`; open=true;
+      } else { progHtml+=`<li>${esc(ln.replace(/^[•\-\*]\s*/u,''))}</li>`; }
+    }
+    if(open) progHtml+='</ul></div>';
+  } else {
+    const mods=buildModules(titre,heures,cat,desc);
+    mods.forEach((m,i)=>{
+      progHtml+=`<div class="tdr-mod"><h4><span class="mn">${i+1}</span> MODULE ${i+1} — ${esc(m.t)}</h4><ul>`;
+      m.b.forEach(b=>{ progHtml+=`<li>${esc(b)}</li>`; });
+      progHtml+='</ul></div>';
+    });
+  }
+
+  // Tarifs
+  let tarHTML = '<div class="tdr-tarifs">';
+  if(prixOnline>0) tarHTML+=`<div class="tdr-tarif"><span>💻 En ligne</span><b>${fcfa(prixOnline)}</b></div>`;
+  if(prixPres>0)   tarHTML+=`<div class="tdr-tarif"><span>🏛️ Présentiel</span><b>${fcfa(prixPres)}</b></div>`;
+  if(prixOnline>0&&prixPres>0){
+    const hyb=Math.round((prixOnline+prixPres)/2/5000)*5000;
+    tarHTML+=`<div class="tdr-tarif"><span>🔀 Hybride</span><b>${fcfa(hyb)}</b></div>`;
+  }
+  if(frais>0) tarHTML+=`<div class="tdr-tarif"><span>📋 Frais d'inscription</span><b>${fcfa(frais)}</b></div>`;
+  tarHTML+='</div>';
+  if(!prixOnline&&!prixPres) tarHTML='<p>Tarifs disponibles sur demande.</p>';
+  tarHTML+='<p style="font-size:11px;color:#6b7280;margin-top:6px">Formation groupe &amp; intra-entreprise : sur devis personnalisé. Facilités de paiement disponibles sur demande.</p>';
+
+  const dateLbl = dateDebut ? new Date(dateDebut).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}) : '';
+
+  // Sections
+  const S = [
+    {titre:"Intitulé du programme", html:`<p><b>${esc(titre)}</b> — Domaine : ${esc(cat||'Non spécifié')}.</p><p>Le présent document constitue les <b>Termes de Référence (TDR)</b> officiels du programme. Il définit le cadre, les objectifs, le contenu pédagogique, les modalités d'évaluation et de certification, ainsi que les conditions d'admission, de financement et d'accompagnement. Il engage IBIG EDUFORM sur un standard de qualité orienté <b>résultats, employabilité et impact</b>.</p>`},
+    {titre:"Contexte &amp; justification", html:`<p>${esc(ctx)}</p>`},
+    {titre:"Objectif général", html:`<p>${esc(obj)}</p>`},
+    {titre:"Résultats attendus", html:`<ul>${res.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>`},
+    {titre:"Public cible", html:`<p>${esc(pub)}</p>`},
+    {titre:"Prérequis &amp; conditions d'admission", html:`<p>Aucun prérequis académique particulier. Une expérience professionnelle d'au moins 6 mois est conseillée.</p><p style="margin-top:8px"><b>Modalités d'admission :</b> préinscription en ligne, étude du profil et validation du dossier par IBIG EDUFORM. Les places étant limitées par session afin de garantir la qualité de l'encadrement, l'inscription est confirmée après validation et règlement des frais d'inscription.</p>`},
+    {titre:"Contenu pédagogique détaillé", html:`<p>Le programme s'articule autour de modules progressifs, chacun associant apports théoriques essentiels et mise en pratique intensive :</p>${progHtml}`},
+    {titre:"Approche &amp; ingénierie pédagogique", html:`<p>Notre dispositif repose sur une pédagogie <b>active et professionnalisante (70% pratique / 30% théorie)</b>. Chaque notion est immédiatement mise en application à travers :</p><ul><li>des <b>études de cas réels</b> issus d'entreprises et d'organisations ;</li><li>des <b>simulations professionnelles</b> reproduisant les situations de terrain ;</li><li>des <b>ateliers outillés</b> (Excel, logiciels métiers, ERP) ;</li><li>un <b>projet fil rouge</b> évalué, consolidant l'ensemble des acquis ;</li><li>un <b>encadrement permanent</b> et l'accès à des supports &amp; modèles professionnels.</li></ul>`},
+    {titre:"Durée &amp; organisation", html:`<p>${heures} heures de formation intensive (environ ${seances} séances de 2h30 à 3h), organisées en sessions de 3 à 4 heures — en semaine ou week-end selon le planning de la session.</p><p style="margin-top:6px">Format : <b>Présentiel</b> (à Abidjan), <b>En ligne</b> (visioconférence interactive) ou <b>Hybride</b>, selon la session choisie.</p>${dateLbl?`<p style="margin-top:6px">📅 Prochaine session : <b>${dateLbl}</b></p>`:''}`},
+    {titre:"Dispositif d'évaluation &amp; de certification", html:`<p>L'évaluation est <b>continue</b> (travaux pratiques, quiz, participation) et sanctionnée par une <b>étude de cas finale</b> et un <b>projet intégré</b>.</p><div class="tdr-cert"><div class="ttl">🎓 Certificat professionnel IBIG EDUFORM</div><p style="margin-top:8px;font-size:13px;color:#5b6b8c">Délivré aux participants justifiant d'une assiduité ≥ 80% et de la validation des évaluations. Reconnu dans les 17 pays membres de l'OHADA.</p></div>`},
+    {titre:"Tarifs &amp; participation", html:tarHTML},
+    {titre:"Financement &amp; facilités", html:`<ul><li><b>Facilités de paiement</b> possibles (échelonnement selon modalités).</li><li><b>Tarifs préférentiels</b> pour les inscriptions de <b>groupe</b> et les <b>entreprises</b> (formations sur mesure possibles).</li><li><b>Offre Early-bird</b> pour les inscriptions anticipées.</li><li>Le règlement s'effectue de façon sécurisée (Mobile Money, carte, virement, espèces).</li></ul>`},
+    {titre:"Accompagnement &amp; insertion professionnelle", html:`<p>Au-delà des compétences, IBIG EDUFORM s'engage sur la <b>trajectoire professionnelle</b> de ses diplômés :</p><ul><li>optimisation du <b>CV</b> et du profil professionnel ;</li><li><b>coaching</b> et simulations d'entretien ;</li><li><b>recommandation</b> auprès de notre réseau d'entreprises et d'organisations partenaires ;</li><li><b>suivi post-formation</b> et accès à la communauté des apprenants.</li></ul><p>Notre finalité : transformer une compétence acquise en <b>opportunité concrète d'emploi ou d'évolution</b>.</p>`},
+    {titre:"Engagement qualité IBIG EDUFORM", html:`<ul><li>Formateurs experts en activité &amp; contenus actualisés (évolutions réglementaires et technologiques) ;</li><li>Supports pédagogiques complets, outils et modèles professionnels ;</li><li>Encadrement permanent, groupe d'entraide et suivi post-formation ;</li><li><b>+90% de satisfaction</b> sur <b>1 000+ apprenants formés</b>.</li></ul>`},
+    {titre:"Pourquoi choisir IBIG EDUFORM", html:`<p>IBIG EDUFORM est un <b>institut international de formation professionnelle et de certifications</b> orienté impact, performance et employabilité. Nos programmes sont conçus <b>avec et pour les professionnels</b>, ancrés dans les réalités africaines et alignés sur les standards internationaux.</p><p>Un réseau d'entreprises et d'organisations partenaires, des formateurs experts, et une approche résolument tournée vers le <b>résultat terrain</b>.</p>`},
+    {titre:"Contacts &amp; préinscription", html:`<p>📞 ${esc(tel||'+225 27 22 27 60 14')}<br>✉️ ${esc(email||'formation@intermark-business.com')}<br>🌐 ${esc((web||'ibig-eduform.com').replace(/^https?:\/\//,''))}</p><p style="margin-top:10px">Préinscription gratuite : <b>https://${esc((web||'ibig-eduform.com').replace(/^https?:\/\//,''))}/preinscription</b></p>`},
+    {titre:"Validation / approbation", html:`<p>Document validé par IBIG EDUFORM — INTERMARK BUSINESS INTERNATIONAL GROUP SARL.</p>`},
+  ];
+
+  // Render
+  return `
+<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 44px;background:${theme.dk};color:#fff;font-size:10.5px;font-weight:600">
+  <span><b>IBIG EDUFORM</b> · Termes de Référence</span><span>Réf. ${ref}</span>
+</div>
+<div style="position:relative;padding:44px 44px 36px;color:#fff;overflow:hidden;background:linear-gradient(${theme.ga}deg,${theme.dk} 0%,${theme.pr} 78%,${theme.a2} 140%)">
+  <div style="position:absolute;right:-20px;top:-50px;font-size:220px;font-weight:900;opacity:.05;line-height:1;pointer-events:none">IBIG</div>
+  <div style="position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,${theme.go},${theme.a2},${theme.go})"></div>
+  <div style="position:relative;z-index:1">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <div style="width:46px;height:46px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex:0 0 auto">IE</div>
+      <div><b style="display:block;font-size:17px;font-weight:800">IBIG EDUFORM</b><span style="display:block;font-size:11px;opacity:.8">Institut international de formation professionnelle &amp; certifications</span></div>
+    </div>
+    <div style="display:inline-block;padding:5px 12px;border-radius:999px;background:linear-gradient(90deg,${theme.go},${theme.a2});color:#0d1b3e;font-weight:800;font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:14px">Termes de Référence — Programme officiel</div>
+    <h1 style="font-size:28px;font-weight:800;line-height:1.15;margin:0 0 10px;text-shadow:0 3px 20px rgba(0,0,0,.35);max-width:88%">${esc(titre)}</h1>
+    ${desc?`<p style="font-size:13px;opacity:.88;line-height:1.6;max-width:80%">${esc(desc.slice(0,240))}${desc.length>240?'…':''}</p>`:''}
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:18px">
+      <span style="padding:7px 12px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.35);font-size:11.5px;font-weight:700">🏷️ <b style="color:#ffd27d">${esc(cat||'Formation certifiante')}</b></span>
+      <span style="padding:7px 12px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.35);font-size:11.5px;font-weight:700">⏱️ <b style="color:#ffd27d">${heures}h</b></span>
+      ${dateLbl?`<span style="padding:7px 12px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.35);font-size:11.5px;font-weight:700">📅 <b style="color:#ffd27d">${dateLbl}</b></span>`:''}
+      <span style="padding:7px 12px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.35);font-size:11.5px;font-weight:700">🌐 Présentiel · En ligne · Hybride</span>
+    </div>
+  </div>
+</div>
+<div style="padding:22px 44px;border-bottom:1px solid #e2e8f0;background:#f8faff">
+  <div style="font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#64748b;margin-bottom:10px;font-weight:700">Sommaire</div>
+  <ol style="list-style:none;column-count:2;column-gap:24px;margin:0;padding:0">
+    ${S.map((s,i)=>`<li style="font-size:12.5px;color:#2a3a5c;padding:4px 0;break-inside:avoid"><b style="font-weight:800;margin-right:6px;color:${theme.pr}">${i+1}.</b>${s.titre.replace(/&amp;/g,'&')}</li>`).join('')}
+  </ol>
+</div>
+<div style="padding:30px 44px">
+  ${S.map((s,i)=>`
+  <div style="margin-bottom:22px">
+    <h3 style="display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-bottom:9px;color:${theme.dk}">
+      <span style="flex:0 0 auto;width:28px;height:28px;border-radius:${theme.nr};background:linear-gradient(135deg,${theme.pr},${theme.a2});display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff">${i+1}</span>${s.titre}
+    </h3>
+    <div style="font-size:13.5px;line-height:1.68;color:#2a3a5c">${s.html}</div>
+  </div>`).join('')}
+</div>
+<div style="background:${theme.dk};color:#cdd7ea;padding:22px 44px;font-size:12px;line-height:1.7">
+  <b style="color:#fff">IBIG EDUFORM</b> — Institut international de formation professionnelle &amp; certifications.<br>
+  📞 ${esc(f.tel||'+225 27 22 27 60 14')} &nbsp;·&nbsp; ✉️ ${esc(f.email||'formation@intermark-business.com')} &nbsp;·&nbsp; 🌐 ${esc((f.web||'ibig-eduform.com').replace(/^https?:\/\//,''))}<br>
+  <span style="opacity:.7;font-style:italic">« Chez IBIG EDUFORM, c'est l'excellence à travers la formation professionnelle. »</span>
+</div>
+<div style="display:flex;justify-content:space-between;flex-wrap:wrap;padding:8px 44px;gap:6px;font-size:10px;background:#0b1322;color:#9fb0c9">
+  <span>Document officiel IBIG EDUFORM — Réf. ${ref} — généré le ${today}</span>
+  <span>Document protégé — toute reproduction ou modification est interdite.</span>
+</div>`;
+}
+
+/* ── Collect form & render ───────────────────────────────────── */
+function getForm() {
+  return {
+    titre:    document.getElementById('titre').value.trim() || 'Formation professionnelle',
+    cat:      document.getElementById('domaine').value,
+    desc:     document.getElementById('description').value.trim(),
+    heures:   parseInt(document.getElementById('heures').value)||25,
+    prixOnline: parseInt(document.getElementById('prix_online').value)||0,
+    prixPres:   parseInt(document.getElementById('prix_pres').value)||0,
+    frais:    parseInt(document.getElementById('frais').value)||50000,
+    dateDebut: document.getElementById('date_debut').value,
+    objCust:  document.getElementById('objectif').value.trim(),
+    pubCust:  document.getElementById('public_cible').value.trim(),
+    progCust: document.getElementById('programme').value.trim(),
+    tel:   document.getElementById('contact_tel').value.trim(),
+    email: document.getElementById('contact_email').value.trim(),
+    web:   document.getElementById('contact_web').value.trim(),
+  };
+}
+
+function renderTDR() {
+  document.getElementById('tdrSheet').innerHTML = buildTDR(getForm());
+}
+
+/* ── PDF export (html2pdf.js) ────────────────────────────────── */
+function exportPDF() {
+  const f = getForm();
+  const btn = document.getElementById('btnPdf');
+  const old = btn.textContent; btn.textContent = '⏳ Génération…'; btn.disabled = true;
+
+  window.scrollTo(0,0);
+  document.body.classList.add('pdf-mode');
+
+  const slug = f.titre.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const fname = 'TDR-IBIG-EDUFORM-' + slug.toUpperCase() + '.pdf';
+
+  const opt = {
+    margin: [8,0,16,0],
+    filename: fname,
+    image: {type:'jpeg', quality:0.98},
+    html2canvas: {scale:2, useCORS:true, backgroundColor:'#ffffff', scrollX:0, scrollY:0},
+    jsPDF: {unit:'mm', format:'a4', orientation:'portrait'},
+    pagebreak: {mode:['css','legacy']},
+  };
+
+  setTimeout(() => {
+    html2pdf().set(opt).from(document.getElementById('tdrSheet')).toPdf().get('pdf').then(pdf => {
+      const total = pdf.internal.getNumberOfPages();
+      const w = pdf.internal.pageSize.getWidth();
+      const h = pdf.internal.pageSize.getHeight();
+      const ref = 'TDR-' + Math.abs(f.titre.split('').reduce((a,c)=>((a<<5)-a)+c.charCodeAt(0)|0,0)).toString(16).toUpperCase().slice(0,8);
+      for(let i=1;i<=total;i++){
+        pdf.setPage(i);
+        pdf.setDrawColor(206,214,230); pdf.setLineWidth(0.25);
+        pdf.line(12,h-11,w-12,h-11);
+        pdf.setFont('helvetica','normal'); pdf.setFontSize(7.5); pdf.setTextColor(120,132,156);
+        pdf.text('IBIG EDUFORM',12,h-6.5);
+        pdf.text(ref,w/2,h-6.5,{align:'center'});
+        pdf.text('Page '+i+' / '+total,w-12,h-6.5,{align:'right'});
+      }
+    }).save().then(()=>{
+      btn.textContent = old; btn.disabled = false;
+      document.body.classList.remove('pdf-mode');
+      showToast('✅ PDF téléchargé');
+    }).catch(()=>{
+      btn.textContent = old; btn.disabled = false;
+      document.body.classList.remove('pdf-mode');
+      showToast('❌ Erreur PDF — essayez avec le bouton 📋 HTML');
+    });
+  }, 120);
+}
+
+/* ── Copy HTML ───────────────────────────────────────────────── */
+function copyHTML() {
+  const f = getForm();
+  const inner = document.getElementById('tdrSheet').innerHTML;
+  const html = `<!doctype html><html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TDR — ${f.titre} — IBIG EDUFORM</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',Arial,sans-serif;background:#d8dff0;padding:28px 16px}
+.w{max-width:820px;margin:0 auto;background:#fff;border-radius:10px;box-shadow:0 20px 60px rgba(10,20,50,.22);overflow:hidden}
+ul{padding-left:18px}li{margin:4px 0;line-height:1.55}
+.tdr-mod{background:#f8faff;border:1px solid #e2e8f0;border-left:4px solid #f5a51a;border-radius:8px;padding:12px 14px;margin:8px 0}
+.tdr-mod h4{font-size:13px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:7px}
+.mn{width:20px;height:20px;border-radius:5px;background:#f5a51a;color:#0d1b3e;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:0 0 auto}
+.tdr-tarifs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:8px}
+.tdr-tarif{border:1px solid #e2e8f0;border-radius:10px;padding:12px;text-align:center;background:#f8faff}
+.tdr-tarif span{display:block;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
+.tdr-tarif b{display:block;font-size:16px;font-weight:800;margin-top:3px}
+.tdr-cert{background:linear-gradient(135deg,rgba(245,165,26,.12),rgba(27,94,216,.06));border:1px solid rgba(245,165,26,.35);border-radius:10px;padding:14px;margin-top:8px}
+.tdr-cert .ttl{font-weight:800}
+@media print{body{background:#fff;padding:0}.w{border-radius:0;box-shadow:none}}</style>
+</head><body><div class="w">${inner}</div></body></html>`;
+
+  navigator.clipboard.writeText(html).then(()=>{
+    showToast('✅ HTML copié — collez dans un fichier .html');
+  }).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=html; ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✅ HTML copié dans le presse-papier');
+  });
+}
+
+/* ── Toast ───────────────────────────────────────────────────── */
+function showToast(msg,dur=3200){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+/* ── Mobile tabs ─────────────────────────────────────────────── */
+function switchTab(tab){
+  const pF=document.getElementById('panelForm'), pP=document.getElementById('panelPreview');
+  const bF=document.getElementById('tabF'), bP=document.getElementById('tabP');
+  if(tab==='form'){pF.removeAttribute('data-tab');pP.setAttribute('data-tab','hidden');bF.classList.add('active');bP.classList.remove('active');}
+  else{pP.removeAttribute('data-tab');pF.setAttribute('data-tab','hidden');bP.classList.add('active');bF.classList.remove('active');}
+}
+
+/* ── Debounced live update ───────────────────────────────────── */
+let tmr;
+document.querySelectorAll('input,select,textarea').forEach(el=>{
+  el.addEventListener('input',()=>{ clearTimeout(tmr); tmr=setTimeout(renderTDR,400); });
+  el.addEventListener('change',()=>{ clearTimeout(tmr); tmr=setTimeout(renderTDR,200); });
+});
+
+/* ── Reset / Init ────────────────────────────────────────────── */
+function resetForm(){
+  document.getElementById('titre').value = 'Gestion des Ressources Humaines (35h)';
+  document.getElementById('domaine').value = 'GRH';
+  document.getElementById('description').value = "Maîtrisez la gestion RH de A à Z : contrats de travail, paie, CNPS, CMU, recrutement et développement des compétences. Formation pratique orientée terrain, adaptée aux entreprises ivoiriennes et de l'espace OHADA.";
+  document.getElementById('heures').value = '35';
+  document.getElementById('prix_online').value = '350000';
+  document.getElementById('prix_pres').value = '450000';
+  document.getElementById('frais').value = '50000';
+  document.getElementById('date_debut').value = '';
+  document.getElementById('objectif').value = '';
+  document.getElementById('public_cible').value = '';
+  document.getElementById('programme').value = '';
+  document.getElementById('contact_tel').value = '+225 27 22 27 60 14';
+  document.getElementById('contact_email').value = 'formation@intermark-business.com';
+  document.getElementById('contact_web').value = 'ibig-eduform.com';
+  renderTDR();
+}
+
+resetForm();
+</script>
+</body>
+</html>

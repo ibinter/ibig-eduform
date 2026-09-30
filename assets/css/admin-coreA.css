@@ -1,0 +1,109 @@
+/* ===============================
+   RESET ADMIN — IBIG
+=============================== */
+
+*,
+*::before,
+*::after{
+  box-sizing:border-box;
+}
+
+html{
+  font-size:14px;
+}
+
+body{
+  margin:0;
+  background:#020617;
+  color:#e5e7eb;
+  font-family:Inter,system-ui,-apple-system,sans-serif;
+  line-height:1.5;
+}
+
+/* ===============================
+   STRUCTURE
+=============================== */
+
+.admin-layout{
+  display:flex;
+  min-height:100vh;
+}
+
+.content{
+  flex:1;
+  padding:20px;
+}
+
+/* ===============================
+   TEXT
+=============================== */
+
+h1{font-size:1.4rem;font-weight:800}
+h2{font-size:1.2rem;font-weight:700}
+h3{font-size:1rem;font-weight:700}
+
+p,td,th{
+  font-size:.9rem;
+}
+
+.muted{
+  color:#94a3b8;
+  font-size:.75rem;
+}
+
+/* ===============================
+   TABLE
+=============================== */
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th{
+  font-size:.75rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:#94a3b8;
+}
+
+td,th{
+  padding:10px 8px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.content{
+  flex:1;
+  padding:24px;
+  max-width:1400px;
+  margin:0 auto;
+}
+
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+  margin-bottom:20px;
+}
+
+.kpi-card{
+  padding:14px;
+}
+
+.card.table-card{
+  max-width:100%;
+  overflow-x:auto;
+}
+
+<div class="card table-card">
+  <table>...</table>
+</div>
+
+.session-item{
+  padding:10px 12px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:10px;
+  background:rgba(255,255,255,.02);
+}
+
+html{ font-size:13.5px; }

@@ -1,0 +1,54 @@
+{
+  "name": "IBIG EDUFORM — Formations Certifiantes",
+  "short_name": "IBIG EDUFORM",
+  "description": "Institut de formation professionnelle certifiante dans l'espace OHADA — 17 pays d'Afrique francophone.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#f5a623",
+  "lang": "fr",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Catalogue des formations",
+      "short_name": "Catalogue",
+      "url": "/catalogue-formations.php",
+      "description": "Voir toutes les formations certifiantes"
+    },
+    {
+      "name": "Calendrier des sessions",
+      "short_name": "Calendrier",
+      "url": "/calendrier.php",
+      "description": "Prochaines sessions de formation"
+    },
+    {
+      "name": "Préinscription",
+      "short_name": "S'inscrire",
+      "url": "/preinscription-generale.php",
+      "description": "Se préinscrire à une formation"
+    }
+  ]
+}
