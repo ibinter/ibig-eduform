@@ -26,7 +26,7 @@ $pdo = Database::connect();
    PRÉINSCRIPTION
 ========================= */
 $stmt = $pdo->prepare("
-  SELECT p.*, f.titre AS formation
+  SELECT p.*, f.titre AS formation, f.slug AS formation_slug
   FROM preinscriptions p
   LEFT JOIN formations f ON f.id = p.formation_id
   WHERE p.id = ?
@@ -180,7 +180,10 @@ hr{border:0;border-top:1px solid #eef2f7;margin:18px 0}
     <?php if (!empty($p['cni_path'])): ?>
       <a class="btn btn-file" href="/<?= e($p['cni_path']); ?>" target="_blank">🪪 Télécharger la pièce d'identité</a>
     <?php endif; ?>
-    <?php if (empty($p['cv_path']) && empty($p['cni_path'])): ?>
+    <?php if (!empty($p['formation_slug'])): ?>
+      <a class="btn btn-secondary" href="/tdr-local-pdf.php?slug=<?= urlencode((string)$p['formation_slug']); ?>" target="_blank" rel="noopener">📋 Voir le TDR</a>
+    <?php endif; ?>
+    <?php if (empty($p['cv_path']) && empty($p['cni_path']) && empty($p['formation_slug'])): ?>
       <span class="muted" style="color:#94a3b8;font-size:13.5px">Aucun document fourni par le candidat.</span>
     <?php endif; ?>
   </div>
