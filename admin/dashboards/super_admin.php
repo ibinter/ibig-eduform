@@ -44,6 +44,35 @@ try {
   $revenuTotal = (int)($kp['rev'] ?? 0);
 } catch (Throwable $e) {}
 
+/* ── Niveaux actifs & répartition préinscriptions par niveau ── */
+$nbNiveauxActifs = 0; $nbNiveauxModules = 0;
+$preinscParNiveau = ['debutant' => 0, 'intermediaire' => 0, 'expert' => 0, 'autre' => 0];
+try {
+  $kn = $pdo->query("SELECT COUNT(*) AS nb, SUM(CASE WHEN EXISTS(SELECT 1 FROM formation_niveau_modules m WHERE m.niveau_id=fn.id) THEN 1 ELSE 0 END) AS avec_modules FROM formation_niveaux fn WHERE fn.statut='actif'")->fetch(PDO::FETCH_ASSOC) ?: [];
+  $nbNiveauxActifs  = (int)($kn['nb'] ?? 0);
+  $nbNiveauxModules = (int)($kn['avec_modules'] ?? 0);
+} catch (Throwable $e) {}
+try {
+  $kpn = $pdo->query("SELECT COALESCE(niveau,'') AS niv, COUNT(*) AS nb FROM preinscriptions GROUP BY niveau")->fetchAll(PDO::FETCH_ASSOC);
+  foreach ($kpn as $row) {
+    $nv = strtolower(trim((string)$row['niv']));
+    if (isset($preinscParNiveau[$nv])) { $preinscParNiveau[$nv] += (int)$row['nb']; }
+    else { $preinscParNiveau['autre'] += (int)$row['nb']; }
+  }
+} catch (Throwable $e) {}
+
+/* ── Top 5 formations les plus demandées ── */
+$topFormations = [];
+try {
+  $topFormations = $pdo->query("
+    SELECT f.titre, COUNT(p.id) AS nb
+    FROM preinscriptions p
+    JOIN formations f ON f.id = p.formation_id
+    GROUP BY p.formation_id
+    ORDER BY nb DESC LIMIT 5
+  ")->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {}
+
 /* =====================================================
    LISTES
 ===================================================== */
@@ -130,6 +159,18 @@ ob_start();
 
 .chip-sp{display:inline-block;font-size:10px;font-weight:800;color:#1f3fe0;background:rgba(31,63,224,.08);border:1px solid rgba(31,63,224,.2);border-radius:999px;padding:1px 7px;margin-left:5px}
 
+.niv-dist{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.niv-pill{display:flex;flex-direction:column;align-items:center;gap:2px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 14px;min-width:80px}
+.niv-pill b{font-size:20px;font-weight:900}
+.niv-pill span{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.3px}
+.niv-pill.d b{color:#166534}.niv-pill.i b{color:#1e40af}.niv-pill.e b{color:#9d174d}
+.top-bar{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9}
+.top-bar:last-child{border-bottom:0}
+.top-bar-name{flex:1;font-size:12.5px;font-weight:600;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-bar-nb{font-size:12px;font-weight:800;color:#1d4ed8;min-width:28px;text-align:right}
+.top-bar-track{height:6px;background:#e2e8f0;border-radius:3px;margin-top:3px}
+.top-bar-fill{height:6px;background:linear-gradient(90deg,#3b82f6,#1d4ed8);border-radius:3px;transition:width .3s}
+
 .alert-banner{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;color:#9a3412;display:flex;align-items:center;gap:8px;margin-bottom:18px}
 
 @media(max-width:1100px){.sa-kpis{grid-template-columns:repeat(3,1fr)}}
@@ -170,8 +211,13 @@ ob_start();
     <span>&#128100; Utilisateurs</span>
     <div class="hint">Comptes enregistrés</div>
   </div>
-  <?php if ($revenuTotal > 0): ?>
   <div class="sa-kpi k-teal">
+    <b><?= $nbNiveauxActifs; ?></b>
+    <span>&#127891; Niveaux actifs</span>
+    <div class="hint"><?= $nbNiveauxModules; ?> avec modules &nbsp;·&nbsp; <a href="/admin/niveaux/index.php" style="color:#0f766e;font-weight:700">Gérer →</a></div>
+  </div>
+  <?php if ($revenuTotal > 0): ?>
+  <div class="sa-kpi k-sky">
     <b><?= number_format($revenuTotal, 0, ',', ' '); ?></b>
     <span>&#128176; Revenus (FCFA)</span>
     <div class="hint"><?= $nbPaiements; ?> paiement(s) validé(s)</div>
@@ -223,26 +269,42 @@ ob_start();
     <?php endif; ?>
   </div>
 
-  <!-- PROCHAINES FORMATIONS -->
+  <!-- RÉPARTITION PAR NIVEAU -->
   <div class="sa-card">
     <div class="sa-card-head">
-      <h3>&#128197; Prochaines sessions</h3>
-      <a href="/admin/formations/index.php">Gérer &rarr;</a>
+      <h3>&#127891; Par niveau de formation</h3>
+      <a href="/admin/niveaux/index.php">Gérer &rarr;</a>
     </div>
-    <?php if (!$nextFormations): ?>
-      <p style="color:#94a3b8;font-size:13px">Aucune session prévue.</p>
-    <?php else: ?>
-    <ul class="sa-list">
-      <?php foreach ($nextFormations as $s): ?>
-        <li>
-          <span>
-            <div class="lbl"><?= e($s['titre']); ?><?php if (!empty($s['is_samedi_pro'])): ?><span class="chip-sp">SP</span><?php endif; ?></div>
-            <div class="sub"><?= e($s['domaine'] ?? ''); ?></div>
-          </span>
-          <span class="ts"><?= !empty($s['date_debut']) ? date('d/m/Y', strtotime((string)$s['date_debut'])) : '—'; ?></span>
-        </li>
+    <div class="niv-dist">
+      <div class="niv-pill d">
+        <b><?= $preinscParNiveau['debutant']; ?></b>
+        <span>🟢 Débutant</span>
+      </div>
+      <div class="niv-pill i">
+        <b><?= $preinscParNiveau['intermediaire']; ?></b>
+        <span>🔵 Intermédiaire</span>
+      </div>
+      <div class="niv-pill e">
+        <b><?= $preinscParNiveau['expert']; ?></b>
+        <span>🔴 Expert</span>
+      </div>
+    </div>
+    <?php $topMax = $topFormations ? (int)$topFormations[0]['nb'] : 1; ?>
+    <?php if ($topFormations): ?>
+    <div style="margin-top:16px">
+      <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px">Top formations demandées</div>
+      <?php foreach ($topFormations as $tf): ?>
+        <div class="top-bar">
+          <div style="flex:1">
+            <div style="display:flex;justify-content:space-between">
+              <span class="top-bar-name" title="<?= e($tf['titre']); ?>"><?= e($tf['titre']); ?></span>
+              <span class="top-bar-nb"><?= (int)$tf['nb']; ?></span>
+            </div>
+            <div class="top-bar-track"><div class="top-bar-fill" style="width:<?= $topMax > 0 ? round((int)$tf['nb'] / $topMax * 100) : 0; ?>%"></div></div>
+          </div>
+        </div>
       <?php endforeach; ?>
-    </ul>
+    </div>
     <?php endif; ?>
   </div>
 
@@ -311,6 +373,7 @@ ob_start();
   <a href="/admin/demandes-formation/index.php" style="padding:10px 18px;background:#f97316;color:#fff;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none">&#127891; Demandes</a>
   <a href="/admin/formations/index.php" style="padding:10px 18px;background:#16a34a;color:#fff;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none">&#128196; Formations</a>
   <a href="/admin/statistics/index.php" style="padding:10px 18px;background:#6366f1;color:#fff;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none">&#128202; Statistiques</a>
+  <a href="/admin/niveaux/index.php" style="padding:10px 18px;background:#0f766e;color:#fff;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none">&#127891; Niveaux</a>
   <a href="/admin/users/index.php" style="padding:10px 18px;background:#0f172a;color:#fff;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none">&#128100; Utilisateurs</a>
 </div>
 

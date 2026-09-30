@@ -35,9 +35,15 @@ try {
   $nbDemandesNouvelles = (int)$pdo->query("SELECT COUNT(*) FROM demandes_formation WHERE statut='nouvelle'")->fetchColumn();
 } catch (Throwable $e) {}
 
-$nbSessions = 0;
+$preinscParNiveau = ['debutant' => 0, 'intermediaire' => 0, 'expert' => 0];
 try {
-  $nbSessions = (int)$pdo->query("SELECT COUNT(*) FROM formations WHERE statut='active' AND date_debut IS NOT NULL AND date_debut >= CURDATE()")->fetchColumn();
+  $kpn = $pdo->query("SELECT COALESCE(niveau,'') AS niv, COUNT(*) AS nb FROM preinscriptions GROUP BY niveau")->fetchAll(PDO::FETCH_ASSOC);
+  foreach ($kpn as $row) { $nv = strtolower(trim((string)$row['niv'])); if (isset($preinscParNiveau[$nv])) $preinscParNiveau[$nv] += (int)$row['nb']; }
+} catch (Throwable $e) {}
+
+$topFormations = [];
+try {
+  $topFormations = $pdo->query("SELECT f.titre, COUNT(p.id) AS nb FROM preinscriptions p JOIN formations f ON f.id=p.formation_id GROUP BY p.formation_id ORDER BY nb DESC LIMIT 5")->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {}
 
 /* =====================================================
@@ -50,15 +56,6 @@ try {
     FROM preinscriptions p
     LEFT JOIN formations f ON f.id = p.formation_id
     ORDER BY p.id DESC LIMIT 8
-  ")->fetchAll(PDO::FETCH_ASSOC);
-} catch (Throwable $e) {}
-
-$nextSessions = [];
-try {
-  $nextSessions = $pdo->query("
-    SELECT titre, date_debut, domaine, is_samedi_pro FROM formations
-    WHERE statut='active' AND date_debut IS NOT NULL AND date_debut >= CURDATE()
-    ORDER BY date_debut ASC LIMIT 6
   ")->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {}
 
@@ -137,9 +134,9 @@ ob_start();
     <div class="hint">Dans le catalogue</div>
   </div>
   <div class="da-kpi k-amber">
-    <b><?= $nbSessions; ?></b>
-    <span>&#128197; Sessions à venir</span>
-    <div class="hint">Formations planifiées</div>
+    <b><?= $preinscParNiveau['debutant'] + $preinscParNiveau['intermediaire'] + $preinscParNiveau['expert']; ?></b>
+    <span>&#127891; Avec niveau</span>
+    <div class="hint">🟢 <?= $preinscParNiveau['debutant']; ?> · 🔵 <?= $preinscParNiveau['intermediaire']; ?> · 🔴 <?= $preinscParNiveau['expert']; ?></div>
   </div>
 </div>
 
@@ -187,31 +184,39 @@ ob_start();
     <?php endif; ?>
   </div>
 
-  <!-- PROCHAINES SESSIONS -->
+  <!-- TOP FORMATIONS & NIVEAUX -->
   <div class="da-card">
     <div class="da-card-head">
-      <h3>&#128197; Prochaines sessions</h3>
-      <a href="/admin/formations/index.php">Voir tout &rarr;</a>
+      <h3>&#127891; Par niveau &amp; Top formations</h3>
+      <a href="/admin/preinscriptions/index.php?niveau=debutant">Filtrer &rarr;</a>
     </div>
-    <?php if (!$nextSessions): ?>
-      <p style="color:#94a3b8;font-size:13px">Aucune session à venir.</p>
-    <?php else: ?>
-    <ul class="da-list">
-      <?php foreach ($nextSessions as $s): ?>
-        <li>
-          <span>
-            <div class="lbl"><?= e($s['titre']); ?><?php if (!empty($s['is_samedi_pro'])): ?><span class="chip-sp">SP</span><?php endif; ?></div>
-            <div class="sub"><?= e($s['domaine'] ?? ''); ?></div>
-          </span>
-          <span class="ts"><?= !empty($s['date_debut']) ? date('d/m/Y', strtotime((string)$s['date_debut'])) : '—'; ?></span>
-        </li>
-      <?php endforeach; ?>
-    </ul>
-    <?php endif; ?>
-
-    <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
-      <a href="/admin/demandes-formation/index.php" style="padding:8px 14px;background:#f97316;color:#fff;border-radius:10px;font-weight:800;font-size:12.5px;text-decoration:none;text-align:center">
-        &#127891; Demandes de formation (<?= $nbDemandesNouvelles; ?> nouvelles)
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <div style="background:#dcfce7;border:1px solid #86efac;border-radius:9px;padding:8px 14px;text-align:center;min-width:70px">
+        <div style="font-size:18px;font-weight:900;color:#166534"><?= $preinscParNiveau['debutant']; ?></div>
+        <div style="font-size:10px;font-weight:700;color:#166534">🟢 Débutant</div>
+      </div>
+      <div style="background:#dbeafe;border:1px solid #93c5fd;border-radius:9px;padding:8px 14px;text-align:center;min-width:70px">
+        <div style="font-size:18px;font-weight:900;color:#1e40af"><?= $preinscParNiveau['intermediaire']; ?></div>
+        <div style="font-size:10px;font-weight:700;color:#1e40af">🔵 Intermédiaire</div>
+      </div>
+      <div style="background:#fce7f3;border:1px solid #f9a8d4;border-radius:9px;padding:8px 14px;text-align:center;min-width:70px">
+        <div style="font-size:18px;font-weight:900;color:#9d174d"><?= $preinscParNiveau['expert']; ?></div>
+        <div style="font-size:10px;font-weight:700;color:#9d174d">🔴 Expert</div>
+      </div>
+    </div>
+    <?php $topMax = $topFormations ? (int)$topFormations[0]['nb'] : 1; ?>
+    <?php foreach ($topFormations as $tf): ?>
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9">
+        <div style="flex:1;overflow:hidden">
+          <div style="font-size:12px;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= e($tf['titre']); ?></div>
+          <div style="height:5px;background:#e2e8f0;border-radius:3px;margin-top:3px"><div style="height:5px;background:linear-gradient(90deg,#3b82f6,#1d4ed8);border-radius:3px;width:<?= $topMax > 0 ? round((int)$tf['nb'] / $topMax * 100) : 0; ?>%"></div></div>
+        </div>
+        <span style="font-size:12px;font-weight:900;color:#1d4ed8;min-width:24px;text-align:right"><?= (int)$tf['nb']; ?></span>
+      </div>
+    <?php endforeach; ?>
+    <div style="margin-top:12px">
+      <a href="/admin/demandes-formation/index.php" style="padding:7px 14px;background:#f97316;color:#fff;border-radius:9px;font-weight:800;font-size:12px;text-decoration:none">
+        &#127891; Demandes (<?= $nbDemandesNouvelles; ?> nouvelles)
       </a>
     </div>
   </div>
