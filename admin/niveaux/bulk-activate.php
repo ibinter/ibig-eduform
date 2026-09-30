@@ -19,7 +19,7 @@ $flash = null;
 
 /* ── POST : activation ── */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    csrf_verify();
+    csrf_check();
     $type   = trim((string)($_POST['type_action'] ?? ''));
     $niveau = trim((string)($_POST['niveau_cible'] ?? ''));
     $ids    = array_map('intval', (array)($_POST['ids'] ?? []));
@@ -54,30 +54,28 @@ $stats = $pdo->query("
     FROM formation_niveaux
     WHERE statut = 'brouillon'
     GROUP BY niveau
-    ORDER BY FIELD(niveau,'debutant','intermediaire','expert')
+    ORDER BY CASE niveau WHEN 'debutant' THEN 1 WHEN 'intermediaire' THEN 2 WHEN 'expert' THEN 3 ELSE 4 END
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 $total_brouillons = array_sum(array_column($stats, 'nb'));
 
 /* ── Liste brouillons (prévisualisation) ── */
 $niv_filter = trim((string)($_GET['niv'] ?? ''));
-$preview_where = "WHERE statut = 'brouillon'";
-$preview_params = [];
-if (in_array($niv_filter, ['debutant','intermediaire','expert'], true)) {
-    $preview_where .= " AND niveau = :niv";
-    $preview_params[':niv'] = $niv_filter;
-}
-$previews = $pdo->prepare("
+$preview_sql_base = "
     SELECT n.id, n.niveau, n.duree_heures, n.tarif_en_ligne, n.tarif_presentiel,
            f.titre, f.slug
     FROM formation_niveaux n
     JOIN formations f ON f.id = n.formation_id
-    $preview_where
-    ORDER BY f.titre ASC, n.ordre_affichage ASC
-    LIMIT 200
-");
-$previews->execute($preview_params);
-$previews = $previews->fetchAll(PDO::FETCH_ASSOC);
+    WHERE n.statut = 'brouillon'";
+$preview_params = [];
+if (in_array($niv_filter, ['debutant','intermediaire','expert'], true)) {
+    $preview_sql_base .= " AND n.niveau = :niv";
+    $preview_params[':niv'] = $niv_filter;
+}
+$preview_sql_base .= " ORDER BY f.titre ASC, n.ordre_affichage ASC LIMIT 200";
+$prev_stmt = $pdo->prepare($preview_sql_base);
+$prev_stmt->execute($preview_params);
+$previews = $prev_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $niv_labels  = ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'];
 $niv_classes = ['debutant'=>'niv-d','intermediaire'=>'niv-i','expert'=>'niv-e'];
@@ -163,7 +161,7 @@ ob_start();
       <h4><span class="niv-badge niv-<?= $nv[0] ?>"><?= $niv_labels[$nv] ?></span></h4>
       <p><?= $nb_nv ?> niveaux en brouillon.<br>Tous seront activés immédiatement.</p>
       <form method="post" onsubmit="return confirm('Activer tous les <?= $nb_nv ?> niveaux <?= $niv_labels[$nv] ?> brouillons ?')">
-        <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+        <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
         <input type="hidden" name="type_action" value="activate_all_niveau">
         <input type="hidden" name="niveau_cible" value="<?= $nv ?>">
         <button type="submit" class="btn-activate btn-act-<?= $nv === 'debutant' ? 'debutant' : ($nv === 'intermediaire' ? 'inter' : 'expert') ?>"
@@ -178,7 +176,7 @@ ob_start();
       <h4>⚡ Tout activer</h4>
       <p><?= $total_brouillons ?> niveaux brouillons au total.<br><strong style="color:#dc2626">Action irréversible.</strong></p>
       <form method="post" onsubmit="return confirm('Activer TOUS les <?= $total_brouillons ?> niveaux brouillons ? Cette action est irréversible.')">
-        <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+        <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
         <input type="hidden" name="type_action" value="activate_all">
         <button type="submit" class="btn-activate btn-act-all" <?= $total_brouillons === 0 ? 'disabled' : '' ?>>
           ⚡ Activer tous les brouillons
@@ -202,7 +200,7 @@ ob_start();
     <p style="color:#22c55e;font-weight:700">✅ Aucun brouillon<?= $niv_filter ? ' pour ce niveau' : '' ?>.</p>
   <?php else: ?>
   <form method="post" id="selForm">
-    <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+    <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
     <input type="hidden" name="type_action" value="activate_ids">
     <button type="submit" class="btn-activate-sel" onclick="return selCount() > 0 || (alert('Sélectionnez au moins un niveau.'), false)">
       ✅ Activer la sélection (<span id="selCount">0</span>)

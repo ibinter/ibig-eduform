@@ -31,7 +31,7 @@ foreach ($niveaux as $n) $niveaux_map[$n['niveau']] = $n;
 /* ── POST : sauvegarde ── */
 $flash = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    csrf_verify();
+    csrf_check();
     $niveau = trim((string)($_POST['niveau'] ?? ''));
     if (!in_array($niveau, ['debutant','intermediaire','expert'], true)) {
         $flash = ['err', 'Niveau invalide.'];
@@ -154,7 +154,7 @@ ob_start();
     <?php endif; ?>
 
     <form method="post">
-      <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+      <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
       <input type="hidden" name="niveau" value="<?= $nv ?>">
 
       <div class="statut-bar">
