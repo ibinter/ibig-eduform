@@ -22,9 +22,10 @@ if (!is_writable($mpdfTempDir)) {
     $mpdfTempDir = sys_get_temp_dir();
 }
 
-$slug = trim(strip_tags((string)($_GET['slug'] ?? '')));
-$mode = trim($_GET['mode'] ?? 'en_ligne');
-$fmt  = trim($_GET['fmt']  ?? 'individuel');
+$slug     = trim(strip_tags((string)($_GET['slug'] ?? '')));
+$mode     = trim($_GET['mode'] ?? 'en_ligne');
+$fmt      = trim($_GET['fmt']  ?? 'individuel');
+$niv_get  = trim(strtolower((string)($_GET['niveau'] ?? '')));  // debutant|intermediaire|expert
 
 if ($slug === '') {
     http_response_code(400);
@@ -72,14 +73,50 @@ $domMap = [
 $domaine  = (string)($row['domaine'] ?? '');
 $category = $domMap[$domaine] ?? $domaine;
 
+/* ── Charger le niveau si demandé ── */
+$niveau_row = null;
+if (in_array($niv_get, ['debutant', 'intermediaire', 'expert'])) {
+    // Récupérer l'id de la formation d'abord
+    $stmt_fid = $pdo->prepare("SELECT id FROM formations WHERE slug = ? LIMIT 1");
+    $stmt_fid->execute([$slug]);
+    $fid = (int)($stmt_fid->fetchColumn() ?: 0);
+    if ($fid) {
+        $stmt_niv = $pdo->prepare("
+            SELECT n.id AS niveau_id, n.duree_heures, n.tarif_en_ligne, n.tarif_presentiel,
+                   n.objectifs, n.prerequis, n.public_cible
+            FROM formation_niveaux n
+            WHERE n.formation_id = :fid AND n.niveau = :niv AND n.statut = 'actif'
+            LIMIT 1
+        ");
+        $stmt_niv->execute([':fid' => $fid, ':niv' => $niv_get]);
+        $niveau_row = $stmt_niv->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+}
+
+$prix_base = (int)($row['tarif_en_ligne'] > 0 ? $row['tarif_en_ligne'] : ($row['tarif_presentiel'] ?? 0));
+$prix_pres_base = (int)($row['tarif_presentiel'] ?? 0);
+$duree_base = (string)($row['duree'] ?? '');
+
+if ($niveau_row) {
+    if ($niveau_row['tarif_en_ligne'] > 0)   $prix_base      = (int)$niveau_row['tarif_en_ligne'];
+    if ($niveau_row['tarif_presentiel'] > 0) $prix_pres_base = (int)$niveau_row['tarif_presentiel'];
+    if ($niveau_row['duree_heures'] > 0)     $duree_base     = $niveau_row['duree_heures'] . 'H';
+}
+
 $formation = [
-    'name'        => (string)($row['titre']          ?? ''),
-    'category'    => $category,
-    'slug'        => (string)($row['slug']            ?? ''),
-    'price'       => (int)   ($row['tarif_en_ligne'] > 0 ? $row['tarif_en_ligne'] : ($row['tarif_presentiel'] ?? 0)),
-    'description' => (string)($row['description']     ?? ''),
-    'prix_pres'   => (int)   ($row['tarif_presentiel']?? 0),
-    'duree'       => (string)($row['duree']            ?? ''),
+    'name'             => (string)($row['titre']          ?? ''),
+    'category'         => $category,
+    'slug'             => (string)($row['slug']            ?? ''),
+    'price'            => $prix_base,
+    'description'      => (string)($row['description']     ?? ''),
+    'prix_pres'        => $prix_pres_base,
+    'duree'            => $duree_base,
+    /* Données niveau */
+    'niveau'           => $niv_get,
+    'niveau_id'        => $niveau_row ? (int)$niveau_row['niveau_id'] : null,
+    'objectifs_niveau' => $niveau_row['objectifs']   ?? '',
+    'prerequis_niveau' => $niveau_row['prerequis']   ?? '',
+    'public_niveau'    => $niveau_row['public_cible'] ?? '',
 ];
 
 $opts = [
