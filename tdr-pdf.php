@@ -35,14 +35,55 @@ if (!hash_equals($sig, (string)($data['sig'] ?? ''))) {
 }
 
 /* ── Données formation ── */
+$nid = isset($data['nid']) && (int)$data['nid'] > 0 ? (int)$data['nid'] : null;
+
 $formation = [
-    'name'        => (string)($data['nom']  ?? ''),
-    'category'    => (string)($data['cat']  ?? ''),
-    'slug'        => (string)($data['slug'] ?? ''),
-    'price'       => (int)($data['prix']    ?? 0),
-    'description' => (string)($data['desc'] ?? ''),
-    'niveau_id'   => isset($data['nid']) && (int)$data['nid'] > 0 ? (int)$data['nid'] : null,
+    'name'             => (string)($data['nom']  ?? ''),
+    'category'         => (string)($data['cat']  ?? ''),
+    'slug'             => (string)($data['slug'] ?? ''),
+    'price'            => (int)($data['prix']    ?? 0),
+    'description'      => (string)($data['desc'] ?? ''),
+    'prix_pres'        => 0,
+    'prix_hyb'         => 0,
+    'duree'            => '',
+    'niveau'           => '',
+    'niveau_id'        => $nid,
+    'objectifs_niveau' => '',
+    'prerequis_niveau' => '',
+    'public_niveau'    => '',
 ];
+
+/* Enrichit depuis la DB si un niveau est référencé dans le token */
+if ($nid) {
+    try {
+        $pdoEnrich = new PDO(
+            'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
+            DB_USER, DB_PASS,
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+        );
+        $stmt = $pdoEnrich->prepare("
+            SELECT n.niveau, n.duree_heures, n.tarif_en_ligne, n.tarif_presentiel, n.tarif_hybride,
+                   n.objectifs, n.prerequis, n.public_cible
+            FROM formation_niveaux n
+            WHERE n.id = :nid AND n.statut = 'actif'
+            LIMIT 1
+        ");
+        $stmt->execute([':nid' => $nid]);
+        $nr = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($nr) {
+            if ((int)$nr['tarif_en_ligne']         > 0) $formation['price']    = (int)$nr['tarif_en_ligne'];
+            if ((int)$nr['tarif_presentiel']        > 0) $formation['prix_pres'] = (int)$nr['tarif_presentiel'];
+            if ((int)($nr['tarif_hybride'] ?? 0)    > 0) $formation['prix_hyb'] = (int)$nr['tarif_hybride'];
+            if ((int)$nr['duree_heures']            > 0) $formation['duree']    = $nr['duree_heures'] . 'H';
+            $formation['niveau']           = (string)($nr['niveau']      ?? '');
+            $formation['objectifs_niveau'] = (string)($nr['objectifs']   ?? '');
+            $formation['prerequis_niveau'] = (string)($nr['prerequis']   ?? '');
+            $formation['public_niveau']    = (string)($nr['public_cible'] ?? '');
+        }
+    } catch (\Throwable $e) {
+        error_log('[TDR_PDF] DB enrich: ' . $e->getMessage());
+    }
+}
 $opts = [
     'mode_formation'   => (string)($data['mode'] ?? 'en_ligne'),
     'format_formation' => (string)($data['fmt']  ?? 'individuel'),
