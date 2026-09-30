@@ -185,6 +185,58 @@ if ($prix > 0 && !$_isSamPro && !$_isLocal) {
 
 $g         = $prix > 0 ? grille_d($prix) : null;
 
+/* ── Mode d'enseignement (tags hero) ── */
+if (!$_isLocal) {
+    [$_mo, $_mp, $_mh] = [true, true, true];
+} else {
+    [$_mo, $_mp, $_mh] = [($f['price']??0)>0, ($f['price_pres']??0)>0, ($f['price_hyb']??0)>0];
+    if (!empty($f['_niveaux'])) {
+        [$_mo, $_mp, $_mh] = [false, false, false];
+        foreach ($f['_niveaux'] as $_nv) {
+            if ((int)$_nv['tarif_en_ligne']>0)   $_mo = true;
+            if ((int)$_nv['tarif_presentiel']>0) $_mp = true;
+            if ((int)$_nv['tarif_hybride']>0)    $_mh = true;
+        }
+    }
+    if (!$_mo && !$_mp) [$_mo, $_mp, $_mh] = [true, true, true];
+}
+
+/* ── Niveaux, durées & nb modules depuis la BD (API + local) ── */
+$_niv_dur    = []; // ['debutant' => 20, ...]
+$_mod_counts = []; // ['debutant' => 6, ...]
+$niv_labels  = ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'];
+try {
+    if (!isset($pdo)) {
+        require_once __DIR__ . '/core/config.php';
+        require_once __DIR__ . '/core/database.php';
+        $pdo = Database::connect();
+    }
+    $_mc = $pdo->prepare("
+        SELECT fn.niveau, fn.duree_heures, COUNT(fnm.id) AS nb
+        FROM formations f
+        JOIN formation_niveaux fn ON fn.formation_id = f.id AND fn.statut = 'actif'
+        LEFT JOIN formation_niveau_modules fnm ON fnm.niveau_id = fn.id
+        WHERE f.slug = :slug
+        GROUP BY fn.niveau, fn.duree_heures
+        ORDER BY FIELD(fn.niveau,'debutant','intermediaire','expert')
+    ");
+    $_mc->execute([':slug' => $slug]);
+    foreach ($_mc->fetchAll(PDO::FETCH_ASSOC) as $_r) {
+        $_niv_dur[$_r['niveau']]    = (int)$_r['duree_heures'];
+        $_mod_counts[$_r['niveau']] = (int)$_r['nb'];
+    }
+} catch (\Exception $_e) {}
+
+/* Durée min/max pour le tag hero */
+$_durs = array_filter($_niv_dur);
+if (empty($_durs) && !empty($f['_niveaux'])) {
+    foreach ($f['_niveaux'] as $_nv) {
+        if ((int)$_nv['duree_heures'] > 0) $_durs[] = (int)$_nv['duree_heures'];
+    }
+}
+$_dur_min = $_durs ? min($_durs) : 0;
+$_dur_max = $_durs ? max($_durs) : 0;
+
 $pageTitle = $nom . ' — IBIG EDUFORM';
 $ogTitle   = $nom . ' — Formation certifiante IBIG EDUFORM';
 $inscUrl   = '/preinscription-generale.php?catalogue_nom=' . urlencode($nom) . '&formation_slug=' . urlencode($slug) . '&domaine=' . urlencode($cat) . ($prix > 0 ? '&catalogue_prix=' . $prix : '');
@@ -362,6 +414,14 @@ function fdToggleFaq(btn) {
   a.classList.toggle('open');
   arrow.style.transform = a.classList.contains('open') ? 'rotate(180deg)' : '';
 }
+function fdProgTab(btn, id) {
+  var card = btn.closest('.fd-card');
+  card.querySelectorAll('.fd-prog-tab').forEach(function(t){ t.classList.remove('active'); });
+  card.querySelectorAll('.fd-prog-panel').forEach(function(p){ p.classList.remove('active'); });
+  btn.classList.add('active');
+  var panel = document.getElementById(id);
+  if (panel) panel.classList.add('active');
+}
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════ HERO -->
@@ -373,8 +433,12 @@ function fdToggleFaq(btn) {
   <p class="fd-hero-sub"><?= htmlspecialchars(mb_substr($desc, 0, 200, 'UTF-8'), ENT_QUOTES, 'UTF-8') ?><?= mb_strlen($desc, 'UTF-8') > 200 ? '…' : '' ?></p>
   <?php endif; ?>
   <div class="fd-hero-tags">
-    <span class="fd-tag">🔀 Hybride</span>
-    <span class="fd-tag">🏛️ Présentiel</span>
+    <?php if ($_mo): ?><span class="fd-tag">💻 En ligne</span><?php endif; ?>
+    <?php if ($_mh): ?><span class="fd-tag">🔀 Hybride</span><?php endif; ?>
+    <?php if ($_mp): ?><span class="fd-tag">🏛️ Présentiel</span><?php endif; ?>
+    <?php if ($_dur_min > 0): ?>
+      <span class="fd-tag">⏱️ <?= $_dur_min === $_dur_max ? $_dur_min.'H' : $_dur_min.'–'.$_dur_max.'H' ?></span>
+    <?php endif; ?>
     <span class="fd-tag">📜 Certificat IBIG</span>
     <span class="fd-tag">🌍 Espace OHADA</span>
   </div>
@@ -443,6 +507,32 @@ function fdToggleFaq(btn) {
     <!-- Programme / Modules -->
     <div class="fd-card">
       <h2><span class="fd-ico">📚</span> Programme &amp; Modules</h2>
+      <?php $_total_mod = array_sum($_mod_counts); if ($_total_mod > 0): ?>
+      <div class="fd-prog-tabs">
+        <?php $_pi = 0; foreach ($_mod_counts as $_pnv => $_pnb): $_pi++; ?>
+        <button type="button" class="fd-prog-tab fd-niv-<?= $_pnv ?><?= $_pi === 1 ? ' active' : '' ?>"
+                onclick="fdProgTab(this,'fd-prog-<?= $_pnv ?>')"><?= $niv_labels[$_pnv] ?? $_pnv ?>
+          <span style="font-weight:400;opacity:.7;font-size:.7em;margin-left:4px">(<?= $_pnb ?> modules)</span>
+        </button>
+        <?php endforeach; ?>
+      </div>
+      <?php $_pi = 0; foreach ($_mod_counts as $_pnv => $_pnb): $_pi++; ?>
+      <div class="fd-prog-panel<?= $_pi === 1 ? ' active' : '' ?>" id="fd-prog-<?= $_pnv ?>">
+        <div class="fd-locked">
+          <ul class="fd-modules fd-locked-inner">
+            <?php for ($_pm = 1; $_pm <= min($_pnb, 8); $_pm++): ?>
+            <li class="fd-module">Module <?= $_pm ?></li>
+            <?php endfor; ?>
+          </ul>
+          <div class="fd-locked-overlay">
+            <div class="fd-lock-icon">🔒</div>
+            <p>Ce niveau comprend <strong><?= $_pnb ?> module<?= $_pnb > 1 ? 's' : '' ?></strong><?php if (isset($_niv_dur[$_pnv]) && $_niv_dur[$_pnv] > 0): ?> — <?= $_niv_dur[$_pnv] ?>h<?php endif; ?>.<br>Le programme complet est réservé aux personnes inscrites.</p>
+            <a href="<?= htmlspecialchars($inscUrl, ENT_QUOTES, 'UTF-8') ?>">✍️ S'inscrire pour accéder</a>
+          </div>
+        </div>
+      </div>
+      <?php endforeach; ?>
+      <?php else: ?>
       <div class="fd-locked">
         <ul class="fd-modules fd-locked-inner">
           <li class="fd-module">Module 1 — Introduction et fondamentaux</li>
@@ -457,6 +547,7 @@ function fdToggleFaq(btn) {
           <a href="<?= htmlspecialchars($inscUrl, ENT_QUOTES, 'UTF-8') ?>">✍️ S'inscrire pour accéder</a>
         </div>
       </div>
+      <?php endif; ?>
     </div>
 
     <!-- Méthodologie -->
@@ -604,7 +695,6 @@ function fdToggleFaq(btn) {
     <!-- Tarifs -->
     <?php
     $niveaux_fd = $f['_niveaux'] ?? [];
-    $niv_labels = ['debutant' => 'Débutant', 'intermediaire' => 'Intermédiaire', 'expert' => 'Expert'];
     if ($niveaux_fd): ?>
     <div class="fd-price-card">
       <h3>💰 Coûts &amp; Niveaux</h3>
