@@ -1,9 +1,10 @@
 <?php
 declare(strict_types=1);
 /**
- * ADMIN — API : génère et sauvegarde les modules d'un niveau via Claude AI
+ * ADMIN — API : génère et sauvegarde les modules d'un niveau
+ * Stratégie : tdr_modules() en priorité (local, gratuit), fallback Claude AI si aucune correspondance.
  * POST : niveau_id (int), csrf
- * Retourne JSON {ok, nb_modules, modules[]}
+ * Retourne JSON {ok, nb_modules, modules[], source}
  */
 require_once __DIR__ . '/../_init.php';
 Middleware::requireAuth();
@@ -38,146 +39,114 @@ if (!$niv) {
     http_response_code(404); echo json_encode(['error' => 'Niveau introuvable']); exit;
 }
 
-/* ── Clé API Anthropic ── */
-require_once __DIR__ . '/../../core/config.php';
-$apiKey = defined('ANTHROPIC_API_KEY') ? ANTHROPIC_API_KEY : (getenv('ANTHROPIC_API_KEY') ?: '');
-if (!$apiKey) {
-    http_response_code(500); echo json_encode(['error' => 'Clé API non configurée']); exit;
-}
-
 /* ── Données ── */
 $titre   = $niv['titre'];
-$niveau  = $niv['niveau'];  // debutant | intermediaire | expert
-$duree   = (int)$niv['duree_heures'];
-$domaine = $niv['domaine'] ?? '';
+$niveau  = $niv['niveau'];
+$duree   = max(1, (int)$niv['duree_heures']);
+$domaine = (string)($niv['domaine'] ?? '');
 $desc    = mb_substr((string)($niv['description'] ?? ''), 0, 400);
 
-$niv_labels = [
-    'debutant'      => 'Débutant',
-    'intermediaire' => 'Intermédiaire',
-    'expert'        => 'Expert',
-];
-$niv_label = $niv_labels[$niveau] ?? $niveau;
+/* ── Stratégie 1 : tdr_modules() local (gratuit, instantané) ── */
+require_once __DIR__ . '/../../core/tdr_generator.php';
+$tdr_raw = tdr_modules($titre, $domaine, $duree, $desc);
 
-/* Nombre de modules selon durée */
-$nb_mod = 6;
-if ($duree >= 30) $nb_mod = 7;
-if ($duree >= 40) $nb_mod = 8;
+$source = 'tdr_local';
+$modules = [];
 
-/* Orientation pédagogique par niveau */
-$niv_hint = match($niveau) {
-    'debutant' => "Niveau DÉBUTANT : partir de zéro. Commencer par les concepts fondamentaux, le vocabulaire de base, les outils essentiels. Progression lente, exemples simples, exercices guidés. PAS de contenu avancé.",
-    'intermediaire' => "Niveau INTERMÉDIAIRE : les bases sont acquises. Approfondir les compétences, travailler sur des cas réels, maîtriser les outils professionnels courants, développer l'autonomie.",
-    'expert' => "Niveau EXPERT : maîtrise complète attendue. Cas complexes, stratégie, leadership, audit, optimisation avancée, préparation à des responsabilités senior. Contenu exigeant et pointu.",
-    default => ''
-};
-
-/* Détection domaine métier */
-$hints = '';
-if (preg_match('/comptab|syscohada|ifrs|bilan|fiscal|tva|paie|comptable|finance|trésorerie|budget/ui', $titre . $domaine)) {
-    $hints = "Domaine : Comptabilité, Finance, Fiscalité (SYSCOHADA, OHADA, DGI, CNPS, TVA).";
-} elseif (preg_match('/rh\b|ressources humaines|recrutement|grh|sirh|personnel|talent/ui', $titre . $domaine)) {
-    $hints = "Domaine : Gestion des Ressources Humaines (Code du travail ivoirien, CNPS, CMU, GPEC).";
-} elseif (preg_match('/marketing|réseaux sociaux|digital|whatsapp|facebook|seo|branding/ui', $titre . $domaine)) {
-    $hints = "Domaine : Marketing Digital (WhatsApp Business, Meta Ads, Canva, PME africaines).";
-} elseif (preg_match('/vente|closing|commercial|négociation|crm|sales/ui', $titre . $domaine)) {
-    $hints = "Domaine : Commerce & Vente (techniques SPIN, BANT, CRM, contexte africain).";
-} elseif (preg_match('/leadership|management|dirigeant|stratégie|entrepreneur|gouvernance/ui', $titre . $domaine)) {
-    $hints = "Domaine : Leadership & Management (PME africaines, BSC, OKR, tableaux de bord).";
-} elseif (preg_match('/data|power bi|excel|analytics|bi\b|intelligence artificielle|ia\b|automatisation/ui', $titre . $domaine)) {
-    $hints = "Domaine : Data & IA (Power BI, Excel, transformation numérique en Afrique).";
-} elseif (preg_match('/logistique|supply chain|achat|procurement|stock/ui', $titre . $domaine)) {
-    $hints = "Domaine : Logistique & Supply Chain (corridors africains, ERP, incoterms).";
+if (!empty($tdr_raw)) {
+    /* tdr_modules retourne duree (pas duree_heures) — normaliser */
+    foreach ($tdr_raw as $m) {
+        $modules[] = [
+            'titre'       => (string)($m['titre'] ?? ''),
+            'contenus'    => (string)($m['contenus'] ?? ''),
+            'duree_heures'=> max(1, min(40, (int)($m['duree'] ?? $m['duree_heures'] ?? 2))),
+        ];
+    }
 }
 
-/* ── Prompt ── */
-$prompt = <<<PROMPT
-Génère exactement {$nb_mod} modules de formation PROFESSIONNELS et SPÉCIFIQUES pour :
+/* ── Stratégie 2 : fallback Claude AI si tdr_modules() n'a pas de correspondance ── */
+if (empty($modules)) {
+    $source = 'claude_ai';
+    require_once __DIR__ . '/../../core/config.php';
+    $apiKey = defined('ANTHROPIC_API_KEY') ? ANTHROPIC_API_KEY : (getenv('ANTHROPIC_API_KEY') ?: '');
+    if (!$apiKey) {
+        http_response_code(500); echo json_encode(['error' => 'Clé API non configurée et aucun module local disponible']); exit;
+    }
 
-**Formation** : {$titre}
-**Niveau** : {$niv_label}
-**Durée totale** : {$duree}h
-**Domaine** : {$domaine}
-{$hints}
+    $niv_labels = ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'];
+    $niv_label  = $niv_labels[$niveau] ?? $niveau;
+    $nb_mod = 6;
+    if ($duree >= 30) $nb_mod = 7;
+    if ($duree >= 40) $nb_mod = 8;
 
-**INSTRUCTIONS PÉDAGOGIQUES** :
-{$niv_hint}
+    $niv_hint = match($niveau) {
+        'debutant'      => "Niveau DÉBUTANT : partir de zéro, concepts fondamentaux, vocabulaire de base, exercices guidés.",
+        'intermediaire' => "Niveau INTERMÉDIAIRE : bases acquises, cas réels, outils professionnels, autonomie.",
+        'expert'        => "Niveau EXPERT : maîtrise complète, cas complexes, stratégie, optimisation avancée.",
+        default => ''
+    };
 
-RÈGLES ABSOLUES :
-- {$nb_mod} modules EXACTEMENT — ni plus ni moins
-- La somme des durées doit ÉGALER {$duree}h (distribue les heures intelligemment)
-- Chaque titre de module doit être PRÉCIS et MÉTIER (pas "Introduction", pas "Conclusion générale")
-- Chaque "contenus" doit avoir 4 à 6 points clés séparés par " · " — SPÉCIFIQUES à ce domaine et ce niveau
-- Progression logique : du plus fondamental au plus appliqué
-- RÉPONDS UNIQUEMENT en JSON valide (sans markdown)
+    $prompt = "Génère exactement {$nb_mod} modules de formation PROFESSIONNELS pour :\n"
+        . "Formation : {$titre}\nNiveau : {$niv_label}\nDurée : {$duree}h\nDomaine : {$domaine}\n\n"
+        . "{$niv_hint}\n\n"
+        . "RÈGLES : {$nb_mod} modules exactement · somme des durées = {$duree}h · titres précis · "
+        . "contenus 4-6 points séparés par ' · ' · JSON pur sans markdown.\n\n"
+        . '[{"titre":"...","contenus":"...","duree_heures":X},...]';
 
-Format JSON attendu :
-[
-  {"titre": "Titre précis module 1", "contenus": "Point 1 · Point 2 · Point 3 · Point 4", "duree_heures": X},
-  {"titre": "Titre précis module 2", "contenus": "Point 1 · Point 2 · Point 3 · Point 4", "duree_heures": X},
-  ...
-]
-PROMPT;
+    $payload = json_encode([
+        'model'      => 'claude-haiku-4-5-20251001',
+        'max_tokens' => 2000,
+        'system'     => "Tu es un ingénieur pédagogique senior pour PME africaines. Réponds TOUJOURS en JSON pur.",
+        'messages'   => [['role' => 'user', 'content' => $prompt]],
+        'temperature'=> 0.5,
+    ]);
 
-/* ── Appel Claude API ── */
-$payload = json_encode([
-    'model'       => 'claude-haiku-4-5-20251001',
-    'max_tokens'  => 2000,
-    'system'      => "Tu es un ingénieur pédagogique senior spécialisé en formations professionnelles pour les PME africaines. Tu génères des modules de formation précis, progressifs et adaptés au niveau indiqué. Réponds TOUJOURS en JSON pur sans markdown.",
-    'messages'    => [['role' => 'user', 'content' => $prompt]],
-    'temperature' => 0.5,
-]);
+    $ch = curl_init('https://api.anthropic.com/v1/messages');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $payload,
+        CURLOPT_TIMEOUT        => 90,
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/json',
+            'x-api-key: ' . $apiKey,
+            'anthropic-version: 2023-06-01',
+        ],
+        CURLOPT_CAINFO => '/root/.ccr/ca-bundle.crt',
+    ]);
+    $raw  = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $err  = curl_error($ch);
+    curl_close($ch);
 
-$ch = curl_init('https://api.anthropic.com/v1/messages');
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST           => true,
-    CURLOPT_POSTFIELDS     => $payload,
-    CURLOPT_TIMEOUT        => 90,
-    CURLOPT_HTTPHEADER     => [
-        'Content-Type: application/json',
-        'x-api-key: ' . $apiKey,
-        'anthropic-version: 2023-06-01',
-    ],
-    CURLOPT_CAINFO => '/root/.ccr/ca-bundle.crt',
-]);
-
-$raw  = curl_exec($ch);
-$code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$err  = curl_error($ch);
-curl_close($ch);
-
-if ($err) {
-    http_response_code(502);
-    echo json_encode(['error' => 'Réseau : ' . $err]);
-    exit;
+    if ($err) { http_response_code(502); echo json_encode(['error' => 'Réseau : ' . $err]); exit; }
+    $resp = json_decode($raw, true);
+    if ($code !== 200 || empty($resp['content'][0]['text'])) {
+        $msg = $resp['error']['message'] ?? ('API erreur ' . $code);
+        http_response_code(502); echo json_encode(['error' => $msg]); exit;
+    }
+    $text = preg_replace(['/^```(?:json)?\s*/i', '/\s*```\s*$/m'], '', trim($resp['content'][0]['text']));
+    $ai_modules = json_decode($text, true);
+    if (!is_array($ai_modules) || empty($ai_modules)) {
+        http_response_code(500); echo json_encode(['error' => 'Réponse IA invalide.', 'raw' => mb_substr($text, 0, 500)]); exit;
+    }
+    foreach ($ai_modules as $m) {
+        $modules[] = [
+            'titre'       => mb_substr((string)($m['titre'] ?? ''), 0, 255),
+            'contenus'    => mb_substr((string)($m['contenus'] ?? ''), 0, 1000),
+            'duree_heures'=> max(1, min(40, (int)($m['duree_heures'] ?? 2))),
+        ];
+    }
 }
 
-$resp = json_decode($raw, true);
-if ($code !== 200 || empty($resp['content'][0]['text'])) {
-    $msg = $resp['error']['message'] ?? ('API erreur ' . $code);
-    http_response_code(502);
-    echo json_encode(['error' => $msg]);
-    exit;
-}
-
-$text = trim($resp['content'][0]['text']);
-$text = preg_replace('/^```(?:json)?\s*/i', '', $text);
-$text = preg_replace('/\s*```\s*$/m', '', $text);
-
-$modules = json_decode($text, true);
-if (!is_array($modules) || empty($modules)) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Réponse IA invalide.', 'raw' => mb_substr($text, 0, 500)]);
-    exit;
+if (empty($modules)) {
+    http_response_code(500); echo json_encode(['error' => 'Aucun module généré.']); exit;
 }
 
 /* ── Sauvegarder en base ── */
 try {
     $pdo->beginTransaction();
-    // Supprimer anciens modules
     $pdo->prepare("DELETE FROM formation_niveau_modules WHERE niveau_id = :nid")->execute([':nid' => $niveau_id]);
-    // Insérer nouveaux
     $ins = $pdo->prepare("INSERT INTO formation_niveau_modules (niveau_id, ordre, titre, contenus, duree_heures) VALUES (:nid, :ord, :t, :c, :d)");
     foreach ($modules as $i => $m) {
         $ins->execute([
@@ -196,4 +165,4 @@ try {
     exit;
 }
 
-echo json_encode(['ok' => true, 'nb_modules' => count($modules), 'modules' => $modules]);
+echo json_encode(['ok' => true, 'nb_modules' => count($modules), 'modules' => $modules, 'source' => $source]);
