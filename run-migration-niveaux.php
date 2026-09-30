@@ -23,9 +23,14 @@ declare(strict_types=1);
  * Exécuter UNE SEULE FOIS : php run-migration-niveaux.php
  */
 
-// ── Sécurité : uniquement en CLI ou depuis l'admin ─────────────────────
-if (PHP_SAPI !== 'cli' && (!isset($_GET['token']) || $_GET['token'] !== '')) {
-    http_response_code(403); exit('Accès refusé.');
+// ── Sécurité : uniquement en CLI ou avec le token TDR_SECRET ──────────
+if (PHP_SAPI !== 'cli') {
+    require_once __DIR__ . '/core/config.php';
+    $expected = defined('TDR_SECRET') ? TDR_SECRET : '';
+    if ($expected === '' || ($_GET['token'] ?? '') !== $expected) {
+        http_response_code(403);
+        exit('<p style="font-family:sans-serif;color:#dc2626;padding:20px">Accès refusé. Token requis.</p>');
+    }
 }
 
 require_once __DIR__ . '/core/config.php';
