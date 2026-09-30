@@ -729,13 +729,6 @@ function fdToggleFaq(btn) {
         }
       }
     }
-    function fdToggleModules(btn){
-      var list = btn.nextElementSibling;
-      if (!list) return;
-      var open = list.style.display !== 'none';
-      list.style.display = open ? 'none' : 'block';
-      btn.textContent = open ? btn.textContent.replace('▲','').trim().replace('📋 Masquer','📋 Voir') : btn.textContent.replace('Voir','Masquer');
-    }
     function fdCopyLink(btn, url){
       try {
         navigator.clipboard.writeText(url).then(function(){
