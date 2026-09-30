@@ -1,7 +1,26 @@
 <?php
 declare(strict_types=1);
-ini_set('display_errors', '1');
-error_reporting(E_ALL);
+// Capturer erreurs fatales avant tout output
+ob_start();
+register_shutdown_function(function() {
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        ob_end_clean();
+        http_response_code(500);
+        echo '<pre style="background:#1e1e1e;color:#f87171;padding:20px;font-family:monospace">';
+        echo "ERREUR FATALE : " . htmlspecialchars($err['message']) . "\n";
+        echo "Fichier : " . htmlspecialchars($err['file']) . " ligne " . $err['line'];
+        echo '</pre>';
+    }
+});
+set_exception_handler(function(Throwable $e) {
+    ob_end_clean();
+    echo '<pre style="background:#1e1e1e;color:#f87171;padding:20px;font-family:monospace">';
+    echo "EXCEPTION : " . htmlspecialchars($e->getMessage()) . "\n";
+    echo "Fichier : " . htmlspecialchars($e->getFile()) . " ligne " . $e->getLine() . "\n";
+    echo htmlspecialchars($e->getTraceAsString());
+    echo '</pre>';
+});
 /**
  * IBIG EDUFORM — Migration système 3 niveaux
  * ─────────────────────────────────────────────────────────────────────
@@ -36,6 +55,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 require_once __DIR__ . '/core/config.php';
+ini_set('display_errors', '1'); // override production setting for this diagnostic run
 require_once __DIR__ . '/core/database.php';
 
 $pdo = Database::connect();
