@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                ON mc.niveau_id = n.id
         WHERE " . implode(' AND ', $where) . "
         ORDER BY f.titre ASC, n.niveau ASC
-        LIMIT 5000
+        LIMIT 10000
     ");
     $rows->execute($params);
     $niveaux = $rows->fetchAll(PDO::FETCH_ASSOC);
