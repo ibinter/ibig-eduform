@@ -48,7 +48,7 @@ $desc    = mb_substr((string)($niv['description'] ?? ''), 0, 400);
 
 /* ── Stratégie 1 : tdr_modules() local (gratuit, instantané) ── */
 require_once __DIR__ . '/../../core/tdr_generator.php';
-$tdr_raw = tdr_modules($titre, $domaine, $duree, $desc);
+$tdr_raw = tdr_modules($titre, $domaine, $duree, $desc, $niveau);
 
 $source = 'tdr_local';
 $modules = [];
@@ -76,21 +76,21 @@ if (empty($modules)) {
     $niv_labels = ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'];
     $niv_label  = $niv_labels[$niveau] ?? $niveau;
     $nb_mod = 6;
-    if ($duree >= 30) $nb_mod = 7;
-    if ($duree >= 40) $nb_mod = 8;
 
     $niv_hint = match($niveau) {
-        'debutant'      => "Niveau DÉBUTANT : partir de zéro, concepts fondamentaux, vocabulaire de base, exercices guidés.",
+        'debutant'      => "Niveau DÉBUTANT : partir de zéro, concepts fondamentaux, vocabulaire de base, exercices guidés. Les débutants ont besoin de plus de temps d'appropriation.",
         'intermediaire' => "Niveau INTERMÉDIAIRE : bases acquises, cas réels, outils professionnels, autonomie.",
-        'expert'        => "Niveau EXPERT : maîtrise complète, cas complexes, stratégie, optimisation avancée.",
+        'expert'        => "Niveau EXPERT : maîtrise complète, cas complexes, stratégie, optimisation avancée. Les experts peuvent avoir plus ou moins d'heures selon la complexité du contenu avancé.",
         default => ''
     };
 
     $prompt = "Génère exactement {$nb_mod} modules de formation PROFESSIONNELS pour :\n"
-        . "Formation : {$titre}\nNiveau : {$niv_label}\nDurée : {$duree}h\nDomaine : {$domaine}\n\n"
+        . "Formation : {$titre}\nNiveau : {$niv_label}\nDomaine : {$domaine}\n\n"
         . "{$niv_hint}\n\n"
-        . "RÈGLES : {$nb_mod} modules exactement · somme des durées = {$duree}h · titres précis · "
-        . "contenus 4-6 points séparés par ' · ' · JSON pur sans markdown.\n\n"
+        . "RÈGLES IMPORTANTES : {$nb_mod} modules exactement · "
+        . "Assigne à chaque module ses heures SELON SON CONTENU RÉEL (complexité, pratique, exercices) — "
+        . "pas de formule : la somme totale doit être cohérente avec l'ampleur du programme · "
+        . "titres précis · contenus 4-6 points séparés par ' · ' · JSON pur sans markdown.\n\n"
         . '[{"titre":"...","contenus":"...","duree_heures":X},...]';
 
     $payload = json_encode([
@@ -158,6 +158,12 @@ try {
         ]);
     }
     $pdo->commit();
+    // Synchroniser duree_heures du niveau = somme des heures de ses modules (contenu-driven)
+    $pdo->prepare("
+        UPDATE formation_niveaux
+           SET duree_heures = (SELECT COALESCE(SUM(duree_heures), 20) FROM formation_niveau_modules WHERE niveau_id = :nid)
+         WHERE id = :nid
+    ")->execute([':nid' => $niveau_id]);
 } catch (Throwable $e) {
     $pdo->rollBack();
     http_response_code(500);
@@ -165,4 +171,6 @@ try {
     exit;
 }
 
-echo json_encode(['ok' => true, 'nb_modules' => count($modules), 'modules' => $modules, 'source' => $source]);
+// Lire les heures réelles après synchronisation
+$duree_reelle = (int)$pdo->query("SELECT duree_heures FROM formation_niveaux WHERE id = $niveau_id")->fetchColumn();
+echo json_encode(['ok' => true, 'nb_modules' => count($modules), 'modules' => $modules, 'source' => $source, 'duree_heures' => $duree_reelle]);

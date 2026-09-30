@@ -54,15 +54,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $del = $pdo->prepare("DELETE FROM formation_niveau_modules WHERE niveau_id = :nid");
 
     $nb_ok = 0; $nb_err = 0;
+    $ids_synced = [];
+
+    $syncDuree = $pdo->prepare("
+        UPDATE formation_niveaux
+           SET duree_heures = (
+               SELECT COALESCE(SUM(duree_heures), 20)
+               FROM formation_niveau_modules
+               WHERE niveau_id = :nid
+           )
+         WHERE id = :nid
+    ");
 
     foreach ($niveaux as $n) {
-        $duree = (int)$n['duree_heures'];
-        if ($duree < 1) $duree = 20;
+        $nid   = (int)$n['id'];
+        $duree = max(1, (int)$n['duree_heures']); // hint only — tdr_modules() overrides via lookup
         $modules = tdr_modules(
             (string)$n['titre'],
             (string)($n['domaine'] ?? ''),
             $duree,
-            (string)($n['description'] ?? '')
+            (string)($n['description'] ?? ''),
+            (string)($n['niveau'] ?? 'debutant')
         );
         if (empty($modules)) {
             $results[] = ['err', $n['titre'] . ' [' . $n['niveau'] . ']', 'Aucun module généré'];
@@ -71,10 +83,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         try {
             $pdo->beginTransaction();
-            $del->execute([':nid' => (int)$n['id']]);
+            $del->execute([':nid' => $nid]);
             foreach ($modules as $i => $m) {
                 $ins->execute([
-                    ':nid' => (int)$n['id'],
+                    ':nid' => $nid,
                     ':ord' => $i + 1,
                     ':t'   => mb_substr((string)($m['titre'] ?? ''), 0, 255),
                     ':c'   => mb_substr((string)($m['contenus'] ?? ''), 0, 1000),
@@ -82,6 +94,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
             }
             $pdo->commit();
+            // Synchroniser duree_heures du niveau = somme des heures de ses modules
+            $syncDuree->execute([':nid' => $nid]);
+            $ids_synced[] = $nid;
             $results[] = ['ok', $n['titre'] . ' [' . $n['niveau'] . ']', count($modules) . ' modules'];
             $nb_ok++;
         } catch (Throwable $e) {
@@ -92,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $flash = $nb_err === 0
-        ? ['ok', "✅ $nb_ok niveaux traités avec succès."]
+        ? ['ok', "✅ $nb_ok niveaux traités — heures synchronisées depuis les modules."]
         : ['warn', "⚠️ $nb_ok ok · $nb_err erreurs."];
 }
 

@@ -163,7 +163,7 @@ function generate_tdr_html(array $f, string $nomProspect = '', array $opts = [])
             'duree'    => (int)$m['duree_heures'],
         ], $_niveau_modules_db);
     } else {
-        $modules = tdr_modules($nom, $cat, $heures, $desc);
+        $modules = tdr_modules($nom, $cat, $heures, $desc, $niveau_code);
     }
     /* Surcharger objectifs spécifiques avec ceux du niveau si dispo */
     if ($objectifs_niveau !== '') {
@@ -592,9 +592,77 @@ function _get_fillers_for_cat(string $cat, string $nom): array {
     ];
 }
 
-function tdr_modules(string $nom, string $cat, int $heures, string $desc = ''): array
+function tdr_modules(string $nom, string $cat, int $heures, string $desc = '', string $niveau = 'debutant'): array
 {
     $n_low = mb_strtolower($nom, 'UTF-8');
+
+    /* ─────────────────────────────────────────────────────────────────────
+       TABLE DES HEURES NATURELLES PAR TYPE DE FORMATION ET PAR NIVEAU
+       Format : [regex, deb_h, inter_h, exp_h]
+       Heures déterminées par la nature du contenu — pas de formule universelle.
+       Certaines formations sont ascendantes (IT/outils), d'autres descendantes
+       (droit/réglementation), d'autres mixtes (audit, gestion de projet).
+    ───────────────────────────────────────────────────────────────────── */
+    $_nh = [
+        // Comptabilité / SYSCOHADA — fondations lourdes, expert plus ciblé
+        ['/syscohada|syst[eè]me\s+comptable\s+ohada|comptabilit[eé]\s+(selon|ohada|syscohada)/ui', 40, 32, 28],
+        // Fiscalité DGI — réglementation, expert maîtrise plus vite
+        ['/d[eé]claration\s+fiscale|tva.*is\b|fiscalit[eé]\s+(des\s+)?pme|dgi.*c[oô]te|imp[oô]t\s+soci[eé]t[eé]|irvm/ui', 32, 28, 24],
+        // Audit Interne — expert a plus de cas complexes
+        ['/audit\s+interne|normes\s+iia|ippf|audit.*contr[oô]le\s+interne/ui', 40, 40, 45],
+        // Analyse Financière — expert : modèles complexes, plus de cas
+        ['/analyse\s+financi[eè]re|diagnostic\s+financier|[eé]tats\s+financiers.*syscohada/ui', 30, 28, 35],
+        // Power BI / BI — plus de features à maîtriser au niveau supérieur
+        ['/power\s*bi|business\s+intelligence|tableau.{0,10}bord|reporting|data.*visualis/ui', 20, 25, 30],
+        // Droit du travail — réglementation, expert connaît les bases
+        ['/droit\s+du\s+travail|code\s+du\s+travail.*ivoir|contrat\s+de\s+travail|licenciement|prud\'?hom/ui', 25, 20, 18],
+        // Paie / CNPS — calculs techniques, expert maîtrise les automatismes
+        ['/paie\s+ivoi|bulletin\s+de\s+(paie|salaire)|cnps.*irvm|calcul\s+salaire|gestion\s+(de\s+la\s+)?paie/ui', 28, 24, 20],
+        // Recrutement / Entretiens — expert : assessment centers, tests psycho
+        ['/recrutement|conduite\s+d.{1,5}entretien|entretien\s+structur[eé]|talent\s+acquisition|s[eé]lection\s+de\s+candidat/ui', 20, 18, 22],
+        // Gestion de Projet / PMP — expert : PMBOK complet, cas complexes
+        ['/gestion\s+de\s+projet|pmp\b|pmbok|prince\s*2|m[eé]thode\s+agile|agile.*scrum|scrum.*agile/ui', 35, 35, 40],
+        // Conduite du changement — expert : programmes de transformation lourds
+        ['/conduite\s+du\s+changement|accompagner\s+les?\s+transformation|change\s+management/ui', 20, 20, 25],
+        // Marchés Publics — réglementation, expert procédures avancées
+        ['/march[eé]s?\s+publics|anrmp|appel\s+d.offres|passation\s+de\s+march[eé]/ui', 28, 24, 20],
+        // Droit OHADA — réglementation complexe, même niveau expert
+        ['/droit\s+ohada|acte\s+uniforme|sarl.*sa.*gie|contrats?\s+commerciaux.*ohada|contentieux.*ohada|ccja|s[uû]ret[eé]s\s+ohada/ui', 30, 25, 25],
+        // Transit / Import-Export — procédures, expert maîtrise les flux
+        ['/transit\s+douanier|sydam|dgd\s+c[oô]te|import[- ]export|guichet\s+unique|incoterms|d[eé]douanement/ui', 28, 24, 20],
+        // BCEAO / Conformité bancaire — expert : LBC-FT avancé, contrôles
+        ['/r[eé]glementation\s+bceao|conformit[eé]\s+bancaire|lbc.ft|kyc.*aml|banque.*r[eé]glementation|compliance\s+bancaire/ui', 28, 25, 30],
+        // ONG / Cadre Logique — expert : multi-bailleurs, MEAL complexe
+        ['/cadre\s+logique|afd.*usaid|ue.*usaid|proj.{1,10}d[eé]veloppement|ong.*projet|rapportage.*bailleur|suivi.?[eé]valuation|kobo|odk\b|meal\b/ui', 28, 25, 30],
+        // Business Plan / Entrepreneuriat — expert : pitch investisseur, scale-up
+        ['/business\s+plan|cr[eé]ation\s+d.entreprise|cepici|entrepreneuriat|lancer\s+son|monter\s+son\s+projet/ui', 25, 22, 20],
+        // Microfinance / SFD — réglementation, expert processus avancés
+        ['/microfinance|syst[eè]mes?\s+financiers?\s+d[eé]centralis[eé]s?|sfd\b|imf\b.*cr[eé]dit|warrantage|cr[eé]dit.{1,10}stockage/ui', 28, 24, 22],
+        // Agrobusiness / Cacao — terrain + certification
+        ['/cacao|agrob[uo]siness|agro.{0,5}aliment|fili[eè]re.*certif|tracabilit[eé]|eudr|rainforest|fairtrade/ui', 24, 20, 20],
+        // Odoo ERP — plus de modules à configurer au niveau expert
+        ['/odoo|erp.*gestion|gestion.{1,10}int[eé]gr[eé]e/ui', 24, 28, 35],
+        // Cybersécurité — pentest, threat hunting : plus lourd en expert
+        ['/cybers[eé]curit[eé]|s[eé]curit[eé]\s+inform|administration\s+r[eé]seau|hacking|pentest|pfsense|firewall.*pme/ui', 25, 30, 40],
+        // WordPress / SEO — technique avancée en expert
+        ['/wordpress|woocommerce|seo\b|r[eé]f[eé]rencement\s+(naturel|web)|site\s+(web|professionnel).*cr[eé]er/ui', 20, 18, 25],
+        // Mobile Money / API — intégrations complexes en expert
+        ['/mobile\s+money|paiements?\s+mobiles?|orange\s+money\s+api|mtn\s+momo|wave\s+(business|api)|moneroo/ui', 20, 22, 30],
+        // IA générative / ChatGPT — API, fine-tuning en expert
+        ['/chatgpt|gpt[-\s]?[34o]|ia\s+g[eé]n[eé]rative|intelligence\s+artificielle.*pratique|prompt\s+engineering|copilot|gemini|mistral|outils?\s+ia/ui', 18, 20, 28],
+        // Data Analyst RH — analyse avancée, modèles prédictifs en expert
+        ['/data analyst\s*(rh|grh|ressources humaines|hr\b)?/ui', 25, 28, 35],
+        // Excel / outils bureautiques — plus de fonctionnalités au niveau expert
+        ['/excel|tableur|power\s*query/ui', 18, 22, 28],
+        // Logistique / Supply Chain
+        ['/logistique|supply\s+chain|approvisionnement|gestion\s+(des\s+)?stocks?/ui', 22, 22, 25],
+    ];
+    foreach ($_nh as [$_pat, $_d, $_i, $_e]) {
+        if (preg_match($_pat, $nom)) {
+            $heures = ['debutant' => $_d, 'intermediaire' => $_i, 'expert' => $_e][$niveau] ?? $_d;
+            break;
+        }
+    }
 
     /* ─────────────────────────────────────────────────────────────────────
        HELPER : répartit $heures sur $n modules (dernier toujours 2h = eval)
