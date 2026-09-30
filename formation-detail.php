@@ -99,7 +99,7 @@ if (!$f) {
     try {
         $pdo  = Database::connect();
         $stmt = $pdo->prepare("
-            SELECT titre, description, tarif_en_ligne, tarif_presentiel, tarif_hybride,
+            SELECT id, titre, description, tarif_en_ligne, tarif_presentiel, tarif_hybride,
                    domaine, duree, slug
             FROM formations
             WHERE slug = :slug
@@ -111,6 +111,7 @@ if (!$f) {
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($row) {
             $f = [
+                'id'          => (int)$row['id'],
                 'name'        => (string)$row['titre'],
                 'description' => (string)($row['description'] ?? ''),
                 'price'       => (int)($row['tarif_en_ligne'] ?? 0),
@@ -121,6 +122,17 @@ if (!$f) {
                 '_duree'      => (string)($row['duree'] ?? ''),
                 '_local'      => true,
             ];
+            // Charger les niveaux actifs de cette formation
+            try {
+                $niv_stmt = $pdo->prepare("
+                    SELECT niveau, duree_heures, tarif_en_ligne, tarif_presentiel, tarif_hybride, ordre_affichage
+                    FROM formation_niveaux
+                    WHERE formation_id = :fid AND statut = 'actif'
+                    ORDER BY ordre_affichage ASC
+                ");
+                $niv_stmt->execute([':fid' => (int)$row['id']]);
+                $f['_niveaux'] = $niv_stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (\Exception $_e) { $f['_niveaux'] = []; }
         }
     } catch (\Exception $e) { /* silence */ }
 }
@@ -263,6 +275,14 @@ require_once __DIR__ . '/partials/header.php';
 .fd-tbl .fd-hl td{background:#fffbeb}
 .fd-tbl .fd-intra td{background:#f8fafc;font-style:italic;color:var(--muted)}
 .fd-tbl-note{font-size:.68rem;color:var(--muted);margin:8px 0 0;line-height:1.5}
+.fd-niv-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.fd-niv-tab{font-size:.72rem;font-weight:700;padding:4px 14px;border-radius:999px;border:2px solid transparent;cursor:pointer;background:#f1f5f9;color:#475569}
+.fd-niv-tab.active,.fd-niv-tab:focus{outline:none}
+.fd-niv-tab.fd-niv-debutant.active{background:#dcfce7;color:#166534;border-color:#86efac}
+.fd-niv-tab.fd-niv-intermediaire.active{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.fd-niv-tab.fd-niv-expert.active{background:#fce7f3;color:#9d174d;border-color:#f9a8d4}
+.fd-niv-panel{display:none}.fd-niv-panel.active{display:block}
+.fd-niv-dur{font-size:.75rem;color:var(--muted);margin-bottom:8px}
 
 /* TDR */
 .fd-tdr-card{background:#f0fdf4;border:1px solid #86efac;border-radius:var(--radius);padding:18px}
@@ -539,7 +559,41 @@ function fdToggleFaq(btn) {
     </div>
 
     <!-- Tarifs -->
-    <?php if ($g): ?>
+    <?php
+    $niveaux_fd = $f['_niveaux'] ?? [];
+    $niv_labels = ['debutant' => 'Débutant', 'intermediaire' => 'Intermédiaire', 'expert' => 'Expert'];
+    if ($niveaux_fd): ?>
+    <div class="fd-price-card">
+      <h3>💰 Coûts &amp; Niveaux</h3>
+      <?php if (count($niveaux_fd) > 1): ?>
+      <div class="fd-niv-tabs">
+        <?php foreach ($niveaux_fd as $i => $nv): ?>
+        <button type="button" class="fd-niv-tab<?= $i === 0 ? ' active' : '' ?> fd-niv-<?= $nv['niveau'] ?>"
+                onclick="fdSelectNiv(this,<?= $i ?>)"><?= $niv_labels[$nv['niveau']] ?></button>
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
+      <?php foreach ($niveaux_fd as $i => $nv): ?>
+      <div class="fd-niv-panel<?= $i === 0 ? ' active' : '' ?>" data-niv-idx="<?= $i ?>">
+        <div class="fd-niv-dur">⏱️ <?= (int)$nv['duree_heures'] ?> heures</div>
+        <table class="fd-tbl">
+          <thead>
+            <tr><th>Modalité</th><th>💰 Tarif</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>💻 En ligne</td><td><?= fd_fcfa((int)$nv['tarif_en_ligne']) ?></td></tr>
+            <?php if ((int)$nv['tarif_hybride'] > 0): ?>
+            <tr><td>🔀 Hybride</td><td><?= fd_fcfa((int)$nv['tarif_hybride']) ?></td></tr>
+            <?php endif; ?>
+            <tr><td>🏛️ Présentiel</td><td><?= fd_fcfa((int)$nv['tarif_presentiel']) ?></td></tr>
+            <tr class="fd-intra"><td colspan="2">👥 Groupe &amp; intra-entreprise — <strong>Sur devis</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <?php endforeach; ?>
+      <p class="fd-tbl-note">Tarifs en F CFA, indicatifs. Prix par personne.</p>
+    </div>
+    <?php elseif ($g): ?>
     <div class="fd-price-card">
       <h3>💰 Coûts &amp; Modalités</h3>
       <table class="fd-tbl">
@@ -547,7 +601,6 @@ function fdToggleFaq(btn) {
           <tr><th>Modalité</th><th>💻 En ligne</th><th>🏛️ Présentiel</th></tr>
         </thead>
         <tbody>
-
           <tr><td>👤 Individuel en ligne</td><td><?= fd_fcfa((int)$g['individuel_online']) ?></td><td>—</td></tr>
           <tr><td>🔀 Hybride (En ligne et en présentiel)</td><td colspan="2" style="text-align:center"><?= fd_fcfa((int)$g['hybride']) ?></td></tr>
           <tr><td>👤 Individuel présentiel</td><td>—</td><td><?= fd_fcfa((int)$g['individuel_pres']) ?></td></tr>
@@ -612,6 +665,14 @@ function fdToggleFaq(btn) {
       </div>
     </div>
     <script>
+    function fdSelectNiv(btn, idx){
+      var card = btn.closest('.fd-price-card');
+      card.querySelectorAll('.fd-niv-tab').forEach(function(t){ t.classList.remove('active'); });
+      card.querySelectorAll('.fd-niv-panel').forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      var panel = card.querySelector('[data-niv-idx="'+idx+'"]');
+      if (panel) panel.classList.add('active');
+    }
     function fdCopyLink(btn, url){
       try {
         navigator.clipboard.writeText(url).then(function(){
