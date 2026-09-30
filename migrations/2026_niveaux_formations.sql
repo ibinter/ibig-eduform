@@ -23,9 +23,7 @@ CREATE TABLE IF NOT EXISTS formation_niveaux (
   updated_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY uq_formation_niveau (formation_id, niveau),
   INDEX idx_statut (statut),
-  INDEX idx_formation (formation_id),
-  CONSTRAINT fk_fniveaux_formation
-    FOREIGN KEY (formation_id) REFERENCES formations(id) ON DELETE CASCADE ON UPDATE CASCADE
+  INDEX idx_formation (formation_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Déclinaisons par niveau de chaque formation du catalogue';
 
@@ -39,9 +37,7 @@ CREATE TABLE IF NOT EXISTS formation_niveau_modules (
   duree_heures TINYINT UNSIGNED NOT NULL DEFAULT 2,
   created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  INDEX idx_niveau (niveau_id),
-  CONSTRAINT fk_fnmodules_niveau
-    FOREIGN KEY (niveau_id) REFERENCES formation_niveaux(id) ON DELETE CASCADE ON UPDATE CASCADE
+  INDEX idx_niveau (niveau_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Modules de contenu par niveau de formation';
 
