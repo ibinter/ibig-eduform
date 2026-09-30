@@ -209,8 +209,8 @@ if (!function_exists('formation_cta')) {
         </a>
         <?php endif; ?>
 
-        <a class="pdf js-tdr" data-formation="<?= (int)$fid; ?>" data-titre="<?= h((string)($f['titre'] ?? '')); ?>"
-           href="/tdr.php?formation=<?= $fid; ?>">
+        <a class="pdf js-tdr" data-formation="<?= (int)$fid; ?>" data-slug="<?= h((string)($f['slug'] ?? '')); ?>" data-titre="<?= h((string)($f['titre'] ?? '')); ?>"
+           href="/tdr-local-pdf.php?slug=<?= urlencode((string)($f['slug'] ?? '')); ?>">
           Télécharger le TDR
         </a>
 
@@ -256,7 +256,7 @@ if (!function_exists('formation_cta')) {
       </a>
       <?php endif; ?>
 
-      <a class="pdf js-tdr" data-formation="<?= (int)$id; ?>" data-titre="<?= h((string)($f['titre'] ?? '')); ?>" href="/tdr.php?formation=<?= $id; ?>">
+      <a class="pdf js-tdr" data-formation="<?= (int)$id; ?>" data-slug="<?= h((string)($f['slug'] ?? '')); ?>" data-titre="<?= h((string)($f['titre'] ?? '')); ?>" href="/tdr-local-pdf.php?slug=<?= urlencode((string)($f['slug'] ?? '')); ?>">
         <i class="fa-solid fa-file-pdf"></i>
         Télécharger le TDR
       </a>
@@ -1594,7 +1594,7 @@ echo "<script type=\"application/ld+json\">" . json_encode($ldFaq, JSON_UNESCAPE
       if(em&&!em.value&&c.email) em.value=c.email;
       if(w&&!w.value&&c.wa)    w.value=c.wa;
     }
-    function tdrOpen(id){ window.open('/tdr.php?formation='+encodeURIComponent(id),'_blank'); }
+    function tdrOpen(id,slug){ window.open(slug ? '/tdr-local-pdf.php?slug='+encodeURIComponent(slug) : '/tdr-local-pdf.php?slug='+encodeURIComponent(id),'_blank'); }
 
     function close(){ modal.classList.remove('open'); }
     document.getElementById('tdrCancel').addEventListener('click',close);
@@ -1603,8 +1603,9 @@ echo "<script type=\"application/ld+json\">" . json_encode($ldFaq, JSON_UNESCAPE
       var a=e.target.closest('.js-tdr'); if(!a) return;
       e.preventDefault();
       tdrFid=a.getAttribute('data-formation')||0; tdrTitre=a.getAttribute('data-titre')||'';
+      var tdrSlug=a.getAttribute('data-slug')||'';
       /* Déjà débloqué pour CE TDR : téléchargement direct, sans formulaire */
-      if(tdrUnlocked(tdrFid)){ tdrOpen(tdrFid); return; }
+      if(tdrUnlocked(tdrFid)){ tdrOpen(tdrFid,tdrSlug); return; }
       /* Sinon : on demande (en pré-remplissant si on connaît déjà le contact) */
       tdrPrefill();
       msg.textContent=''; modal.classList.add('open');
@@ -1627,8 +1628,8 @@ echo "<script type=\"application/ld+json\">" . json_encode($ldFaq, JSON_UNESCAPE
         go.disabled=false; go.textContent=old;
         if(d&&d.ok){ msg.style.color='#34d399'; msg.textContent='Merci ! Téléchargement en cours…';
           tdrMarkUnlocked(tdrFid); tdrSaveContact({nom:nom,email:email,wa:wa});
-          var url=d.download||('/tdr.php?formation='+tdrFid);
-          window.open(url,'_blank'); setTimeout(close,900); }
+          var url=d.download||(tdrSlug ? '/tdr-local-pdf.php?slug='+encodeURIComponent(tdrSlug) : null);
+          if(url) window.open(url,'_blank'); setTimeout(close,900); }
         else { msg.style.color='#fb7185'; msg.textContent=(d&&d.error)||'Erreur, réessayez.'; }
       }).catch(function(){ go.disabled=false; go.textContent=old; msg.style.color='#fb7185'; msg.textContent='Connexion impossible, réessayez.'; });
     });

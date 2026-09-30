@@ -19,7 +19,7 @@ $pages = [
     ['/a-propos.php', '0.6', 'monthly'],
     ['/entreprises.php', '0.7', 'monthly'],
     ['/partenaires.php', '0.6', 'monthly'],
-    ['/tdr.php', '0.5', 'monthly'],
+    ['/catalogue-formations.php', '0.7', 'monthly'],
 ];
 
 // Formations locales depuis la DB

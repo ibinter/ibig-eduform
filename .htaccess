@@ -15,6 +15,13 @@
 </FilesMatch>
 
 # =========================================================
+# SÉCURITÉ — scripts de développement/migration/diagnostic
+# =========================================================
+<FilesMatch "^(_fix|_audit|_check|_diag|_insert|_revert|_tdr|bulk_insert|run[-_]migration|run_migration|fix[-_]|fix2|fix_|normalise_|admin_fix|admin_diag|admin_recalc|admin_restore|check_|check-|diag_|diag-|test-tdr|test_tdr|tmp_|audit-|audit_|add_formations|import-partners|migrate-leads|paiement-test|_fix_cal|admin_fix_samedi|admin_recalc_samedi|admin_restore_samedi|admin_diag_samedi).*\.php$">
+  Require all denied
+</FilesMatch>
+
+# =========================================================
 # COMPRESSION GZIP
 # =========================================================
 <IfModule mod_deflate.c>

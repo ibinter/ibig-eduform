@@ -15,7 +15,7 @@ $pdo = Database::connect();
 $formationId = isset($_GET['formation']) ? (int)$_GET['formation'] : (int)($_GET['formation_id'] ?? 0);
 
 $stmt = $pdo->prepare("
-  SELECT id, titre, frais_inscription, tarif_presentiel, tarif_en_ligne, is_samedi_pro, date_debut, paiement_lien
+  SELECT id, titre, slug, frais_inscription, tarif_presentiel, tarif_en_ligne, is_samedi_pro, date_debut, paiement_lien
   FROM formations
   WHERE id = ? AND statut = 'active'
   LIMIT 1
@@ -176,10 +176,12 @@ include __DIR__ . '/partials/header.php';
     <h1>💳 Paiement des frais d'inscription</h1>
     <p style="opacity:.85"><?= e($f['titre']); ?></p>
 
-    <a href="/tdr.php?id=<?= (int)$f['id']; ?>" target="_blank" rel="noopener"
+    <?php if (!empty($f['slug'])): ?>
+    <a href="/tdr-local-pdf.php?slug=<?= urlencode($f['slug']); ?>" target="_blank" rel="noopener"
        style="display:inline-flex;align-items:center;gap:8px;margin:8px 0 6px;padding:10px 16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:13.5px">
       📄 Consulter le TDR de la formation
     </a>
+    <?php endif; ?>
 
     <?php if ($serviceFee > 0): ?>
       <div style="margin:12px 0;font-size:14px;color:#cbd5e1">

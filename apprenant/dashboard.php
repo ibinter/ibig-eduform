@@ -123,7 +123,7 @@ include __DIR__ . '/../partials/header.php';
         $mode  = $modeLabel[$ins['mode_formation']] ?? ($ins['mode_formation'] ?: '—');
         $date  = $ins['created_at'] ? date('d/m/Y', strtotime($ins['created_at'])) : '—';
         $dateDebut = $ins['date_debut'] ? date('d/m/Y', strtotime($ins['date_debut'])) : null;
-        $lienTDR   = $ins['formation_id'] ? '/tdr.php?id=' . (int)$ins['formation_id'] : null;
+        $lienTDR   = !empty($ins['formation_slug']) ? '/tdr-local-pdf.php?slug=' . urlencode($ins['formation_slug']) : null;
         $lienDetail = $ins['formation_slug'] ? '/formation-detail.php?slug=' . urlencode($ins['formation_slug']) : null;
         $lienPay    = $ins['formation_id'] ? '/paiement-inscription.php?formation=' . (int)$ins['formation_id'] : null;
       ?>

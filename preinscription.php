@@ -155,7 +155,7 @@ if (isset($_GET['formation_id'])) {
 $formation = null;
 if ($formationId > 0) {
     $stmt = $pdo->prepare("
-        SELECT id, titre
+        SELECT id, titre, slug
         FROM formations
         WHERE id = ? AND statut = 'active'
         LIMIT 1
@@ -517,10 +517,12 @@ hr{border:none;border-top:1px solid rgba(255,255,255,.2)}
         <label>Formation choisie</label>
         <input type="text" value="<?= h($formation['titre']); ?>" disabled>
 
-        <a href="/tdr.php?id=<?= (int)$formation['id']; ?>" target="_blank" rel="noopener"
+        <?php if (!empty($formation['slug'])): ?>
+        <a href="/tdr-local-pdf.php?slug=<?= urlencode($formation['slug']); ?>" target="_blank" rel="noopener"
            style="display:inline-flex;align-items:center;gap:9px;margin:8px 0 16px;padding:12px 18px;background:linear-gradient(135deg,#1f3fe0,#3b82f6);color:#fff;border-radius:12px;text-decoration:none;font-weight:800;font-size:14.5px;box-shadow:0 10px 24px rgba(31,63,224,.28)">
           📄 Consulter le TDR de la formation
         </a>
+        <?php endif; ?>
 
         <label>Nom *</label>
         <input name="nom" required value="<?= h($old['nom']); ?>">
