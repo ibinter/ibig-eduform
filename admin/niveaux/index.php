@@ -108,6 +108,7 @@ ob_start();
     <h2>📊 Niveaux des formations catalogue</h2>
     <div style="display:flex;gap:8px;align-items:center">
       <a href="bulk-activate.php" style="padding:6px 14px;background:#166534;color:#fff;border-radius:6px;font-size:.8rem;font-weight:700;text-decoration:none">⚡ Activation en masse</a>
+      <a href="generate-modules.php" style="padding:6px 14px;background:#7c3aed;color:#fff;border-radius:6px;font-size:.8rem;font-weight:700;text-decoration:none">🤖 Générer modules IA</a>
     </div>
     <form method="get" class="filters">
       <input type="text" name="q" value="<?= e($q) ?>" placeholder="Rechercher une formation…" style="width:220px">

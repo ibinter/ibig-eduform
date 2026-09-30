@@ -155,7 +155,11 @@ ob_start();
   <!-- Liste des modules -->
   <div class="mo-list" id="moList">
     <?php if (empty($modules)): ?>
-    <div style="padding:30px;text-align:center;color:#94a3b8">Aucun module. Ajoutez-en un ci-dessous.</div>
+    <div style="padding:24px;text-align:center;color:#94a3b8">
+      Aucun module.
+      <button onclick="genModulesIA()" style="margin-left:12px;padding:6px 14px;background:#7c3aed;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:700;cursor:pointer">🤖 Générer par IA</button>
+      <span id="genStatus" style="display:none;font-size:.8rem;margin-left:8px;color:#6d28d9"></span>
+    </div>
     <?php else: ?>
     <?php foreach ($modules as $m): ?>
     <div class="mo-item" data-id="<?= $m['id'] ?>">
@@ -272,6 +276,29 @@ function saveOrder() {
         headers:{'Content-Type':'application/x-www-form-urlencoded'},
         body:'action=reorder&' + ids.map((id,i) => `ids[${i}]=${id}`).join('&')
     }).then(r => r.json()).then(d => { if (!d.ok) alert('Erreur sauvegarde ordre.'); });
+}
+
+async function genModulesIA() {
+    const st = document.getElementById('genStatus');
+    st.textContent = '⏳ Génération en cours…'; st.style.display = '';
+    try {
+        const fd = new FormData();
+        fd.append('csrf', <?= json_encode(csrf_token()) ?>);
+        fd.append('niveau_id', <?= $niveau_id ?>);
+        const r = await fetch('api-gen-modules.php', {method:'POST', body: fd});
+        const d = await r.json();
+        if (d.ok) {
+            st.textContent = '✅ ' + d.nb_modules + ' modules générés !';
+            st.style.color = '#166534';
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            st.textContent = '❌ ' + (d.error || 'Erreur');
+            st.style.color = '#991b1b';
+        }
+    } catch(e) {
+        st.textContent = '❌ Erreur réseau';
+        st.style.color = '#991b1b';
+    }
 }
 </script>
 
