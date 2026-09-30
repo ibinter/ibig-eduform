@@ -119,6 +119,70 @@ $niv_labels = ['debutant' => 'Débutant', 'intermediaire' => 'Intermédiaire', '
 $niv_colors = ['debutant' => '#166534', 'intermediaire' => '#1e40af', 'expert' => '#9d174d'];
 $niv_bg     = ['debutant' => '#dcfce7', 'intermediaire' => '#dbeafe', 'expert' => '#fce7f3'];
 
+/* ── POST : correction en masse des niveaux en trop ── */
+$flash = null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'archiver_surplus') {
+    csrf_check();
+    $nb_arch = 0; $nb_err = 0;
+
+    $arch_stmt = $pdo->prepare(
+        "UPDATE formation_niveaux SET statut = 'archive' WHERE id = :id AND statut = 'actif'"
+    );
+    /* Requête pour récupérer l'ID d'un niveau par formation + type */
+    $id_stmt = $pdo->prepare(
+        "SELECT id FROM formation_niveaux WHERE formation_id = :fid AND niveau = :niv AND statut = 'actif' LIMIT 1"
+    );
+
+    foreach ($formations as $f) {
+        $actifs   = $f['niveaux_actifs'] ? explode(',', $f['niveaux_actifs']) : [];
+        $attendus = niveaux_attendus($f['titre'], $f['domaine'] ?? '');
+        $en_trop  = array_diff($actifs, $attendus);
+        if (empty($en_trop)) continue;
+
+        foreach ($en_trop as $nv) {
+            try {
+                $id_stmt->execute([':fid' => (int)$f['id'], ':niv' => $nv]);
+                $nid = $id_stmt->fetchColumn();
+                if ($nid) {
+                    $arch_stmt->execute([':id' => (int)$nid]);
+                    $nb_arch++;
+                }
+            } catch (Throwable $e) {
+                error_log('[AUDIT_NIV] ' . $e->getMessage());
+                $nb_err++;
+            }
+        }
+    }
+
+    /* Recharger les données après correction */
+    $formations = $pdo->query("
+        SELECT f.id, f.titre, f.domaine, f.slug,
+               GROUP_CONCAT(n.niveau ORDER BY n.ordre_affichage SEPARATOR ',') AS niveaux_actifs,
+               COUNT(n.id) AS nb_niv
+        FROM formations f
+        LEFT JOIN formation_niveaux n ON n.formation_id = f.id AND n.statut = 'actif'
+        WHERE f.statut IN ('active','inactive') AND COALESCE(f.is_samedi_pro,0) = 0
+        GROUP BY f.id, f.titre, f.domaine, f.slug
+        ORDER BY f.titre ASC
+    ")->fetchAll(PDO::FETCH_ASSOC);
+
+    /* Recalcul anomalies */
+    $anomalies = []; $ok = 0; $sans_niveau = 0;
+    foreach ($formations as $f) {
+        $actifs   = $f['niveaux_actifs'] ? explode(',', $f['niveaux_actifs']) : [];
+        $attendus = niveaux_attendus($f['titre'], $f['domaine'] ?? '');
+        $manquants = array_values(array_diff($attendus, $actifs));
+        $en_trop   = array_values(array_diff($actifs, $attendus));
+        if (empty($actifs)) { $sans_niveau++; $anomalies[] = ['type'=>'sans_niveau','f'=>$f,'attendus'=>$attendus,'manquants'=>[],'en_trop'=>[]]; }
+        elseif (!empty($en_trop) || !empty($manquants)) { $anomalies[] = ['type'=>'desequilibre','f'=>$f,'actifs'=>$actifs,'attendus'=>$attendus,'manquants'=>$manquants,'en_trop'=>$en_trop]; }
+        else { $ok++; }
+    }
+
+    $flash = $nb_err === 0
+        ? ['ok',   "✅ $nb_arch niveau(x) archivés avec succès."]
+        : ['warn', "⚠️ $nb_arch archivés · $nb_err erreurs."];
+}
+
 ob_start();
 ?>
 <style>
@@ -150,6 +214,10 @@ ob_start();
 .dist-fill-inner{height:100%;background:#1e40af}
 .info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 16px;font-size:.8rem;color:#1e3a8a;margin-bottom:18px;line-height:1.6}
 .info-box strong{display:block;font-weight:700;margin-bottom:4px}
+.flash-ok{background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:7px;padding:10px 16px;font-size:.85rem;margin-bottom:14px;font-weight:700}
+.flash-warn{background:#fef9c3;color:#713f12;border:1px solid #fde047;border-radius:7px;padding:10px 16px;font-size:.85rem;margin-bottom:14px;font-weight:700}
+.btn-correct{padding:9px 20px;background:#dc2626;color:#fff;border:none;border-radius:7px;font-size:.85rem;font-weight:800;cursor:pointer}
+.btn-correct:hover{background:#b91c1c}
 </style>
 
 <div class="aud-wrap">
@@ -158,6 +226,10 @@ ob_start();
 
   <h2>🔍 Audit des niveaux de formation</h2>
   <div class="aud-sub">Détecte les formations avec des niveaux incohérents (trop de niveaux ou niveaux manquants) selon les mots-clés du titre.</div>
+
+  <?php if ($flash): ?>
+    <div class="flash-<?= $flash[0] ?>"><?= e($flash[1]) ?></div>
+  <?php endif; ?>
 
   <div class="info-box">
     <strong>Comment fonctionne l'analyse ?</strong>
@@ -204,6 +276,28 @@ ob_start();
     <span style="color:#94a3b8">(<?= $pct ?>%)</span>
   </div>
   <?php endforeach; ?>
+
+  <!-- Bouton correction en masse -->
+  <?php
+  $nb_surplus = 0;
+  foreach ($anomalies as $a) { if (!empty($a['en_trop'])) $nb_surplus += count($a['en_trop']); }
+  ?>
+  <?php if ($nb_surplus > 0): ?>
+  <div style="background:#fff3cd;border:1px solid #fde047;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px">
+      <p style="margin:0 0 4px;font-weight:800;color:#713f12;font-size:.9rem">⚠️ <?= $nb_surplus ?> niveau(x) en trop détectés</p>
+      <p style="margin:0;font-size:.78rem;color:#92400e">Les niveaux "en trop" seront <strong>archivés</strong> (non supprimés) — leurs modules et préinscriptions sont préservés. Vous pouvez les réactiver à tout moment.</p>
+    </div>
+    <form method="post" style="flex-shrink:0">
+      <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+      <input type="hidden" name="action" value="archiver_surplus">
+      <button type="submit" class="btn-correct"
+              onclick="return confirm('Archiver <?= $nb_surplus ?> niveaux en trop pour <?= count(array_filter($anomalies, fn($a) => !empty($a[\'en_trop\']))) ?> formations ?\n\nCette action est réversible depuis la page d\'édition de chaque niveau.')">
+        🗃️ Archiver les <?= $nb_surplus ?> niveaux en trop
+      </button>
+    </form>
+  </div>
+  <?php endif; ?>
 
   <!-- Anomalies -->
   <?php if (!empty($anomalies)): ?>
