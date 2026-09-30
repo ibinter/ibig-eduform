@@ -145,7 +145,31 @@ foreach ($stmts as $stmt) {
         }
     }
 }
-log_msg("   → Tables créées (ou déjà présentes).");
+// Vérifier que la table a bien été créée avant de continuer
+if ($errors) {
+    echo '<pre style="background:#1e1e1e;color:#f87171;padding:20px;font-family:monospace">';
+    echo "⚠ ERREURS lors de la création des tables :\n\n";
+    foreach ($errors as $err) echo htmlspecialchars($err) . "\n\n";
+    echo '</pre>';
+    exit;
+}
+try {
+    $pdo->query("SELECT 1 FROM formation_niveaux LIMIT 1");
+    log_msg("   → Tables créées (ou déjà présentes).");
+} catch (PDOException $e) {
+    echo '<pre style="background:#1e1e1e;color:#f87171;padding:20px;font-family:monospace">';
+    echo "⚠ La table formation_niveaux n'existe pas après migration.\n";
+    echo "Erreur SQL lors de la création : \n";
+    // Ré-tenter la création et afficher l'erreur brute
+    $sql2 = file_get_contents(__DIR__ . '/migrations/2026_niveaux_formations.sql');
+    foreach (array_filter(array_map('trim', explode(';', $sql2))) as $s2) {
+        if (empty($s2) || str_starts_with(ltrim($s2), '--')) continue;
+        try { $pdo->exec($s2); echo "OK: " . htmlspecialchars(substr($s2, 0, 80)) . "\n"; }
+        catch (PDOException $e2) { echo "ERR: " . htmlspecialchars($e2->getMessage()) . "\n     SQL: " . htmlspecialchars(substr($s2, 0, 80)) . "\n"; }
+    }
+    echo '</pre>';
+    exit;
+}
 
 // ── 2. Charger toutes les formations actives du catalogue ──────────────
 // Exclure les formations Samedi Pro (calendrier)
