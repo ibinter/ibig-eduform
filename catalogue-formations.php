@@ -1114,6 +1114,7 @@ function showToast(msg){
     return '<button type="button" class="cg-btn-tdr" data-tdr-local="1"'
       + ' data-tdr-slug="' + esc(f.slug) + '"'
       + ' data-tdr-titre="' + esc(f.name) + '"'
+      + ' data-tdr-niveaux="' + esc(JSON.stringify(f.niveaux || [])) + '"'
       + ' title="Télécharger le TDR (programme complet PDF)">📄 TDR</button>';
   }
 
@@ -1428,18 +1429,69 @@ function showToast(msg){
     var tdrDialEl    = document.getElementById('tdr-dial');
     var tdrPaysEl    = document.getElementById('tdr-pays');
 
-    function openTdrModal(slug, titre) {
+    var tdrNivWrap   = document.getElementById('tdr-niv-wrap');
+    var tdrNivCards  = document.getElementById('tdr-niv-cards');
+    var tdrNivInput  = document.getElementById('tdr-niveau-input');
+    var tdrNivLabels = {debutant:'🟢 Débutant', intermediaire:'🔵 Intermédiaire', expert:'🔴 Expert'};
+
+    function tdrSelectNiv(card, val) {
+      tdrNivCards.querySelectorAll('.tdr-niv-card').forEach(function(c){
+        c.style.borderColor = '#e2e8f0';
+        c.style.background  = '#fff';
+        c.style.color       = '#374151';
+        c.classList.remove('sel');
+      });
+      card.style.borderColor = '#0a1733';
+      card.style.background  = '#f0f5ff';
+      card.classList.add('sel');
+      tdrNivInput.value = val;
+    }
+
+    function openTdrModal(slug, titre, niveaux) {
       tdrForm.reset();
       tdrSlugInput.value = slug;
       tdrTitreEl.textContent = titre;
-      tdrForm.querySelector('[name="formation_titre"]') && (tdrForm.querySelector('[name="formation_titre"]').value = titre);
       tdrMsg.textContent = '';
       tdrDialEl.textContent = '+__';
       tdrSubmitBtn.disabled = false;
       tdrSubmitBtn.textContent = '📄 Télécharger mon TDR';
+      tdrNivInput.value = '';
+
+      /* Niveau selector */
+      niveaux = niveaux || [];
+      if (niveaux.length > 1) {
+        var html = '';
+        var fmtF = function(n){ return n.toLocaleString('fr-FR'); };
+        for (var i = 0; i < niveaux.length; i++) {
+          var nv = niveaux[i];
+          var label = tdrNivLabels[nv.n] || nv.n;
+          var priceLine = '';
+          if (nv.ol > 0) priceLine += '<div style="font-size:.72rem;color:#374151">💻 ' + fmtF(nv.ol) + ' F</div>';
+          if (nv.pr > 0) priceLine += '<div style="font-size:.7rem;color:#64748b">🏛️ ' + fmtF(nv.pr) + ' F</div>';
+          if (nv.hy > 0) priceLine += '<div style="font-size:.7rem;color:#64748b">🔀 ' + fmtF(nv.hy) + ' F</div>';
+          html += '<div class="tdr-niv-card" onclick="tdrSelNivCard(this,\'' + nv.n + '\')"'
+            + ' style="cursor:pointer;flex:1;min-width:120px;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 12px;background:#fff;transition:.15s;user-select:none">'
+            + '<div style="font-weight:800;font-size:.85rem;margin-bottom:4px">' + label + '</div>'
+            + (nv.h > 0 ? '<div style="font-size:.72rem;color:#94a3b8;margin-bottom:4px">⏱️ ' + nv.h + 'h</div>' : '')
+            + priceLine
+            + '</div>';
+        }
+        tdrNivCards.innerHTML = html;
+        tdrNivWrap.style.display = '';
+        /* Auto-select first */
+        var first = tdrNivCards.querySelector('.tdr-niv-card');
+        if (first) tdrSelectNiv(first, niveaux[0].n);
+      } else {
+        tdrNivWrap.style.display = 'none';
+        tdrNivCards.innerHTML = '';
+        if (niveaux.length === 1) tdrNivInput.value = niveaux[0].n;
+      }
+
       tdrModal.hidden = false;
       tdrModal.querySelector('[name="prenom"]').focus();
     }
+
+    window.tdrSelNivCard = function(card, val) { tdrSelectNiv(card, val); };
     function closeTdrModal() { tdrModal.hidden = true; }
 
     /* Indicatif téléphonique auto selon pays */
@@ -1470,6 +1522,10 @@ function showToast(msg){
       if (!prenom || !nom) { tdrMsg.textContent = 'Veuillez indiquer votre prénom et nom.'; return; }
       if (!email) { tdrMsg.textContent = 'Veuillez indiquer votre adresse email.'; return; }
       if (!pays)  { tdrMsg.textContent = 'Veuillez sélectionner votre pays.'; return; }
+      var selNiv = tdrNivInput ? tdrNivInput.value : '';
+      if (tdrNivWrap && tdrNivWrap.style.display !== 'none' && !selNiv) {
+        tdrMsg.textContent = 'Veuillez sélectionner un niveau de formation.'; return;
+      }
       if (!mode)  { tdrMsg.textContent = 'Veuillez choisir un mode de formation.'; return; }
       if (!fmt)   { tdrMsg.textContent = 'Veuillez choisir un format.'; return; }
 
@@ -1490,7 +1546,11 @@ function showToast(msg){
         .then(function(data) {
           if (data.ok) {
             closeTdrModal();
-            window.open('/tdr-local-pdf.php?slug=' + encodeURIComponent(slug), '_blank');
+            var pdfUrl = '/tdr-local-pdf.php?slug=' + encodeURIComponent(slug)
+              + '&mode=' + encodeURIComponent(mode.value)
+              + '&fmt='  + encodeURIComponent(fmt.value)
+              + (selNiv ? '&niveau=' + encodeURIComponent(selNiv) : '');
+            window.open(pdfUrl, '_blank');
           } else {
             tdrMsg.textContent = data.error || 'Une erreur est survenue.';
             tdrSubmitBtn.disabled = false;
@@ -1509,7 +1569,9 @@ function showToast(msg){
       var btn = e.target.closest('[data-tdr-local]');
       if (!btn) return;
       e.preventDefault();
-      openTdrModal(btn.dataset.tdrSlug, btn.dataset.tdrTitre);
+      var niveaux = [];
+      try { niveaux = JSON.parse(btn.dataset.tdrNiveaux || '[]'); } catch(x){}
+      openTdrModal(btn.dataset.tdrSlug, btn.dataset.tdrTitre, niveaux);
     });
   });
 })();
@@ -1603,6 +1665,14 @@ function showToast(msg){
           <input id="tdr-whatsapp" name="whatsapp" type="tel" placeholder="07 00 00 00 00" autocomplete="tel">
         </div>
         <small class="tdr-hint">L'indicatif se remplit automatiquement selon le pays.</small>
+      </div>
+
+      <!-- Niveau (affiché dynamiquement si formation multi-niveaux) -->
+      <div id="tdr-niv-wrap" class="tdr-field" style="display:none">
+        <label>Niveau souhaité *</label>
+        <div id="tdr-niv-cards" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px"></div>
+        <input type="hidden" name="tdr_niveau" id="tdr-niveau-input">
+        <small class="tdr-hint">Sélectionnez le niveau correspondant à votre profil.</small>
       </div>
 
       <!-- Mode souhaité -->
