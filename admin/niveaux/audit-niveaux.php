@@ -280,7 +280,13 @@ ob_start();
   <!-- Bouton correction en masse -->
   <?php
   $nb_surplus = 0;
-  foreach ($anomalies as $a) { if (!empty($a['en_trop'])) $nb_surplus += count($a['en_trop']); }
+  $nb_formations_surplus = 0;
+  foreach ($anomalies as $a) {
+      if (!empty($a['en_trop'])) {
+          $nb_surplus += count($a['en_trop']);
+          $nb_formations_surplus++;
+      }
+  }
   ?>
   <?php if ($nb_surplus > 0): ?>
   <div style="background:#fff3cd;border:1px solid #fde047;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
@@ -292,7 +298,7 @@ ob_start();
       <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
       <input type="hidden" name="action" value="archiver_surplus">
       <button type="submit" class="btn-correct"
-              onclick="return confirm('Archiver <?= $nb_surplus ?> niveaux en trop pour <?= count(array_filter($anomalies, fn($a) => !empty($a[\'en_trop\']))) ?> formations ?\n\nCette action est réversible depuis la page d\'édition de chaque niveau.')">
+              onclick="return confirm('Archiver <?= $nb_surplus ?> niveaux en trop pour <?= $nb_formations_surplus ?> formations ?\n\nCette action est réversible depuis la page d\'édition de chaque niveau.')">
         🗃️ Archiver les <?= $nb_surplus ?> niveaux en trop
       </button>
     </form>
