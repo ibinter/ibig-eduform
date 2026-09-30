@@ -51,6 +51,23 @@ if ($filtre === 'sans_niveaux') {
 
 $total = count($formations);
 
+/* ── Pré-charger niveaux actifs de toutes les formations listées ── */
+$fids = array_column($formations, 'id');
+$actifs_map = [];
+if ($fids) {
+    $phs = implode(',', array_fill(0, count($fids), '?'));
+    $actifs_rows = $pdo->prepare("
+        SELECT formation_id, id AS niveau_id, niveau
+        FROM formation_niveaux
+        WHERE formation_id IN ($phs) AND statut='actif'
+        ORDER BY ordre_affichage ASC
+    ");
+    $actifs_rows->execute($fids);
+    foreach ($actifs_rows->fetchAll(PDO::FETCH_ASSOC) as $ar) {
+        $actifs_map[(int)$ar['formation_id']][] = $ar;
+    }
+}
+
 ob_start();
 ?>
 <style>
@@ -89,6 +106,9 @@ ob_start();
 
   <div class="toolbar">
     <h2>📊 Niveaux des formations catalogue</h2>
+    <div style="display:flex;gap:8px;align-items:center">
+      <a href="bulk-activate.php" style="padding:6px 14px;background:#166534;color:#fff;border-radius:6px;font-size:.8rem;font-weight:700;text-decoration:none">⚡ Activation en masse</a>
+    </div>
     <form method="get" class="filters">
       <input type="text" name="q" value="<?= e($q) ?>" placeholder="Rechercher une formation…" style="width:220px">
       <select name="statut">
@@ -136,20 +156,17 @@ ob_start();
         </td>
         <td><span style="font-size:.75rem;color:#475569"><?= e($f['domaine'] ?? '—') ?></span></td>
         <td>
-          <?php if ((int)$f['nb_actifs'] === 0): ?>
+          <?php
+          $actifs = $actifs_map[(int)$f['id']] ?? [];
+          $niv_class = ['debutant'=>'niv-d','intermediaire'=>'niv-i','expert'=>'niv-e'];
+          $niv_label = ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'];
+          if (empty($actifs)): ?>
             <span style="color:#94a3b8;font-size:.75rem">Aucun</span>
-          <?php else: ?>
-            <?php
-            $niv_actifs = $pdo->prepare("SELECT niveau FROM formation_niveaux WHERE formation_id=? AND statut='actif' ORDER BY ordre_affichage ASC");
-            $niv_actifs->execute([(int)$f['id']]);
-            $actifs = $niv_actifs->fetchAll(PDO::FETCH_COLUMN);
-            $niv_class = ['debutant'=>'niv-d','intermediaire'=>'niv-i','expert'=>'niv-e'];
-            $niv_label = ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'];
-            foreach ($actifs as $nv):
-            ?>
-              <span class="niv-badge <?= $niv_class[$nv] ?? '' ?>"><?= $niv_label[$nv] ?? $nv ?></span>
-            <?php endforeach; ?>
-          <?php endif; ?>
+          <?php else: foreach ($actifs as $ar): ?>
+            <a href="modules.php?niveau_id=<?= (int)$ar['niveau_id'] ?>" class="niv-badge <?= $niv_class[$ar['niveau']] ?? '' ?>" style="text-decoration:none" title="Gérer les modules">
+              <?= $niv_label[$ar['niveau']] ?? $ar['niveau'] ?>
+            </a>
+          <?php endforeach; endif; ?>
         </td>
         <td>
           <?php if ((int)$f['nb_brouillons'] > 0): ?>

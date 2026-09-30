@@ -2,11 +2,8 @@
 declare(strict_types=1);
 /**
  * ADMIN — Modules d'un niveau de formation
- * Gérer l'ordre, le titre, les contenus et la durée de chaque module
  */
-ob_start();
 require_once __DIR__ . '/../_init.php';
-require_once __DIR__ . '/../auth/middleware.php';
 Middleware::requireAuth();
 
 $pdo = Database::connect();
@@ -88,7 +85,7 @@ $niv_labels = ['debutant' => '🟢 Débutant', 'intermediaire' => '🔵 Intermé
 $pageTitle  = 'Modules — ' . ($niv_labels[$niveau['niveau']] ?? $niveau['niveau']);
 $activeMenu = 'niveaux';
 
-require_once __DIR__ . '/../layout/header.php';
+ob_start();
 ?>
 
 <style>
@@ -135,8 +132,8 @@ require_once __DIR__ . '/../layout/header.php';
 <div class="mo-page">
   <div class="mo-header">
     <div class="mo-title"><?= $pageTitle ?></div>
-    <a href="index.php" style="color:#64748b;font-size:.875rem">← Retour</a>
-    <a href="edit-niveau.php?id=<?= $niveau_id ?>" style="color:#0a1733;font-size:.875rem">✏️ Éditer le niveau</a>
+    <a href="edit.php?id=<?= (int)$niveau['f_id'] ?>" style="color:#64748b;font-size:.875rem">← Retour formation</a>
+    <a href="index.php" style="color:#64748b;font-size:.875rem;margin-left:8px">↑ Liste niveaux</a>
   </div>
 
   <?php if ($msg): ?><div class="mo-msg ok"><?= htmlspecialchars($msg) ?></div><?php endif; ?>
@@ -278,4 +275,7 @@ function saveOrder() {
 }
 </script>
 
-<?php require_once __DIR__ . '/../layout/footer.php'; ?>
+<?php
+$content = ob_get_clean();
+require __DIR__ . '/../layout/layout.php';
+

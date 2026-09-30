@@ -199,7 +199,16 @@ ob_start();
         </div>
       </div>
 
-      <button type="submit" class="btn-save">💾 Enregistrer <?= $niv_labels[$nv] ?></button>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <button type="submit" class="btn-save">💾 Enregistrer <?= $niv_labels[$nv] ?></button>
+        <?php if ($n):
+            $mc = $pdo->prepare("SELECT COUNT(*) FROM formation_niveau_modules WHERE niveau_id=:i");
+            $mc->execute([':i' => (int)$n['id']]);
+            $nb_mod = (int)$mc->fetchColumn();
+        ?>
+        <a href="modules.php?niveau_id=<?= (int)$n['id'] ?>" style="font-size:.8rem;color:#1e40af;text-decoration:none;border:1px solid #93c5fd;padding:6px 14px;border-radius:6px;font-weight:700">📋 Modules (<?= $nb_mod ?>)</a>
+        <?php endif; ?>
+      </div>
     </form>
   </div>
   <?php endforeach; ?>

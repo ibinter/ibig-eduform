@@ -3,9 +3,7 @@ declare(strict_types=1);
 /**
  * ADMIN — Créer / modifier un niveau de formation
  */
-ob_start();
 require_once __DIR__ . '/../_init.php';
-require_once __DIR__ . '/../auth/middleware.php';
 Middleware::requireAuth();
 
 $pdo = Database::connect();
@@ -136,7 +134,7 @@ function suggested_prix(array $formation, string $niv): array {
     return ['ol' => $t_ol, 'pr' => $t_pr, 'hy' => $t_hy];
 }
 
-require_once __DIR__ . '/../layout/header.php';
+ob_start();
 ?>
 
 <style>
@@ -343,4 +341,7 @@ document.getElementById('tarifHy')?.addEventListener('input', function() {
 });
 </script>
 
-<?php require_once __DIR__ . '/../layout/footer.php'; ?>
+<?php
+$content = ob_get_clean();
+require __DIR__ . '/../layout/layout.php';
+
