@@ -148,6 +148,23 @@ $catalogue_slug   = isset($_GET['formation_slug'])   ? trim(strip_tags((string)$
 $catalogue_prix   = isset($_GET['catalogue_prix'])   ? (int)$_GET['catalogue_prix']                        : 0;
 $catalogue_niveau_id = isset($_GET['niveau_id'])     ? (int)$_GET['niveau_id']                             : 0;
 
+// Charger les niveaux actifs de la formation si slug fourni
+$preinsc_niveaux = [];
+if ($catalogue_slug !== '') {
+    try {
+        $niv_q = $pdo->prepare("
+            SELECT n.id, n.niveau, n.duree_heures, n.tarif_en_ligne, n.tarif_presentiel, n.tarif_hybride
+            FROM formation_niveaux n
+            JOIN formations f ON f.id = n.formation_id
+            WHERE f.slug = ? AND n.statut = 'actif'
+            ORDER BY n.ordre_affichage ASC
+            LIMIT 3
+        ");
+        $niv_q->execute([$catalogue_slug]);
+        $preinsc_niveaux = $niv_q->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $ignore) {}
+}
+
 // Lookup du niveau depuis formation_niveaux si niveau_id fourni
 $catalogue_niveau = 'debutant';
 if ($catalogue_niveau_id > 0) {
@@ -159,6 +176,10 @@ if ($catalogue_niveau_id > 0) {
             $catalogue_niveau = (string)$niv_lk_row;
         }
     } catch (Throwable $ignore) {}
+} elseif (!empty($preinsc_niveaux)) {
+    // Par défaut : premier niveau disponible
+    $catalogue_niveau_id = (int)$preinsc_niveaux[0]['id'];
+    $catalogue_niveau    = (string)$preinsc_niveaux[0]['niveau'];
 }
 
 // Sticky values (pour éviter champs vides en cas d'erreur)
@@ -216,6 +237,20 @@ if (function_exists('is_post') && is_post()) {
 
     $formationIdRaw = (string)post('formation_id');
     $formationId    = ($formationIdRaw !== '') ? (int)$formationIdRaw : null;
+
+    // Niveau sélectionné dans le formulaire (remplace la valeur GET)
+    $postNiveauId = (int)post('selected_niveau_id');
+    if ($postNiveauId > 0) {
+        $catalogue_niveau_id = $postNiveauId;
+        try {
+            $niv_lk2 = $pdo->prepare("SELECT niveau FROM formation_niveaux WHERE id = ? AND statut = 'actif' LIMIT 1");
+            $niv_lk2->execute([$postNiveauId]);
+            $niv_lk2_row = $niv_lk2->fetchColumn();
+            if ($niv_lk2_row !== false && in_array($niv_lk2_row, ['debutant','intermediaire','expert'], true)) {
+                $catalogue_niveau = (string)$niv_lk2_row;
+            }
+        } catch (Throwable $ignore) {}
+    }
 
     $domaine   = trim((string)clean(post('domaine_interet')));
 
@@ -1233,6 +1268,37 @@ select option[value=""]{
               <div class="hint">Utile si vous laissez “Orientation libre”.</div>
             </div>
 
+            <?php if (!empty($preinsc_niveaux)): ?>
+            <!-- ── Sélecteur de niveau ── -->
+            <div class="field grid-full" id="preinsc-niv-wrap">
+              <label>Niveau de formation <span class="req">*</span></label>
+              <input type="hidden" name="selected_niveau_id" id="selected_niveau_id" value="<?= $catalogue_niveau_id > 0 ? $catalogue_niveau_id : (int)$preinsc_niveaux[0]['id'] ?>">
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+                <?php
+                $niv_labels_pi = ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'];
+                $niv_icons_pi  = ['debutant'=>'🟢','intermediaire'=>'🔵','expert'=>'🔴'];
+                foreach ($preinsc_niveaux as $pnv):
+                    $is_sel = ((int)$pnv['id'] === $catalogue_niveau_id) || ($catalogue_niveau_id === 0 && $pnv === $preinsc_niveaux[0]);
+                ?>
+                <div class="preinsc-niv-card<?= $is_sel ? ' selected' : '' ?>"
+                     data-niv-id="<?= (int)$pnv['id'] ?>"
+                     onclick="preinscSelectNiv(this)"
+                     style="cursor:pointer;flex:1;min-width:160px;border:2px solid <?= $is_sel ? 'rgba(34,197,94,.7)' : 'rgba(255,255,255,.15)' ?>;border-radius:14px;padding:14px 16px;background:<?= $is_sel ? 'rgba(34,197,94,.12)' : 'rgba(255,255,255,.06)' ?>;transition:.2s">
+                  <div style="font-weight:900;font-size:.97rem;margin-bottom:6px"><?= $niv_icons_pi[$pnv['niveau']] ?? '' ?> <?= $niv_labels_pi[$pnv['niveau']] ?? $pnv['niveau'] ?></div>
+                  <div style="font-size:.78rem;color:rgba(229,231,235,.7);margin-bottom:8px">⏱️ <?= (int)$pnv['duree_heures'] ?> heures</div>
+                  <?php if ((int)$pnv['tarif_en_ligne'] > 0): ?>
+                  <div style="font-size:.82rem;font-weight:700;color:rgba(229,231,235,.95)">💻 En ligne : <?= number_format((int)$pnv['tarif_en_ligne'], 0, ',', ' ') ?> F CFA</div>
+                  <?php endif; ?>
+                  <?php if ((int)$pnv['tarif_presentiel'] > 0): ?>
+                  <div style="font-size:.78rem;color:rgba(229,231,235,.65)">🏛️ Présentiel : <?= number_format((int)$pnv['tarif_presentiel'], 0, ',', ' ') ?> F CFA</div>
+                  <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+              </div>
+              <div class="hint" style="margin-top:8px">Sélectionnez le niveau qui correspond à votre expérience actuelle.</div>
+            </div>
+            <?php endif; ?>
+
             <div class="field">
               <label>Nom <span class="req">*</span></label>
               <input class="input" name="nom" required value="<?= h($old['nom']); ?>" placeholder="Votre nom">
@@ -1395,6 +1461,19 @@ select option[value=""]{
 
           </div>
         </form>
+        <script>
+        function preinscSelectNiv(card) {
+          document.querySelectorAll('.preinsc-niv-card').forEach(function(c) {
+            c.style.border = '2px solid rgba(255,255,255,.15)';
+            c.style.background = 'rgba(255,255,255,.06)';
+            c.classList.remove('selected');
+          });
+          card.style.border = '2px solid rgba(34,197,94,.7)';
+          card.style.background = 'rgba(34,197,94,.12)';
+          card.classList.add('selected');
+          document.getElementById('selected_niveau_id').value = card.getAttribute('data-niv-id');
+        }
+        </script>
 
       <?php endif; ?>
 
