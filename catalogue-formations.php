@@ -654,7 +654,7 @@ function preinsc_url(string $name, string $cat, string $slug = '', int $prix = 0
             placeholder="Rechercher une formation, un domaine…" class="cg-si" autocomplete="off"
             oninput="cgDebounce()" onkeydown="if(event.key==='Escape')cgClearSearch()">
           <button type="button" class="cg-sbtn" onclick="cgApply()">Rechercher</button>
-          <button type="button" id="cgResetAll" class="cg-reset" onclick="cgClear()" style="<?= ($q_raw||$cat_sel||$mode_sel||$prix_sel||$duree_sel)?'':'display:none' ?>">✕ Effacer</button>
+          <button type="button" id="cgResetAll" class="cg-reset" onclick="cgClear()" style="<?= ($q_raw||$cat_sel||$mode_sel||$prix_sel||$duree_sel||isset($_GET['niveau']))?'':'display:none' ?>">✕ Effacer</button>
         </div>
       </div>
       <!-- Toggle Grille / Liste -->
@@ -714,6 +714,15 @@ function preinsc_url(string $name, string $cat, string $slug = '', int $prix = 0
           <option value="court"  <?= $duree_sel==='court' ?'selected':''?>>Court (≤ 20h)</option>
           <option value="moyen"  <?= $duree_sel==='moyen' ?'selected':''?>>Moyen (21 – 40h)</option>
           <option value="long"   <?= $duree_sel==='long'  ?'selected':''?>>Long (+ de 40h)</option>
+        </select>
+      </div>
+      <div class="cg-af-group">
+        <label class="cg-af-lbl" for="cgNiveau">🎯 Niveau</label>
+        <select id="cgNiveau" class="cg-af-sel" onchange="cgApply()">
+          <option value="">Tous les niveaux</option>
+          <option value="debutant">🟢 Débutant</option>
+          <option value="intermediaire">🔵 Intermédiaire</option>
+          <option value="expert">🔴 Expert</option>
         </select>
       </div>
       <div class="cg-af-group" id="cgSortGroup">
@@ -1027,7 +1036,7 @@ function showToast(msg){
   var ALL = window._cgData || [];
   var PER = 24;
   var vm = 'grid';
-  var cur = { q:'', cat:'', mode:'', prix:'', duree:'', sort:'az', page:1 };
+  var cur = { q:'', cat:'', mode:'', prix:'', duree:'', niveau:'', sort:'az', page:1 };
   var debTimer = null;
 
   /* ── Helpers ── */
@@ -1054,6 +1063,15 @@ function showToast(msg){
       if (cur.duree === 'court'  && !(h > 0 && h <= 20))  return false;
       if (cur.duree === 'moyen'  && !(h >= 21 && h <= 40)) return false;
       if (cur.duree === 'long'   && !(h > 40))             return false;
+    }
+    if (cur.niveau){
+      var hasNiv = false;
+      if (f.niveaux && f.niveaux.length > 0) {
+        for (var ni=0; ni<f.niveaux.length; ni++) {
+          if (f.niveaux[ni].n === cur.niveau) { hasNiv = true; break; }
+        }
+      }
+      if (!hasNiv) return false;
     }
     if (cur.q){
       var needle = cur.q.toLowerCase();
@@ -1257,10 +1275,12 @@ function showToast(msg){
     var mSel = document.getElementById('cgMode');
     var pSel = document.getElementById('cgPrix');
     var dSel = document.getElementById('cgDuree');
+    var nSel = document.getElementById('cgNiveau');
     var sSel = document.getElementById('cgSort');
     cur.mode  = mSel  ? mSel.value  : '';
     cur.prix  = pSel  ? pSel.value  : '';
     cur.duree = dSel  ? dSel.value  : '';
+    cur.niveau= nSel  ? nSel.value  : '';
     cur.sort  = sSel  ? sSel.value  : 'az';
     cur.page = 1;
     render();
@@ -1286,12 +1306,14 @@ function showToast(msg){
     var mSel = document.getElementById('cgMode');
     var pSel = document.getElementById('cgPrix');
     var dSel = document.getElementById('cgDuree');
+    var nSel = document.getElementById('cgNiveau');
     var sSel = document.getElementById('cgSort');
     if (mSel) mSel.value = '';
     if (pSel) pSel.value = '';
     if (dSel) dSel.value = '';
+    if (nSel) nSel.value = '';
     if (sSel) sSel.value = 'az';
-    cur = { q:'', cat:'', mode:'', prix:'', duree:'', sort:'az', page:1 };
+    cur = { q:'', cat:'', mode:'', prix:'', duree:'', niveau:'', sort:'az', page:1 };
     document.querySelectorAll('.cg-tab').forEach(function(t){ t.classList.toggle('on', !t.getAttribute('data-cat')); });
     render();
   };
@@ -1332,14 +1354,16 @@ function showToast(msg){
     if (sp.get('cat'))   cur.cat   = sp.get('cat');
     if (sp.get('mode'))  cur.mode  = sp.get('mode');
     if (sp.get('prix'))  cur.prix  = sp.get('prix');
-    if (sp.get('duree')) cur.duree = sp.get('duree');
-    if (sp.get('sort'))  cur.sort  = sp.get('sort');
+    if (sp.get('duree'))  cur.duree  = sp.get('duree');
+    if (sp.get('niveau')) cur.niveau = sp.get('niveau');
+    if (sp.get('sort'))   cur.sort   = sp.get('sort');
     if (sp.get('page'))  cur.page  = parseInt(sp.get('page'),10)||1;
     /* Sync UI */
     var si = document.getElementById('cgSearch'); if (si && cur.q) si.value = cur.q;
     var mSel = document.getElementById('cgMode'); if (mSel && cur.mode) mSel.value = cur.mode;
     var pSel = document.getElementById('cgPrix'); if (pSel && cur.prix) pSel.value = cur.prix;
     var dSel = document.getElementById('cgDuree'); if (dSel && cur.duree) dSel.value = cur.duree;
+    var nSel = document.getElementById('cgNiveau'); if (nSel && cur.niveau) nSel.value = cur.niveau;
     var sSel = document.getElementById('cgSort'); if (sSel) sSel.value = cur.sort;
     document.querySelectorAll('.cg-tab').forEach(function(t){ t.classList.toggle('on', t.getAttribute('data-cat') === cur.cat); });
     /* Vue mémorisée */
