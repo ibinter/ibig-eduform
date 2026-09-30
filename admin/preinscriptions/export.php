@@ -55,7 +55,7 @@ foreach ($PROFIL_COLS as $c) { $extraSel .= ", p.$c"; }
 $sql = "
   SELECT
     p.nom, p.prenoms, p.email, p.telephone, p.ville,
-    f.titre AS formation,
+    f.titre AS formation, p.niveau,
     p.source, p.statut, p.created_at $extraSel
   FROM preinscriptions p
   LEFT JOIN formations f ON f.id = p.formation_id
@@ -79,7 +79,7 @@ $out = fopen('php://output', 'w');
 fwrite($out, "\xEF\xBB\xBF"); // BOM UTF-8
 
 fputcsv($out, [
-  'Nom','Prénoms','Email','Téléphone','Ville','Formation',
+  'Nom','Prénoms','Email','Téléphone','Ville','Formation','Niveau formation',
   'Domaine d\'activité','Niveau d\'étude','Fonction','Années d\'expérience',
   'Source','Statut','Date'
 ], ';');
@@ -92,6 +92,7 @@ foreach ($rows as $r) {
     $r['telephone'] ?? '',
     $r['ville'] ?? '',
     $r['formation'] ?? '',
+    ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'][$r['niveau'] ?? ''] ?? ($r['niveau'] ?? ''),
     $r['domaine_activite'] ?? '',
     $r['niveau_etude'] ?? '',
     $r['fonction'] ?? '',

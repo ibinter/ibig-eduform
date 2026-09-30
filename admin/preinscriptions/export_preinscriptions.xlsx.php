@@ -54,7 +54,7 @@ foreach ($PROFIL_COLS as $c) { $extraSel .= ", p.$c"; }
 
 $sql = "
   SELECT p.nom, p.prenoms, p.email, p.telephone, p.ville,
-         f.titre AS formation, p.source, p.statut, p.created_at $extraSel
+         f.titre AS formation, p.niveau, p.source, p.statut, p.created_at $extraSel
   FROM preinscriptions p
   LEFT JOIN formations f ON f.id = p.formation_id
   $whereSql
@@ -72,8 +72,9 @@ $sheet = $spreadsheet->getActiveSheet();
 $sheet->setTitle('Préinscriptions');
 
 $data = [];
+$nLvXlsx = ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'];
 $data[] = [
-  'Nom','Prénoms','Email','Téléphone','Ville','Formation',
+  'Nom','Prénoms','Email','Téléphone','Ville','Formation','Niveau formation',
   "Domaine d'activité","Niveau d'étude",'Fonction',"Années d'expérience",
   'Source','Statut','Date'
 ];
@@ -85,6 +86,7 @@ foreach ($rows as $r) {
     $r['telephone'] ?? '',
     $r['ville'] ?? '',
     $r['formation'] ?? '',
+    $nLvXlsx[$r['niveau'] ?? ''] ?? ($r['niveau'] ?? ''),
     $r['domaine_activite'] ?? '',
     $r['niveau_etude'] ?? '',
     $r['fonction'] ?? '',
@@ -97,8 +99,8 @@ foreach ($rows as $r) {
 $sheet->fromArray($data, null, 'A1');
 
 /* En-têtes en gras + auto-size (A..M) */
-$sheet->getStyle('A1:M1')->getFont()->setBold(true);
-foreach (range('A','M') as $col) {
+$sheet->getStyle('A1:N1')->getFont()->setBold(true);
+foreach (range('A','N') as $col) {
   $sheet->getColumnDimension($col)->setAutoSize(true);
 }
 

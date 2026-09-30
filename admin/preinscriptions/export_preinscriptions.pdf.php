@@ -41,7 +41,7 @@ $sql = "
     p.email,
     p.ville,
     f.titre AS formation,
-    p.source,
+    p.niveau, p.source,
     p.statut $extraSel
   FROM preinscriptions p
   LEFT JOIN formations f ON f.id = p.formation_id
@@ -112,7 +112,9 @@ foreach ($rows as $r) {
     <td>'.htmlspecialchars(($r['telephone'] ?? ''), ENT_QUOTES, 'UTF-8').'<br>'
        .htmlspecialchars(($r['email'] ?? ''), ENT_QUOTES, 'UTF-8').'</td>
 
-    <td>'.htmlspecialchars(($r['formation'] ?? '—'), ENT_QUOTES, 'UTF-8').'</td>
+    <td>'.htmlspecialchars(($r['formation'] ?? '—'), ENT_QUOTES, 'UTF-8').'
+      '.(!empty($r['niveau']) ? '<br><small><b>'.htmlspecialchars(['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'][$r['niveau']] ?? ucfirst($r['niveau']), ENT_QUOTES, 'UTF-8').'</b></small>' : '').'
+    </td>
 
     <td>'.$profil.'</td>
 

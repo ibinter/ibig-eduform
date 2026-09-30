@@ -538,17 +538,42 @@ function fdToggleFaq(btn) {
     <!-- Ce que vous allez apprendre -->
     <div class="fd-card">
       <h2><span class="fd-ico">💡</span> Ce que vous allez apprendre</h2>
+      <?php
+        /* Extraire les titres de modules depuis la BD (tous niveaux confondus, max 8) */
+        $skill_items = [];
+        if (!empty($f['_niveaux'])) {
+            $seen = [];
+            foreach ($f['_niveaux'] as $_nv_s) {
+                foreach (($_nv_s['_modules'] ?? []) as $_mod_s) {
+                    $t = trim((string)$_mod_s['titre']);
+                    $key = mb_strtolower($t, 'UTF-8');
+                    if ($t !== '' && !isset($seen[$key])) {
+                        $seen[$key] = true;
+                        $skill_items[] = $t;
+                    }
+                    if (count($skill_items) >= 8) break 2;
+                }
+            }
+        }
+        if (empty($skill_items)) {
+            $skill_items = [
+                'Maîtriser les concepts fondamentaux du domaine',
+                'Utiliser les outils et méthodes professionnels',
+                'Analyser et résoudre des problèmes réels',
+                'Communiquer efficacement dans le contexte métier',
+                'Piloter des projets et des équipes',
+                'Produire des livrables conformes aux standards',
+                "S'adapter aux évolutions du secteur",
+                'Valoriser votre profil sur le marché africain',
+            ];
+        }
+      ?>
       <div class="fd-skills-grid">
-        <div class="fd-skill">Maîtriser les concepts fondamentaux du domaine</div>
-        <div class="fd-skill">Utiliser les outils et méthodes professionnels</div>
-        <div class="fd-skill">Analyser et résoudre des problèmes réels</div>
-        <div class="fd-skill">Communiquer efficacement dans le contexte métier</div>
-        <div class="fd-skill">Piloter des projets et des équipes</div>
-        <div class="fd-skill">Produire des livrables conformes aux standards</div>
-        <div class="fd-skill">S'adapter aux évolutions du secteur</div>
-        <div class="fd-skill">Valoriser votre profil sur le marché africain</div>
+        <?php foreach ($skill_items as $_sk): ?>
+          <div class="fd-skill"><?= htmlspecialchars($_sk, ENT_QUOTES, 'UTF-8') ?></div>
+        <?php endforeach; ?>
       </div>
-      <p style="margin-top:12px;font-size:.8rem;color:#64748b">* Compétences spécifiques détaillées dans le programme complet (TDR).</p>
+      <p style="margin-top:12px;font-size:.8rem;color:#64748b">* Compétences détaillées dans le programme complet (TDR).</p>
     </div>
 
     <!-- Formateurs -->
