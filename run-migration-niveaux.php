@@ -134,14 +134,18 @@ $sql = file_get_contents(__DIR__ . '/migrations/2026_niveaux_formations.sql');
 // Exécuter instruction par instruction (PDO ne supporte pas multi-statement)
 $stmts = array_filter(array_map('trim', explode(';', $sql)));
 foreach ($stmts as $stmt) {
-    if (empty($stmt) || str_starts_with(ltrim($stmt), '--')) continue;
+    // Supprimer les lignes de commentaires (-- ...) au début et partout
+    $lines = explode("\n", $stmt);
+    $lines = array_filter($lines, fn($l) => !str_starts_with(trim($l), '--'));
+    $stmt_clean = trim(implode("\n", $lines));
+    if (empty($stmt_clean)) continue;
     try {
-        $pdo->exec($stmt);
+        $pdo->exec($stmt_clean);
     } catch (PDOException $e) {
         // Ignorer les erreurs "déjà existe"
         if (!str_contains($e->getMessage(), 'already exists') &&
             !str_contains($e->getMessage(), 'Duplicate')) {
-            $errors[] = "SQL error: " . $e->getMessage() . "\n  SQL: " . substr($stmt, 0, 100);
+            $errors[] = "SQL error: " . $e->getMessage() . "\n  SQL: " . substr($stmt_clean, 0, 150);
         }
     }
 }
@@ -163,9 +167,11 @@ try {
     // Ré-tenter la création et afficher l'erreur brute
     $sql2 = file_get_contents(__DIR__ . '/migrations/2026_niveaux_formations.sql');
     foreach (array_filter(array_map('trim', explode(';', $sql2))) as $s2) {
-        if (empty($s2) || str_starts_with(ltrim($s2), '--')) continue;
-        try { $pdo->exec($s2); echo "OK: " . htmlspecialchars(substr($s2, 0, 80)) . "\n"; }
-        catch (PDOException $e2) { echo "ERR: " . htmlspecialchars($e2->getMessage()) . "\n     SQL: " . htmlspecialchars(substr($s2, 0, 80)) . "\n"; }
+        $lines2 = array_filter(explode("\n", $s2), fn($l) => !str_starts_with(trim($l), '--'));
+        $s2c = trim(implode("\n", $lines2));
+        if (empty($s2c)) continue;
+        try { $pdo->exec($s2c); echo "OK: " . htmlspecialchars(substr($s2c, 0, 80)) . "\n"; }
+        catch (PDOException $e2) { echo "ERR: " . htmlspecialchars($e2->getMessage()) . "\n     SQL: " . htmlspecialchars(substr($s2c, 0, 80)) . "\n"; }
     }
     echo '</pre>';
     exit;
