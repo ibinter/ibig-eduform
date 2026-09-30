@@ -310,6 +310,23 @@ require_once __DIR__ . '/partials/header.php';
 .fd-module-contenus{color:#64748b;font-size:.7rem;line-height:1.4}
 .fd-module-dur{font-size:.7rem;font-weight:700;color:#1e40af;white-space:nowrap;flex-shrink:0}
 
+/* Programme & modules (onglets par niveau) */
+.fd-prog-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.fd-prog-tab{padding:6px 14px;border-radius:999px;border:1.5px solid #e2e8f0;background:#f8fafc;font-size:.8rem;font-weight:700;cursor:pointer;color:#475569;transition:all .15s}
+.fd-prog-tab:hover{background:#f1f5f9}
+.fd-prog-tab.fd-niv-debutant.active{background:#dcfce7;color:#166534;border-color:#86efac}
+.fd-prog-tab.fd-niv-intermediaire.active{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.fd-prog-tab.fd-niv-expert.active{background:#fce7f3;color:#9d174d;border-color:#f9a8d4}
+.fd-prog-panel{display:none}.fd-prog-panel.active{display:block}
+.fd-prog-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.fd-prog-item{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px}
+.fd-prog-titre{font-weight:700;font-size:.88rem;color:#1e293b;margin-bottom:4px}
+.fd-prog-contenus{font-size:.78rem;color:#64748b;line-height:1.5;margin-bottom:4px}
+.fd-prog-dur{font-size:.72rem;font-weight:700;color:#1e40af}
+.fd-prog-cta{margin-top:16px;text-align:center}
+.fd-prog-cta a{display:inline-block;background:#0a1733;color:#fff;font-weight:700;font-size:.82rem;padding:10px 20px;border-radius:999px;text-decoration:none}
+.fd-prog-cta a:hover{background:#1d4ed8}
+
 /* TDR */
 .fd-tdr-card{background:#f0fdf4;border:1px solid #86efac;border-radius:var(--radius);padding:18px}
 .fd-tdr-card h3{font-size:.88rem;font-weight:800;color:#15803d;margin:0 0 6px;display:flex;align-items:center;gap:6px}
@@ -437,9 +454,58 @@ function fdToggleFaq(btn) {
       <p style="margin-top:10px;font-size:.8rem;color:#64748b">* Prérequis spécifiques précisés dans le TDR de la formation.</p>
     </div>
 
-    <!-- Programme / Modules — verrouillé -->
+    <!-- Programme / Modules -->
     <div class="fd-card">
       <h2><span class="fd-ico">📚</span> Programme &amp; Modules</h2>
+      <?php
+      $niveaux_prog = $f['_niveaux'] ?? [];
+      $has_real_modules = !empty($niveaux_prog) && !empty($niveaux_prog[0]['_modules']);
+      $niv_labels_prog = ['debutant'=>'🟢 Débutant','intermediaire'=>'🔵 Intermédiaire','expert'=>'🔴 Expert'];
+      if ($has_real_modules):
+      ?>
+      <?php if (count($niveaux_prog) > 1): ?>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        <?php foreach ($niveaux_prog as $pi => $pnv): ?>
+        <button type="button"
+                class="fd-prog-tab<?= $pi === 0 ? ' active' : '' ?> fd-niv-<?= $pnv['niveau'] ?>"
+                onclick="fdProgTab(this,<?= $pi ?>)">
+          <?= $niv_labels_prog[$pnv['niveau']] ?? $pnv['niveau'] ?>
+          <span style="font-size:.68rem;font-weight:500;opacity:.8;margin-left:4px"><?= (int)$pnv['duree_heures'] ?>h</span>
+        </button>
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
+      <?php foreach ($niveaux_prog as $pi => $pnv): ?>
+      <div class="fd-prog-panel<?= $pi === 0 ? ' active' : '' ?>" data-prog-idx="<?= $pi ?>">
+        <?php if (!empty($pnv['_modules'])): ?>
+        <ol class="fd-prog-list">
+          <?php foreach ($pnv['_modules'] as $mi => $mod): ?>
+          <li class="fd-prog-item">
+            <div class="fd-prog-titre"><?= htmlspecialchars($mod['titre'], ENT_QUOTES, 'UTF-8') ?></div>
+            <?php if (!empty($mod['contenus'])): ?>
+            <div class="fd-prog-contenus"><?= htmlspecialchars($mod['contenus'], ENT_QUOTES, 'UTF-8') ?></div>
+            <?php endif; ?>
+            <div class="fd-prog-dur">⏱️ <?= (int)$mod['duree_heures'] ?>h</div>
+          </li>
+          <?php endforeach; ?>
+        </ol>
+        <?php endif; ?>
+        <div class="fd-prog-cta">
+          <a href="<?= htmlspecialchars($inscUrlBase, ENT_QUOTES, 'UTF-8') ?>">✍️ S'inscrire à ce niveau — recevoir le TDR complet</a>
+        </div>
+      </div>
+      <?php endforeach; ?>
+      <script>
+      function fdProgTab(btn, idx){
+        var wrap = btn.closest('.fd-card');
+        wrap.querySelectorAll('.fd-prog-tab').forEach(function(t){ t.classList.remove('active'); });
+        wrap.querySelectorAll('.fd-prog-panel').forEach(function(p){ p.classList.remove('active'); });
+        btn.classList.add('active');
+        var panel = wrap.querySelector('[data-prog-idx="'+idx+'"]');
+        if (panel) panel.classList.add('active');
+      }
+      </script>
+      <?php else: ?>
       <div class="fd-locked">
         <ul class="fd-modules fd-locked-inner">
           <li class="fd-module">Module 1 — Introduction et fondamentaux</li>
@@ -454,6 +520,7 @@ function fdToggleFaq(btn) {
           <a href="<?= htmlspecialchars($inscUrl, ENT_QUOTES, 'UTF-8') ?>">✍️ S'inscrire pour accéder</a>
         </div>
       </div>
+      <?php endif; ?>
     </div>
 
     <!-- Méthodologie -->
