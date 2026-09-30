@@ -85,6 +85,34 @@ if ($nid) {
         error_log('[TDR_DOWNLOAD] DB enrich: ' . $e->getMessage());
     }
 }
+
+/* Fallback slug : remplit duree/prix_pres/prix_hyb depuis formations si encore vides */
+$slugDB = (string)($data['slug'] ?? '');
+if ($slugDB !== '' && ($formation['duree'] === '' || $formation['prix_pres'] === 0)) {
+    try {
+        if (!isset($pdo)) {
+            $pdo = new PDO(
+                'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
+                DB_USER, DB_PASS,
+                [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+            );
+        }
+        $sf = $pdo->prepare("SELECT duree, tarif_presentiel, tarif_hybride FROM formations WHERE slug = ? AND statut = 'active' LIMIT 1");
+        $sf->execute([$slugDB]);
+        $frow = $sf->fetch(PDO::FETCH_ASSOC);
+        if ($frow) {
+            if ($formation['duree'] === '' && (string)($frow['duree'] ?? '') !== '')
+                $formation['duree'] = (string)$frow['duree'];
+            if ($formation['prix_pres'] === 0 && (int)($frow['tarif_presentiel'] ?? 0) > 0)
+                $formation['prix_pres'] = (int)$frow['tarif_presentiel'];
+            if ($formation['prix_hyb'] === 0 && (int)($frow['tarif_hybride'] ?? 0) > 0)
+                $formation['prix_hyb'] = (int)$frow['tarif_hybride'];
+        }
+    } catch (\Throwable $e) {
+        error_log('[TDR_DOWNLOAD] slug enrich: ' . $e->getMessage());
+    }
+}
+
 $opts = [
     'mode_formation'   => (string)($data['mode'] ?? 'en_ligne'),
     'format_formation' => (string)($data['fmt']  ?? 'individuel'),

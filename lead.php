@@ -141,8 +141,7 @@ $resp = ['ok' => true, 'message' => 'Merci ! Nous revenons vers vous très vite.
 if ($type === 'calendrier') {
   $resp['message']  = 'Merci ! Votre calendrier complet est prêt.';
   $resp['download'] = '/calendrier-pdf.php';
-} elseif ($type === 'tdr' && $formationId > 0) {
-  $resp['message']  = 'Merci ! Votre TDR est prêt.';
-  $resp['download'] = '/tdr.php?formation=' . $formationId;
+} elseif ($type === 'tdr') {
+  $resp['message'] = 'Merci ! Votre TDR est prêt.';
 }
 echo json_encode($resp);

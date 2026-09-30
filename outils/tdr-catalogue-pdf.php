@@ -68,12 +68,31 @@ if (!$found) {
     exit('<p style="font-family:sans-serif;text-align:center;margin-top:60px;color:#dc2626">Formation introuvable : <strong>' . htmlspecialchars($slug) . '</strong></p>');
 }
 
+/* Extrait prix_pres depuis la grille API si disponible */
+$apiGrille   = $found['grille'] ?? [];
+$apiPrixPres = 0;
+$apiPrixHyb  = 0;
+foreach ($apiGrille as $_gl) {
+    $_lbl = strtolower((string)($_gl['label'] ?? ''));
+    if ($apiPrixPres === 0 && strpos($_lbl, 'individu') !== false && strpos($_lbl, 'sent') !== false)
+        $apiPrixPres = (int)($_gl['price'] ?? 0);
+    if ($apiPrixHyb === 0 && strpos($_lbl, 'hybri') !== false && strpos($_lbl, 'individu') !== false)
+        $apiPrixHyb = (int)($_gl['price'] ?? 0);
+}
+/* Extrait duree depuis la description : "(XXh)" */
+$apiDuree = '';
+if (preg_match('/\((\d+)\s*h\)/i', (string)($found['description'] ?? ''), $_dm))
+    $apiDuree = $_dm[1] . 'H';
+
 $formation = [
     'name'        => (string)($found['name']        ?? ''),
     'category'    => (string)($found['category']    ?? ''),
     'slug'        => (string)($found['slug']        ?? ''),
     'price'       => (int)   ($found['price']       ?? 0),
     'description' => (string)($found['description'] ?? ''),
+    'prix_pres'   => $apiPrixPres,
+    'prix_hyb'    => $apiPrixHyb,
+    'duree'       => $apiDuree,
 ];
 
 $opts = [
