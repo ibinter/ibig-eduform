@@ -99,7 +99,7 @@ if (!$f) {
     try {
         $pdo  = Database::connect();
         $stmt = $pdo->prepare("
-            SELECT id, titre, description, tarif_en_ligne, tarif_presentiel, tarif_hybride,
+            SELECT titre, description, tarif_en_ligne, tarif_presentiel, tarif_hybride,
                    domaine, duree, slug
             FROM formations
             WHERE slug = :slug
@@ -111,7 +111,6 @@ if (!$f) {
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($row) {
             $f = [
-                'id'          => (int)$row['id'],
                 'name'        => (string)$row['titre'],
                 'description' => (string)($row['description'] ?? ''),
                 'price'       => (int)($row['tarif_en_ligne'] ?? 0),
@@ -122,18 +121,6 @@ if (!$f) {
                 '_duree'      => (string)($row['duree'] ?? ''),
                 '_local'      => true,
             ];
-            // Charger les niveaux actifs de cette formation
-            try {
-                $niv_stmt = $pdo->prepare("
-                    SELECT id AS niveau_id, niveau, duree_heures, tarif_en_ligne, tarif_presentiel, tarif_hybride, ordre_affichage
-                    FROM formation_niveaux
-                    WHERE formation_id = :fid AND statut = 'actif'
-                    ORDER BY ordre_affichage ASC
-                ");
-                $niv_stmt->execute([':fid' => (int)$row['id']]);
-                $f['_niveaux'] = $niv_stmt->fetchAll(PDO::FETCH_ASSOC);
-                /* Les modules ne sont pas chargés ici — TDR réservé aux inscrits */
-            } catch (\Exception $_e) { $f['_niveaux'] = []; }
         }
     } catch (\Exception $e) { /* silence */ }
 }
@@ -276,42 +263,6 @@ require_once __DIR__ . '/partials/header.php';
 .fd-tbl .fd-hl td{background:#fffbeb}
 .fd-tbl .fd-intra td{background:#f8fafc;font-style:italic;color:var(--muted)}
 .fd-tbl-note{font-size:.68rem;color:var(--muted);margin:8px 0 0;line-height:1.5}
-.fd-niv-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.fd-niv-tab{font-size:.72rem;font-weight:700;padding:4px 14px;border-radius:999px;border:2px solid transparent;cursor:pointer;background:#f1f5f9;color:#475569}
-.fd-niv-tab.active,.fd-niv-tab:focus{outline:none}
-.fd-niv-tab.fd-niv-debutant.active{background:#dcfce7;color:#166534;border-color:#86efac}
-.fd-niv-tab.fd-niv-intermediaire.active{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
-.fd-niv-tab.fd-niv-expert.active{background:#fce7f3;color:#9d174d;border-color:#f9a8d4}
-.fd-niv-panel{display:none}.fd-niv-panel.active{display:block}
-.fd-niv-dur{font-size:.75rem;color:var(--muted);margin-bottom:8px}
-.fd-modules-toggle{margin-top:10px}
-.fd-modules-btn{width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:.75rem;font-weight:700;color:#475569;cursor:pointer;text-align:left}
-.fd-modules-btn:hover{background:#f1f5f9}
-.fd-modules-list{margin-top:6px;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden}
-.fd-module-row{display:flex;gap:8px;align-items:flex-start;padding:7px 10px;border-bottom:1px solid #f1f5f9;font-size:.75rem}
-.fd-module-row:last-child{border-bottom:none}
-.fd-module-num{width:20px;height:20px;background:#1e40af;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0;margin-top:1px}
-.fd-module-info{flex:1}
-.fd-module-titre{font-weight:700;color:#1e293b;margin-bottom:2px}
-.fd-module-contenus{color:#64748b;font-size:.7rem;line-height:1.4}
-.fd-module-dur{font-size:.7rem;font-weight:700;color:#1e40af;white-space:nowrap;flex-shrink:0}
-
-/* Programme & modules (onglets par niveau) */
-.fd-prog-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.fd-prog-tab{padding:6px 14px;border-radius:999px;border:1.5px solid #e2e8f0;background:#f8fafc;font-size:.8rem;font-weight:700;cursor:pointer;color:#475569;transition:all .15s}
-.fd-prog-tab:hover{background:#f1f5f9}
-.fd-prog-tab.fd-niv-debutant.active{background:#dcfce7;color:#166534;border-color:#86efac}
-.fd-prog-tab.fd-niv-intermediaire.active{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
-.fd-prog-tab.fd-niv-expert.active{background:#fce7f3;color:#9d174d;border-color:#f9a8d4}
-.fd-prog-panel{display:none}.fd-prog-panel.active{display:block}
-.fd-prog-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
-.fd-prog-item{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px}
-.fd-prog-titre{font-weight:700;font-size:.88rem;color:#1e293b;margin-bottom:4px}
-.fd-prog-contenus{font-size:.78rem;color:#64748b;line-height:1.5;margin-bottom:4px}
-.fd-prog-dur{font-size:.72rem;font-weight:700;color:#1e40af}
-.fd-prog-cta{margin-top:16px;text-align:center}
-.fd-prog-cta a{display:inline-block;background:#0a1733;color:#fff;font-weight:700;font-size:.82rem;padding:10px 20px;border-radius:999px;text-decoration:none}
-.fd-prog-cta a:hover{background:#1d4ed8}
 
 /* TDR */
 .fd-tdr-card{background:#f0fdf4;border:1px solid #86efac;border-radius:var(--radius);padding:18px}
@@ -440,7 +391,7 @@ function fdToggleFaq(btn) {
       <p style="margin-top:10px;font-size:.8rem;color:#64748b">* Prérequis spécifiques précisés dans le TDR de la formation.</p>
     </div>
 
-    <!-- Programme / Modules — verrouillé : TDR transmis après inscription -->
+    <!-- Programme / Modules — verrouillé -->
     <div class="fd-card">
       <h2><span class="fd-ico">📚</span> Programme &amp; Modules</h2>
       <div class="fd-locked">
@@ -474,24 +425,17 @@ function fdToggleFaq(btn) {
     <!-- Ce que vous allez apprendre -->
     <div class="fd-card">
       <h2><span class="fd-ico">💡</span> Ce que vous allez apprendre</h2>
-      <?php
-        $skill_items = [
-            'Maîtriser les concepts fondamentaux du domaine',
-            'Utiliser les outils et méthodes professionnels',
-            'Analyser et résoudre des problèmes réels',
-            'Communiquer efficacement dans le contexte métier',
-            'Piloter des projets et des équipes',
-            'Produire des livrables conformes aux standards',
-            "S'adapter aux évolutions du secteur",
-            'Valoriser votre profil sur le marché africain',
-        ];
-      ?>
       <div class="fd-skills-grid">
-        <?php foreach ($skill_items as $_sk): ?>
-          <div class="fd-skill"><?= htmlspecialchars($_sk, ENT_QUOTES, 'UTF-8') ?></div>
-        <?php endforeach; ?>
+        <div class="fd-skill">Maîtriser les concepts fondamentaux du domaine</div>
+        <div class="fd-skill">Utiliser les outils et méthodes professionnels</div>
+        <div class="fd-skill">Analyser et résoudre des problèmes réels</div>
+        <div class="fd-skill">Communiquer efficacement dans le contexte métier</div>
+        <div class="fd-skill">Piloter des projets et des équipes</div>
+        <div class="fd-skill">Produire des livrables conformes aux standards</div>
+        <div class="fd-skill">S'adapter aux évolutions du secteur</div>
+        <div class="fd-skill">Valoriser votre profil sur le marché africain</div>
       </div>
-      <p style="margin-top:12px;font-size:.8rem;color:#64748b">* Compétences détaillées dans le programme complet (TDR).</p>
+      <p style="margin-top:12px;font-size:.8rem;color:#64748b">* Compétences spécifiques détaillées dans le programme complet (TDR).</p>
     </div>
 
     <!-- Formateurs -->
@@ -590,57 +534,12 @@ function fdToggleFaq(btn) {
     <div class="fd-cta-card">
       <h3>✍️ Vous êtes intéressé(e) ?</h3>
       <p>Inscrivez-vous en 2 minutes. Notre équipe vous recontacte sous 24h.</p>
-      <?php
-      $firstNiv = !empty($f['_niveaux']) ? $f['_niveaux'][0] : null;
-      $inscUrlBase = $inscUrl;
-      if ($firstNiv) {
-          $inscUrlBase = '/preinscription-generale.php?catalogue_nom=' . urlencode($nom) . '&formation_slug=' . urlencode($slug) . '&domaine=' . urlencode($cat) . '&catalogue_prix=' . (int)$firstNiv['tarif_en_ligne'] . '&niveau_id=' . (int)$firstNiv['niveau_id'];
-      }
-      ?>
-      <a class="fd-btn-primary" id="fd-insc-btn" href="<?= htmlspecialchars($inscUrlBase, ENT_QUOTES, 'UTF-8') ?>">S'inscrire maintenant</a>
+      <a class="fd-btn-primary" href="<?= htmlspecialchars($inscUrl, ENT_QUOTES, 'UTF-8') ?>">S'inscrire maintenant</a>
       <a class="fd-btn-sec" href="https://wa.me/2250778882592?text=<?= urlencode('Bonjour, je suis intéressé(e) par la formation : ' . $nom) ?>" target="_blank" rel="noopener">💬 Demander via WhatsApp</a>
     </div>
 
     <!-- Tarifs -->
-    <?php
-    $niveaux_fd = $f['_niveaux'] ?? [];
-    $niv_labels = ['debutant' => 'Débutant', 'intermediaire' => 'Intermédiaire', 'expert' => 'Expert'];
-    if ($niveaux_fd): ?>
-    <div class="fd-price-card">
-      <h3>💰 Coûts &amp; Niveaux</h3>
-      <?php if (count($niveaux_fd) > 1): ?>
-      <div class="fd-niv-tabs">
-        <?php foreach ($niveaux_fd as $i => $nv): ?>
-        <button type="button" class="fd-niv-tab<?= $i === 0 ? ' active' : '' ?> fd-niv-<?= $nv['niveau'] ?>"
-                onclick="fdSelectNiv(this,<?= $i ?>)"><?= $niv_labels[$nv['niveau']] ?></button>
-        <?php endforeach; ?>
-      </div>
-      <?php endif; ?>
-      <?php foreach ($niveaux_fd as $i => $nv):
-        $niv_insc_url = '/preinscription-generale.php?catalogue_nom=' . urlencode($nom) . '&formation_slug=' . urlencode($slug) . '&domaine=' . urlencode($cat) . '&catalogue_prix=' . (int)$nv['tarif_en_ligne'] . '&niveau_id=' . (int)$nv['niveau_id'];
-      ?>
-      <div class="fd-niv-panel<?= $i === 0 ? ' active' : '' ?>" data-niv-idx="<?= $i ?>"
-           data-niveau-id="<?= (int)$nv['niveau_id'] ?>"
-           data-insc-url="<?= htmlspecialchars($niv_insc_url, ENT_QUOTES, 'UTF-8') ?>">
-        <div class="fd-niv-dur">⏱️ <?= (int)$nv['duree_heures'] ?> heures</div>
-        <table class="fd-tbl">
-          <thead>
-            <tr><th>Modalité</th><th>💰 Tarif</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>💻 En ligne</td><td><?= fd_fcfa((int)$nv['tarif_en_ligne']) ?></td></tr>
-            <?php if ((int)$nv['tarif_hybride'] > 0): ?>
-            <tr><td>🔀 Hybride</td><td><?= fd_fcfa((int)$nv['tarif_hybride']) ?></td></tr>
-            <?php endif; ?>
-            <tr><td>🏛️ Présentiel</td><td><?= fd_fcfa((int)$nv['tarif_presentiel']) ?></td></tr>
-            <tr class="fd-intra"><td colspan="2">👥 Groupe &amp; intra-entreprise — <strong>Sur devis</strong></td></tr>
-          </tbody>
-        </table>
-      </div>
-      <?php endforeach; ?>
-      <p class="fd-tbl-note">Tarifs en F CFA, indicatifs. Prix par personne.</p>
-    </div>
-    <?php elseif ($g): ?>
+    <?php if ($g): ?>
     <div class="fd-price-card">
       <h3>💰 Coûts &amp; Modalités</h3>
       <table class="fd-tbl">
@@ -648,6 +547,7 @@ function fdToggleFaq(btn) {
           <tr><th>Modalité</th><th>💻 En ligne</th><th>🏛️ Présentiel</th></tr>
         </thead>
         <tbody>
+
           <tr><td>👤 Individuel en ligne</td><td><?= fd_fcfa((int)$g['individuel_online']) ?></td><td>—</td></tr>
           <tr><td>🔀 Hybride (En ligne et en présentiel)</td><td colspan="2" style="text-align:center"><?= fd_fcfa((int)$g['hybride']) ?></td></tr>
           <tr><td>👤 Individuel présentiel</td><td>—</td><td><?= fd_fcfa((int)$g['individuel_pres']) ?></td></tr>
@@ -662,7 +562,7 @@ function fdToggleFaq(btn) {
     <div class="fd-tdr-card">
       <h3>📄 Programme complet (TDR)</h3>
       <p>Le document de référence (TDR) avec tous les modules, objectifs détaillés et planning vous est transmis après votre inscription.</p>
-      <a class="fd-tdr-btn" id="fd-tdr-btn" href="<?= htmlspecialchars($inscUrlBase, ENT_QUOTES, 'UTF-8') ?>">🔒 S'inscrire pour recevoir le TDR</a>
+      <a class="fd-tdr-btn" href="<?= htmlspecialchars($inscUrl, ENT_QUOTES, 'UTF-8') ?>">🔒 S'inscrire pour recevoir le TDR</a>
     </div>
 
     <!-- Contact -->
@@ -712,30 +612,6 @@ function fdToggleFaq(btn) {
       </div>
     </div>
     <script>
-    function fdSelectNiv(btn, idx){
-      var card = btn.closest('.fd-price-card');
-      card.querySelectorAll('.fd-niv-tab').forEach(function(t){ t.classList.remove('active'); });
-      card.querySelectorAll('.fd-niv-panel').forEach(function(p){ p.classList.remove('active'); });
-      btn.classList.add('active');
-      var panel = card.querySelector('[data-niv-idx="'+idx+'"]');
-      if (panel) {
-        panel.classList.add('active');
-        var url = panel.getAttribute('data-insc-url');
-        if (url) {
-          var inscBtn = document.getElementById('fd-insc-btn');
-          if (inscBtn) inscBtn.href = url;
-          var tdrBtn = document.getElementById('fd-tdr-btn');
-          if (tdrBtn) tdrBtn.href = url;
-        }
-      }
-    }
-    function fdToggleModules(btn){
-      var list = btn.nextElementSibling;
-      if (!list) return;
-      var open = list.style.display !== 'none';
-      list.style.display = open ? 'none' : 'block';
-      btn.textContent = open ? btn.textContent.replace('▲','').trim().replace('📋 Masquer','📋 Voir') : btn.textContent.replace('Voir','Masquer');
-    }
     function fdCopyLink(btn, url){
       try {
         navigator.clipboard.writeText(url).then(function(){
