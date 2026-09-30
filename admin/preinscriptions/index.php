@@ -302,9 +302,9 @@ table.pre-table tr:hover td{background:#f0f6ff}
         <label>Niveau</label>
         <select name="niveau">
           <option value="">Tous les niveaux</option>
-          <?php foreach ($niveauxList as $n): ?>
-            <option value="<?= e($n); ?>" <?= $niveauF === (string)$n ? 'selected' : ''; ?>><?= e($n); ?></option>
-          <?php endforeach; ?>
+          <option value="debutant"      <?= $niveauF === 'debutant'      ? 'selected' : ''; ?>>🟢 Débutant</option>
+          <option value="intermediaire" <?= $niveauF === 'intermediaire' ? 'selected' : ''; ?>>🔵 Intermédiaire</option>
+          <option value="expert"        <?= $niveauF === 'expert'        ? 'selected' : ''; ?>>🔴 Expert</option>
         </select>
       </div>
       <div class="f">
@@ -412,7 +412,14 @@ table.pre-table tr:hover td{background:#f0f6ff}
           </strong>
           <div class="meta">
             <?php if (!empty($r['ville'])): ?><?= e($r['ville']); ?><?php endif; ?>
-            <?php if (!empty($r['niveau'])): ?> &middot; <?= e($r['niveau']); ?><?php endif; ?>
+            <?php if (!empty($r['niveau'])): ?>
+              <?php
+                $nLab = ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'];
+                $nCls = ['debutant'=>'background:#dcfce7;color:#166534','intermediaire'=>'background:#dbeafe;color:#1e40af','expert'=>'background:#fce7f3;color:#9d174d'];
+                $nv   = (string)$r['niveau'];
+              ?>
+              &middot; <span style="font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:999px;<?= $nCls[$nv] ?? 'background:#f1f5f9;color:#475569'; ?>"><?= e($nLab[$nv] ?? ucfirst($nv)); ?></span>
+            <?php endif; ?>
           </div>
         </td>
         <td>

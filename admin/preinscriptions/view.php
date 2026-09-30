@@ -126,7 +126,7 @@ hr{border:0;border-top:1px solid #eef2f7;margin:18px 0}
     <div style="flex:1;min-width:200px">
       <h2><?= e($nomComplet !== '' ? $nomComplet : 'Préinscription #'.(int)$p['id']); ?></h2>
       <div class="sub">
-        <?= e($p['ville'] ?? '—'); ?><?php if (!empty($p['niveau'])): ?> · <?= e($p['niveau']); ?><?php endif; ?>
+        <?= e($p['ville'] ?? '—'); ?><?php if (!empty($p['niveau'])): ?><?php $nLv=['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert']; ?> · <?= e($nLv[(string)$p['niveau']] ?? ucfirst((string)$p['niveau'])); ?><?php endif; ?>
         · <?= !empty($p['created_at']) ? date('d/m/Y H:i', strtotime((string)$p['created_at'])) : '—'; ?>
       </div>
     </div>
@@ -150,7 +150,14 @@ hr{border:0;border-top:1px solid #eef2f7;margin:18px 0}
     <div class="detail-item"><strong>Email</strong><?php if ($email !== ''): ?><a href="mailto:<?= e($email); ?>"><?= e($email); ?></a><?php else: ?>—<?php endif; ?></div>
     <div class="detail-item"><strong>Formation</strong><?= e($form !== '' ? $form : '—'); ?></div>
     <div class="detail-item"><strong>Ville</strong><?= e($p['ville'] ?? '—'); ?></div>
-    <div class="detail-item"><strong>Niveau</strong><?= e($p['niveau'] ?? '—'); ?></div>
+    <div class="detail-item"><strong>Niveau</strong><?php
+      $nLv2=['debutant'=>['Débutant','#dcfce7','#166534'],'intermediaire'=>['Intermédiaire','#dbeafe','#1e40af'],'expert'=>['Expert','#fce7f3','#9d174d']];
+      $nv2 = (string)($p['niveau'] ?? '');
+      if ($nv2 !== '' && isset($nLv2[$nv2])) {
+          [$lbl,$bg,$col] = $nLv2[$nv2];
+          echo '<span style="background:'.$bg.';color:'.$col.';font-size:11px;font-weight:800;padding:2px 9px;border-radius:999px">'.e($lbl).'</span>';
+      } else { echo e($nv2 !== '' ? ucfirst($nv2) : '—'); }
+    ?></div>
     <?php if (!empty($p['mode'])): ?><div class="detail-item"><strong>Mode</strong><?= e($p['mode']); ?></div><?php endif; ?>
     <?php if (!empty($p['domaine_activite'])): ?><div class="detail-item"><strong>Domaine d'activité</strong><?= e($p['domaine_activite']); ?></div><?php endif; ?>
     <?php if (!empty($p['niveau_etude'])): ?><div class="detail-item"><strong>Niveau d'étude</strong><?= e($p['niveau_etude']); ?></div><?php endif; ?>
