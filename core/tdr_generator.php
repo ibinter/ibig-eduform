@@ -63,6 +63,8 @@ function generate_tdr_html(array $f, string $nomProspect = '', array $opts = [])
     $formatLabel = $formatLabels[$formatForm] ?? $formatForm;
     $creneauLabel= $creneauLabels[$creneauPref] ?? 'Selon disponibilités mutuelles';
 
+    $prixHybDB = (int)($f['prix_hyb'] ?? 0);
+
     $r5 = fn(float $v): int => (int)(round($v / 5000) * 5000);
     $fcfa = fn(int $v): string => number_format($v, 0, ',', ' ') . ' F CFA';
 
@@ -101,7 +103,7 @@ function generate_tdr_html(array $f, string $nomProspect = '', array $opts = [])
             'elearning_online'   => $r5($prix * 0.5),
             'individuel_online'  => $prix,
             'individuel_pres'    => $ip,
-            'hybride'            => $r5(($prix + $ip) / 2),
+            'hybride'            => $prixHybDB > 0 ? $prixHybDB : $r5(($prix + $ip) / 2),
             'groupe_3_5_online'  => $r5($g35 * 0.70),
             'groupe_3_5_pres'    => $g35,
             'groupe_6_10_online' => $r5($g61 * 0.70),
@@ -238,9 +240,9 @@ function generate_tdr_html(array $f, string $nomProspect = '', array $opts = [])
     <p class="hd-inst">Institut de Formation Professionnelle — INTERMARK BUSINESS INTERNATIONAL GROUP<br>
     www.ibig-eduform.com &nbsp;|&nbsp; Abidjan – Côte d\'Ivoire</p>
     <p class="tdr-title">Termes de Référence (TDR)</p>
-    <p class="tdr-sub">Parcours Certifiant &mdash; En ligne &amp; Présentiel</p>
+    <p class="tdr-sub">Parcours Certifiant &mdash; ' . $h($modeLabel) . '</p>
     <p class="tdr-nom">' . $h($nom) . '</p>
-    <p class="tdr-acc">Accompagnement personnalisé — ' . $heures . ' heures — En ligne &amp; Présentiel</p>
+    <p class="tdr-acc">Accompagnement personnalisé — ' . $heures . ' heures — ' . $h($modeLabel) . '</p>
   </div>
 
   <!-- FICHE SIGNALÉTIQUE -->

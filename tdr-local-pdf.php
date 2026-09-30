@@ -64,7 +64,8 @@ $domMap = [
     'Management & Leadership'  => 'Management & Leadership',
     'Marketing & Commercial'   => 'Marketing & Commercial',
     'Logistique & Supply Chain'=> 'Logistique & Supply Chain',
-    'Informatique & Digital'   => 'Informatique & Digital',
+    'Informatique & Digital'   => 'Informatique & Tech',
+    'Informatique'             => 'Informatique & Tech',
     'Droit des Affaires'       => 'Droit des Affaires',
     'IA & Digitalisation'      => 'IA & Digitalisation',
     'Digital & IA'             => 'IA & Digitalisation',
@@ -82,7 +83,7 @@ if (in_array($niv_get, ['debutant', 'intermediaire', 'expert'])) {
     $fid = (int)($stmt_fid->fetchColumn() ?: 0);
     if ($fid) {
         $stmt_niv = $pdo->prepare("
-            SELECT n.id AS niveau_id, n.duree_heures, n.tarif_en_ligne, n.tarif_presentiel,
+            SELECT n.id AS niveau_id, n.duree_heures, n.tarif_en_ligne, n.tarif_presentiel, n.tarif_hybride,
                    n.objectifs, n.prerequis, n.public_cible
             FROM formation_niveaux n
             WHERE n.formation_id = :fid AND n.niveau = :niv AND n.statut = 'actif'
@@ -93,14 +94,16 @@ if (in_array($niv_get, ['debutant', 'intermediaire', 'expert'])) {
     }
 }
 
-$prix_base = (int)($row['tarif_en_ligne'] > 0 ? $row['tarif_en_ligne'] : ($row['tarif_presentiel'] ?? 0));
+$prix_base      = (int)($row['tarif_en_ligne'] > 0 ? $row['tarif_en_ligne'] : ($row['tarif_presentiel'] ?? 0));
 $prix_pres_base = (int)($row['tarif_presentiel'] ?? 0);
-$duree_base = (string)($row['duree'] ?? '');
+$prix_hyb_base  = 0;
+$duree_base     = (string)($row['duree'] ?? '');
 
 if ($niveau_row) {
-    if ($niveau_row['tarif_en_ligne'] > 0)   $prix_base      = (int)$niveau_row['tarif_en_ligne'];
-    if ($niveau_row['tarif_presentiel'] > 0) $prix_pres_base = (int)$niveau_row['tarif_presentiel'];
-    if ($niveau_row['duree_heures'] > 0)     $duree_base     = $niveau_row['duree_heures'] . 'H';
+    if ((int)$niveau_row['tarif_en_ligne']   > 0) $prix_base      = (int)$niveau_row['tarif_en_ligne'];
+    if ((int)$niveau_row['tarif_presentiel'] > 0) $prix_pres_base = (int)$niveau_row['tarif_presentiel'];
+    if ((int)($niveau_row['tarif_hybride'] ?? 0) > 0) $prix_hyb_base = (int)$niveau_row['tarif_hybride'];
+    if ((int)$niveau_row['duree_heures']     > 0) $duree_base     = $niveau_row['duree_heures'] . 'H';
 }
 
 $formation = [
@@ -110,6 +113,7 @@ $formation = [
     'price'            => $prix_base,
     'description'      => (string)($row['description']     ?? ''),
     'prix_pres'        => $prix_pres_base,
+    'prix_hyb'         => $prix_hyb_base,
     'duree'            => $duree_base,
     /* Données niveau */
     'niveau'           => $niv_get,
