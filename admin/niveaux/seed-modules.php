@@ -61,9 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
            SET duree_heures = (
                SELECT COALESCE(SUM(duree_heures), 20)
                FROM formation_niveau_modules
-               WHERE niveau_id = :nid
+               WHERE niveau_id = :nid1
            )
-         WHERE id = :nid
+         WHERE id = :nid2
     ");
 
     foreach ($niveaux as $n) {
@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $pdo->commit();
             // Synchroniser duree_heures du niveau = somme des heures de ses modules
-            $syncDuree->execute([':nid' => $nid]);
+            $syncDuree->execute([':nid1' => $nid, ':nid2' => $nid]);
             $ids_synced[] = $nid;
             $results[] = ['ok', $n['titre'] . ' [' . $n['niveau'] . ']', count($modules) . ' modules'];
             $nb_ok++;
