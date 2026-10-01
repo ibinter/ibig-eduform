@@ -72,12 +72,12 @@ RewriteRule ^offre/([a-z0-9\-]+)/?$ offre.php?slug=$1 [L,QSA]
 # =========================================================
 # FORMATION PAR SLUG
 # =========================================================
-RewriteRule ^formation/([a-z0-9\-]+)/?$ formation.php?slug=$1 [L,QSA]
+RewriteRule ^formation/([a-z0-9\-]+)/?$ formation-detail.php?slug=$1 [L,QSA]
 
 # =========================================================
 # FORMATION PAR ID
 # =========================================================
-RewriteRule ^formation/([0-9]+)/?$ formation.php?id=$1 [L,QSA]
+RewriteRule ^formation/([0-9]+)/?$ formation-detail.php?id=$1 [L,QSA]
 
 # =========================================================
 # PREINSCRIPTION

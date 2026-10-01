@@ -193,7 +193,7 @@ $_descRaw  = strip_tags($desc);
 $ogDesc    = $_descRaw !== ''
     ? mb_substr($_descRaw, 0, 155, 'UTF-8') . (mb_strlen($_descRaw, 'UTF-8') > 155 ? '…' : '')
     : 'Formation professionnelle certifiante IBIG — ' . $cat . '. Disponible en ligne et en présentiel dans l\'espace OHADA.';
-$ogUrl     = 'https://ibig-eduform.com/formation-detail.php?slug=' . urlencode($slug);
+$ogUrl     = 'https://ibig-eduform.com/formation/' . $slug;
 $ogImage   = 'https://ibig-eduform.com/assets/images/logo.png';
 
 $extraHead = '<link rel="canonical" href="' . htmlspecialchars($ogUrl, ENT_QUOTES, 'UTF-8') . '">';
