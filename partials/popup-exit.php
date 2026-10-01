@@ -43,6 +43,7 @@
         </div>
         <ul id="ep-results" role="listbox" aria-label="Formations disponibles"></ul>
         <p id="ep-selected-label" class="ep-selected-label" hidden></p>
+        <input type="text" id="ep-formation-libre" name="formation_libre" placeholder="Ou saisissez librement le nom de la formation…" style="margin-top:8px;border:1.5px dashed #cbd5e1;border-radius:10px;padding:8px 12px;font-size:.84rem;width:100%;color:#475569;background:#f8fafc;outline:none;box-sizing:border-box">
       </div>
 
       <div id="ep-msg" role="alert" aria-live="polite"></div>
@@ -173,7 +174,7 @@
 
 <script>
 (function(){
-  var STORAGE_KEY = 'ep_shown_v2';
+  var STORAGE_KEY = 'ep_shown_v4';
   var overlay   = document.getElementById('exit-popup-overlay');
   var closeBtn  = document.getElementById('exit-popup-close');
   var form      = document.getElementById('exit-popup-form');
@@ -249,10 +250,21 @@
   });
 
   function doSearch(q){
+    resultsList.innerHTML = '<li style="color:#64748b;padding:10px 14px;font-size:.82rem">Recherche…</li>';
+    resultsList.classList.add('open');
     fetch('/ajax-search-formations.php?q=' + encodeURIComponent(q))
-      .then(function(r){ return r.json(); })
-      .then(function(rows){ renderList(rows, q); })
-      .catch(function(){ renderList([], q); });
+      .then(function(r){
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+      })
+      .then(function(txt){
+        var rows;
+        try { rows = JSON.parse(txt); } catch(e){ rows = []; }
+        renderList(rows, q);
+      })
+      .catch(function(err){
+        resultsList.innerHTML = '<li style="color:#dc2626;padding:10px 14px;font-size:.82rem">Erreur de connexion. Saisissez la formation manuellement ci-dessous.</li>';
+      });
   }
 
   searchInp.addEventListener('keydown', function(e){
@@ -345,7 +357,7 @@
 
     var nom   = document.getElementById('ep-nom').value.trim();
     var email = document.getElementById('ep-email').value.trim();
-    var label = hiddenLbl.value.trim() || searchInp.value.trim();
+    var label = hiddenLbl.value.trim() || searchInp.value.trim() || document.getElementById('ep-formation-libre').value.trim();
 
     if (!nom)   { showErr('Veuillez indiquer votre nom.'); return; }
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))

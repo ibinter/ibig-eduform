@@ -23,6 +23,7 @@ $nom    = trim((string)($_POST['nom']   ?? ''));
 $email  = trim((string)($_POST['email'] ?? ''));
 $tel    = trim((string)($_POST['telephone'] ?? ''));
 $label  = trim((string)($_POST['formation_label'] ?? ''));
+if (!$label) $label = trim((string)($_POST['formation_libre'] ?? ''));
 if (!$label) $label = trim((string)($_POST['formation_autre'] ?? ''));
 
 if ($nom === '') {
