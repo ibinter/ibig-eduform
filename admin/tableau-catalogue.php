@@ -14,6 +14,7 @@ $act = $_POST['act'] ?? $_GET['act'] ?? '';
 
 // Suppression
 if ($act === 'delete' && isset($_POST['id'])) {
+    csrf_check();
     $id = (int)$_POST['id'];
     $pdo->beginTransaction();
     try {
@@ -26,6 +27,7 @@ if ($act === 'delete' && isset($_POST['id'])) {
 
 // Recalcul bulk de tous les tarifs hybrides
 if ($act === 'fix_hybride_all') {
+    csrf_check();
     $pdo->beginTransaction();
     try {
         $rows = $pdo->query("SELECT id, tarif_en_ligne, tarif_presentiel FROM formations WHERE tarif_en_ligne > 0 AND tarif_presentiel > 0")->fetchAll(PDO::FETCH_ASSOC);
@@ -45,6 +47,7 @@ if ($act === 'fix_hybride_all') {
 
 // Mise à jour inline (titre, duree, tarif_en_ligne, tarif_presentiel, tarif_hybride)
 if ($act === 'update' && isset($_POST['id'])) {
+    csrf_check();
     $id  = (int)$_POST['id'];
     $col = $_POST['col'] ?? '';
     $val = trim($_POST['val'] ?? '');
@@ -408,6 +411,8 @@ foreach ($all as $r) $idx[$r['id']] = $r;
 <div id="toast"></div>
 
 <script>
+const CSRF = <?= json_encode(csrf_token()) ?>;
+
 // ── Toast ──────────────────────────────────────────────────────────────────
 function toast(msg, ok=true) {
     const t = document.getElementById('toast');
@@ -423,7 +428,7 @@ function deleteFormation(id, titre) {
     fetch('tableau-catalogue.php', {
         method: 'POST',
         headers:{'Content-Type':'application/x-www-form-urlencoded'},
-        body: 'act=delete&id=' + id
+        body: 'act=delete&id=' + id + '&csrf=' + CSRF
     }).then(r=>r.json()).then(d => {
         if (d.ok) {
             // Retirer la ligne et l'alerte
@@ -480,7 +485,7 @@ document.querySelectorAll('[data-edit]').forEach(el => {
             fetch('tableau-catalogue.php', {
                 method:'POST',
                 headers:{'Content-Type':'application/x-www-form-urlencoded'},
-                body: `act=update&id=${id}&col=${encodeURIComponent(col)}&val=${encodeURIComponent(val)}`
+                body: `act=update&id=${id}&col=${encodeURIComponent(col)}&val=${encodeURIComponent(val)}&csrf=${CSRF}`
             }).then(r=>r.json()).then(d => {
                 this.classList.remove('editing');
                 if (d.ok) {
@@ -537,7 +542,7 @@ function fixHybrideAll() {
     fetch('tableau-catalogue.php', {
         method:'POST',
         headers:{'Content-Type':'application/x-www-form-urlencoded'},
-        body:'act=fix_hybride_all'
+        body:'act=fix_hybride_all&csrf=' + CSRF
     }).then(r=>r.json()).then(d => {
         if (d.ok) {
             toast('✅ ' + d.nb + ' hybrides recalculés — visible immédiatement sur le site.');
