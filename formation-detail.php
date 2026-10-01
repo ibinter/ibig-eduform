@@ -1,4 +1,5 @@
 <?php
+// v2026-10-01
 declare(strict_types=1);
 /**
  * IBIG EDUFORM — formation-detail.php
