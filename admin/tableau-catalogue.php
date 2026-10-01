@@ -86,7 +86,10 @@ $all = $pdo->query("
     SELECT f.id, f.titre, f.slug, f.domaine, f.duree,
            f.tarif_en_ligne, f.tarif_presentiel, f.tarif_hybride,
            f.mode, f.statut, f.created_at,
-           COUNT(n.id) as nb_niveaux
+           COUNT(n.id) as nb_niveaux,
+           SUM(COALESCE(n.duree_heures,0)) as total_h_niveaux,
+           GROUP_CONCAT(n.nom ORDER BY n.ordre_affichage SEPARATOR ' / ') as noms_niveaux,
+           GROUP_CONCAT(n.duree_heures ORDER BY n.ordre_affichage SEPARATOR ' / ') as h_niveaux
     FROM formations f
     LEFT JOIN formation_niveaux n ON n.formation_id = f.id
     GROUP BY f.id
@@ -129,8 +132,12 @@ foreach ($all as $r) {
     if ($bugs) $alertes[$id] = $bugs;
 }
 
-// Stat durées non renseignées (info seulement, pas une alerte individuelle)
-$nb_sans_duree = count(array_filter($all, fn($r) => trim((string)$r['duree']) === '' || trim((string)$r['duree']) === '0'));
+// Stat durées non renseignées : seulement si NI la formation NI ses niveaux n'ont de durée
+$nb_sans_duree = count(array_filter($all, function($r) {
+    $duree_vide = trim((string)$r['duree']) === '' || trim((string)$r['duree']) === '0';
+    $niveaux_sans_h = (int)$r['total_h_niveaux'] === 0;
+    return $duree_vide && $niveaux_sans_h;
+}));
 
 // Stats
 $stats = [
@@ -366,7 +373,8 @@ foreach ($all as $r) $idx[$r['id']] = $r;
         $pr  = (int)$r['tarif_presentiel'];
         $hy  = (int)$r['tarif_hybride'];
         $hyb_ok = ($el > 0 && $pr > 0) ? abs($hy - r5((int)(($el+$pr)/2))) <= 5000 : true;
-        $h_ok = $h !== null && $h >= 15 && $h <= 200;
+        $has_niveaux_h = (int)$r['total_h_niveaux'] > 0;
+        $h_ok = $h !== null || $has_niveaux_h; // ok si durée renseignée OU niveaux avec heures
         $has_alert = isset($alertes[$id]);
     ?>
     <tr class="<?= $has_alert ? 'has-alert' : '' ?>"
@@ -382,9 +390,17 @@ foreach ($all as $r) $idx[$r['id']] = $r;
             <div class="cell-slug"><?= htmlspecialchars($r['slug']) ?></div>
         </td>
         <td>
+            <?php $duree_vide = trim((string)$r['duree']) === '' || trim((string)$r['duree']) === '0'; ?>
             <span class="cell-duree <?= $h_ok ? 'ok' : 'bad' ?>"
                   data-edit data-id="<?= $id ?>" data-col="duree"
-                  title="Cliquer pour modifier"><?= htmlspecialchars($r['duree']) ?></span>
+                  title="Cliquer pour modifier">
+                <?= $duree_vide ? '—' : htmlspecialchars($r['duree']) ?>
+            </span>
+            <?php if ($duree_vide && $has_niveaux_h && $r['h_niveaux']): ?>
+            <div style="font-size:10px;color:#64748b;margin-top:2px">
+                <?= htmlspecialchars($r['h_niveaux']) ?>H (niveaux)
+            </div>
+            <?php endif; ?>
         </td>
         <td>
             <span class="cell-tarif <?= $el > 0 ? 'ok' : 'bad' ?>"
