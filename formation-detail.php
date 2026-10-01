@@ -130,10 +130,9 @@ try {
             ");
             $niv_stmt->execute([':fid' => (int)$row['id']]);
             $f['_niveaux'] = $niv_stmt->fetchAll(PDO::FETCH_ASSOC);
-            } catch (\Exception $_e) { $f['_niveaux'] = []; }
-        }
-    } catch (\Exception $e) { /* silence */ }
-}
+        } catch (\Exception $_e) { $f['_niveaux'] = []; }
+    }
+} catch (\Exception $e) { /* silence */ }
 
 /* Fallback API si pas trouvé en BD locale */
 if (!$f) {
