@@ -33,7 +33,7 @@ $activeMenu = "demandes_formation";
 =============================== */
 $adminEmail = defined('ADMIN_EMAIL')
   ? ADMIN_EMAIL
-  : 'formation@intermark-business.com';
+  : 'formation@ibig-eduform.com';
 
 /* WhatsApp admin */
 $adminWhats = '2250778882592'; // sans +

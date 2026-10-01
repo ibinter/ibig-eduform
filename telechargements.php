@@ -68,7 +68,7 @@ $docs = [
 <div class="tdl-wrap">
   <div class="tdl-note">
     <strong>📌 Note importante</strong>
-    Ces documents sont mis à jour régulièrement. Pour toute demande de document spécifique ou d'information complémentaire, contactez-nous à <a href="mailto:formation@ibig-eduform.com" style="color:#92400e;font-weight:700">formation@ibig-eduform.com</a> ou appelez le <a href="tel:+2252722276014" style="color:#92400e;font-weight:700">+225 27 22 27 60 14</a>.
+    Ces documents sont mis à jour régulièrement. Pour toute demande de document spécifique ou d'information complémentaire, contactez-nous à <a href="mailto:formation@ibig-eduform.com" style="color:#92400e;font-weight:700">formation@ibig-eduform.com</a> ou appelez le <a href="tel:+2250778882592" style="color:#92400e;font-weight:700">+225 07 78 88 25 92</a>.
   </div>
 
   <?php foreach ($docs as $section): ?>

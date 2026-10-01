@@ -99,7 +99,7 @@ $moisFr = [1=>'Janvier',2=>'Février',3=>'Mars',4=>'Avril',5=>'Mai',6=>'Juin',7=
       <?php endif; ?>
     </div>
     <div class="foot">
-      📞 +225 07 78 88 25 92 &nbsp;·&nbsp; ✉️ formation@intermark-business.com &nbsp;·&nbsp; 🌐 ibig-eduform.com<br>
+      📞 +225 07 78 88 25 92 &nbsp;·&nbsp; ✉️ formation@ibig-eduform.com &nbsp;·&nbsp; 🌐 ibig-eduform.com<br>
       Pack Premium = plusieurs certificats · Samedi Pro = attestation. Tarifs en FCFA, sous réserve de modification.
       © <?= hh(date('Y')); ?> IBIG EDUFORM.
     </div>

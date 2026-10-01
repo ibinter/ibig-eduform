@@ -72,7 +72,7 @@ $app = defined('APP_URL') ? rtrim(APP_URL, '/') : '';
       <p style="color:#64748b;font-size:13px">Ce document atteste du paiement reçu par IBIG EDUFORM. Conservez-le comme preuve d'inscription.</p>
     </div>
     <div class="foot">
-      📞 +225 07 78 88 25 92 · ✉️ formation@intermark-business.com · 🌐 ibig-eduform.com<br>
+      📞 +225 07 78 88 25 92 · ✉️ formation@ibig-eduform.com · 🌐 ibig-eduform.com<br>
       © <?= hh(date('Y')); ?> IBIG EDUFORM — Tous droits réservés.
     </div>
   </div>

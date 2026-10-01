@@ -347,11 +347,11 @@ body.pdf-mode #tdrSheet {
         <div class="g">
           <div class="fi">
             <label for="contact_tel">Téléphone</label>
-            <input id="contact_tel" type="text" value="+225 27 22 27 60 14">
+            <input id="contact_tel" type="text" value="+225 07 78 88 25 92">
           </div>
           <div class="fi">
             <label for="contact_email">Email</label>
-            <input id="contact_email" type="email" value="formation@intermark-business.com">
+            <input id="contact_email" type="email" value="formation@ibig-eduform.com">
           </div>
           <div class="fi">
             <label for="contact_web">Site web</label>
@@ -611,7 +611,7 @@ function buildTDR(f) {
     {titre:"Accompagnement &amp; insertion professionnelle", html:`<p>Au-delà des compétences, IBIG EDUFORM s'engage sur la <b>trajectoire professionnelle</b> de ses diplômés :</p><ul><li>optimisation du <b>CV</b> et du profil professionnel ;</li><li><b>coaching</b> et simulations d'entretien ;</li><li><b>recommandation</b> auprès de notre réseau d'entreprises et d'organisations partenaires ;</li><li><b>suivi post-formation</b> et accès à la communauté des apprenants.</li></ul><p>Notre finalité : transformer une compétence acquise en <b>opportunité concrète d'emploi ou d'évolution</b>.</p>`},
     {titre:"Engagement qualité IBIG EDUFORM", html:`<ul><li>Formateurs experts en activité &amp; contenus actualisés (évolutions réglementaires et technologiques) ;</li><li>Supports pédagogiques complets, outils et modèles professionnels ;</li><li>Encadrement permanent, groupe d'entraide et suivi post-formation ;</li><li><b>+90% de satisfaction</b> sur <b>1 000+ apprenants formés</b>.</li></ul>`},
     {titre:"Pourquoi choisir IBIG EDUFORM", html:`<p>IBIG EDUFORM est un <b>institut international de formation professionnelle et de certifications</b> orienté impact, performance et employabilité. Nos programmes sont conçus <b>avec et pour les professionnels</b>, ancrés dans les réalités africaines et alignés sur les standards internationaux.</p><p>Un réseau d'entreprises et d'organisations partenaires, des formateurs experts, et une approche résolument tournée vers le <b>résultat terrain</b>.</p>`},
-    {titre:"Contacts &amp; préinscription", html:`<p>📞 ${esc(tel||'+225 27 22 27 60 14')}<br>✉️ ${esc(email||'formation@intermark-business.com')}<br>🌐 ${esc((web||'ibig-eduform.com').replace(/^https?:\/\//,''))}</p><p style="margin-top:10px">Préinscription gratuite : <b>https://${esc((web||'ibig-eduform.com').replace(/^https?:\/\//,''))}/preinscription</b></p>`},
+    {titre:"Contacts &amp; préinscription", html:`<p>📞 ${esc(tel||'+225 07 78 88 25 92')}<br>✉️ ${esc(email||'formation@ibig-eduform.com')}<br>🌐 ${esc((web||'ibig-eduform.com').replace(/^https?:\/\//,''))}</p><p style="margin-top:10px">Préinscription gratuite : <b>https://${esc((web||'ibig-eduform.com').replace(/^https?:\/\//,''))}/preinscription</b></p>`},
     {titre:"Validation / approbation", html:`<p>Document validé par IBIG EDUFORM — INTERMARK BUSINESS INTERNATIONAL GROUP SARL.</p>`},
   ];
 
@@ -656,7 +656,7 @@ function buildTDR(f) {
 </div>
 <div style="background:${theme.dk};color:#cdd7ea;padding:22px 44px;font-size:12px;line-height:1.7">
   <b style="color:#fff">IBIG EDUFORM</b> — Institut international de formation professionnelle &amp; certifications.<br>
-  📞 ${esc(f.tel||'+225 27 22 27 60 14')} &nbsp;·&nbsp; ✉️ ${esc(f.email||'formation@intermark-business.com')} &nbsp;·&nbsp; 🌐 ${esc((f.web||'ibig-eduform.com').replace(/^https?:\/\//,''))}<br>
+  📞 ${esc(f.tel||'+225 07 78 88 25 92')} &nbsp;·&nbsp; ✉️ ${esc(f.email||'formation@ibig-eduform.com')} &nbsp;·&nbsp; 🌐 ${esc((f.web||'ibig-eduform.com').replace(/^https?:\/\//,''))}<br>
   <span style="opacity:.7;font-style:italic">« Chez IBIG EDUFORM, c'est l'excellence à travers la formation professionnelle. »</span>
 </div>
 <div style="display:flex;justify-content:space-between;flex-wrap:wrap;padding:8px 44px;gap:6px;font-size:10px;background:#0b1322;color:#9fb0c9">
@@ -805,8 +805,8 @@ function resetForm(){
   document.getElementById('objectif').value = '';
   document.getElementById('public_cible').value = '';
   document.getElementById('programme').value = '';
-  document.getElementById('contact_tel').value = '+225 27 22 27 60 14';
-  document.getElementById('contact_email').value = 'formation@intermark-business.com';
+  document.getElementById('contact_tel').value = '+225 07 78 88 25 92';
+  document.getElementById('contact_email').value = 'formation@ibig-eduform.com';
   document.getElementById('contact_web').value = 'ibig-eduform.com';
   renderTDR();
 }

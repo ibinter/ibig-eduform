@@ -11,5 +11,5 @@ function notify_admin_preinscription($data){
   <p><strong>Date :</strong> ".date('d/m/Y H:i')."</p>
   ";
 
-  send_mail("formation@intermark-business.com", $subject, $html);
+  send_mail("formation@ibig-eduform.com", $subject, $html);
 }

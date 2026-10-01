@@ -670,9 +670,9 @@ function fdToggleFaq(btn) {
       <h3>📞 Contact &amp; Informations</h3>
       <div class="fd-contact-row">📞 <a href="tel:+2250778882592">+225 07 78 88 25 92</a></div>
       <div class="fd-contact-row">📞 <a href="tel:+2250565904779">+225 05 65 90 47 79</a></div>
-      <div class="fd-contact-row">📞 <a href="tel:+2252722276014">+225 27 22 27 60 14</a></div>
+      <div class="fd-contact-row">📞 <a href="tel:+2250778882592">+225 07 78 88 25 92</a></div>
       <div class="fd-contact-row">📧 <a href="mailto:formation@ibig-eduform.com">formation@ibig-eduform.com</a></div>
-      <div class="fd-contact-row">📧 <a href="mailto:formation@intermark-business.com">formation@intermark-business.com</a></div>
+      <div class="fd-contact-row">📧 <a href="mailto:formation@ibig-eduform.com">formation@ibig-eduform.com</a></div>
       <div class="fd-contact-row">📧 <a href="mailto:formation.ibigsarl@gmail.com">formation.ibigsarl@gmail.com</a></div>
       <div class="fd-contact-row">🕐 Lun–Ven : 8h–18h | Sam : 9h–13h</div>
     </div>

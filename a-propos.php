@@ -25,7 +25,7 @@ $extraHead = <<<'JSONLD'
     "addressLocality": "Abidjan",
     "addressCountry": "CI"
   },
-  "telephone": "+22527222760​14",
+  "telephone": "+2250778882592",
   "email": "formation@ibig-eduform.com",
   "numberOfEmployees": {"@type": "QuantitativeValue", "minValue": 10},
   "areaServed": "Espace OHADA — 17 pays d'Afrique francophone"
