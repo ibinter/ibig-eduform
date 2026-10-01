@@ -42,7 +42,7 @@ $maintenance = $settings['maintenance'] ?? 'off';
 
 /* Contacts / Chiffres / Promotions (avec valeurs par défaut) */
 $contactEmail   = $settings['contact_email']       ?? 'formation@intermark-business.com';
-$contactPhones  = $settings['contact_phones']      ?? "+225 27 22 27 60 14\n+225 07 78 88 25 92";
+$contactPhones  = $settings['contact_phones']      ?? "+225 07 78 88 25 92\n+225 07 78 88 25 92";
 $whatsappNumber = $settings['whatsapp_number']     ?? '2250778882592';
 $siteInstit     = $settings['site_institutionnel'] ?? 'intermark-business.com';
 $statApprenants = $settings['stat_apprenants']     ?? '1 000+';

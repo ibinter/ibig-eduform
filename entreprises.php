@@ -24,7 +24,7 @@ $avis = function_exists('get_approved_avis') ? get_approved_avis(6) : [];
 
 /* ---------- Contacts (settings) ---------- */
 $cEmail   = function_exists('setting') ? (string)setting('contact_email', 'formation@intermark-business.com') : 'formation@intermark-business.com';
-$cPhones  = function_exists('setting') ? (string)setting('contact_phones', "+225 27 22 27 60 14\n+225 07 78 88 25 92") : "+225 27 22 27 60 14";
+$cPhones  = function_exists('setting') ? (string)setting('contact_phones', "+225 07 78 88 25 92\n+225 07 78 88 25 92") : "+225 07 78 88 25 92";
 $firstPhone = trim(strtok($cPhones, "\n"));
 $telHref  = '+' . preg_replace('/\D/', '', $firstPhone);
 $waNum    = function_exists('whatsapp_admin_phone') ? whatsapp_admin_phone() : '2250778882592';
