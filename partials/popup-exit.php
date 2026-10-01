@@ -1,18 +1,8 @@
 <?php
 /* =========================================================
    POPUP EXIT-INTENT — Préinscription rapide
-   Inclus via footer.php sur toutes les pages
+   Inclus via footer.php — recherche AJAX via ajax-search-formations.php
 ========================================================= */
-/* Connexion DB indépendante */
-$_ep_formations = [];
-try {
-    $_ep_pdo = Database::connect();
-    $_ep_stmt = $_ep_pdo->query(
-        "SELECT id, titre, domaine FROM formations WHERE statut='active' ORDER BY domaine, titre LIMIT 400"
-    );
-    $_ep_formations = $_ep_stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (Exception $_ep_e) { /* silencieux */ }
-?>
 <div id="exit-popup-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="exit-popup-title">
   <div id="exit-popup">
 
@@ -75,12 +65,6 @@ try {
   </div>
 </div>
 
-<!-- Données formations injectées en JSON -->
-<script>
-var EP_FORMATIONS = <?= json_encode(array_map(function($r){
-    return ['id'=>(int)$r['id'],'titre'=>$r['titre'],'domaine'=>$r['domaine']];
-}, $_ep_formations), JSON_UNESCAPED_UNICODE) ?>;
-</script>
 
 <style>
 #exit-popup-overlay{
@@ -207,7 +191,7 @@ var EP_FORMATIONS = <?= json_encode(array_map(function($r){
   var hiddenId  = document.getElementById('ep-formation-id');
   var hiddenLbl = document.getElementById('ep-formation-label');
 
-  if (!overlay || !EP_FORMATIONS) return;
+  if (!overlay) return;
 
   /* ---- Ne montrer qu'une fois par session ---- */
   var alreadySeen = false;
@@ -244,22 +228,32 @@ var EP_FORMATIONS = <?= json_encode(array_map(function($r){
   /* ---- Pré-sélection via URL formation_id ---- */
   var urlFid = new URLSearchParams(location.search).get('formation_id');
   if (urlFid) {
-    var presel = EP_FORMATIONS.find(function(f){ return f.id == urlFid; });
-    if (presel) selectFormation(presel);
+    fetch('/ajax-search-formations.php?q=' + encodeURIComponent(urlFid))
+      .then(function(r){ return r.json(); })
+      .then(function(rows){
+        var found = rows.find(function(f){ return f.id == urlFid; });
+        if (found) selectFormation(found);
+      }).catch(function(){});
   }
 
-  /* ---- RECHERCHE ---- */
+  /* ---- RECHERCHE AJAX ---- */
   var activeIdx = -1;
+  var debounceTimer = null;
 
   searchInp.addEventListener('input', function(){
-    var q = this.value.trim().toLowerCase();
+    var q = this.value.trim();
     clearBtn.hidden = !q;
-    if (!q) { closeList(); return; }
-    var matches = EP_FORMATIONS.filter(function(f){
-      return f.titre.toLowerCase().includes(q) || f.domaine.toLowerCase().includes(q);
-    }).slice(0, 30);
-    renderList(matches, q);
+    clearTimeout(debounceTimer);
+    if (q.length < 2) { closeList(); return; }
+    debounceTimer = setTimeout(function(){ doSearch(q); }, 220);
   });
+
+  function doSearch(q){
+    fetch('/ajax-search-formations.php?q=' + encodeURIComponent(q))
+      .then(function(r){ return r.json(); })
+      .then(function(rows){ renderList(rows, q); })
+      .catch(function(){ renderList([], q); });
+  }
 
   searchInp.addEventListener('keydown', function(e){
     var items = resultsList.querySelectorAll('li:not(.ep-no-result)');
