@@ -107,11 +107,11 @@
   },
 
   "remises": [
-    { "type": "Early-bird",                    "valeur": 5,  "condition": "Inscription et acompte versés ≥ 30 jours avant le démarrage", "cumulable": true  },
+    { "type": "Early-bird",                    "valeur": 0,  "valeur_fixe_en_ligne": 20000, "valeur_fixe_presentiel": 25000, "condition": "Formation du mois en cours ou du mois suivant — inscription ≥ 3 jours avant le démarrage", "cumulable": true  },
     { "type": "Client fidèle",                 "valeur": 8,  "condition": "≥ 2 formations IBIG EDUFORM suivies (attesté par certificat)", "cumulable": true  },
     { "type": "ONG / Association",             "valeur": 10, "condition": "Sur présentation de statuts ou agrément en cours de validité",  "cumulable": false },
     { "type": "Partenaire IBIG",               "valeur": 0,  "condition": "Selon convention IBIG Partners — tarif négocié individuellement","cumulable": false },
-    { "type": "Recommandation active",         "valeur": 5,  "condition": "Avoir parrainé un apprenant ayant effectivement démarré",        "cumulable": true  },
+    { "type": "Parrainage",                    "valeur": 10, "condition": "Remise de 10% accordée au parrain pour chaque apprenant parrainé ayant effectivement démarré sa formation", "cumulable": true  },
     { "type": "Secteur public / Fonctionnaire","valeur": 5,  "condition": "Sur présentation d'attestation employeur public",                "cumulable": true  }
   ],
   "remise_max": 20,
@@ -151,7 +151,7 @@
       { "pourcentage": 50, "echeance": "À mi-parcours — après la 5e séance (ou à l'ouverture pour les parcours courts ≤ 15h)" }
     ],
     "mensualites": { "nb": 3, "majoration": 0, "condition": "Sur demande expresse, sans frais supplémentaires — applicable aux parcours ≥ 25h" },
-    "modes": ["Virement bancaire", "Mobile Money (Wave · Orange Money · MTN MoMo)", "Espèces contre reçu numéroté", "Chèque certifié"],
+    "modes": ["Virement bancaire", "Mobile Money (Wave · Orange Money · MTN MoMo · Moov Money)", "Paiement en ligne sécurisé (Moneroo)", "Espèces contre reçu numéroté", "Chèque certifié"],
     "devises_acceptees": ["XOF (F CFA)", "EUR (taux BCEAO)", "USD (taux BCEAO)"],
     "validite_offre_jours": 30,
     "note": "Tout règlement partiel engage les deux parties sur le calendrier convenu. Aucun remboursement en numéraire — uniquement report ou avoir sur formation."
@@ -174,6 +174,28 @@
     "Traduction de documents ou interprétariat",
     "Location de salle extérieure (si hors locaux IBIG EDUFORM)"
   ],
+
+  "samedi_pro": {
+    "description": "Programme de formations courtes et pratiques — une compétence, un samedi, un impact immédiat. Présentiel à Abidjan + option en ligne.",
+    "horaires": "09h00 – 16h00 (7h de formation effective)",
+    "tarif_fourchette": "45 000 – 100 000 FCFA par participant",
+    "tarif_min": 45000,
+    "tarif_max": 100000,
+    "early_bird_remise_presentiel": 25000,
+    "attestation": "Attestation de participation nominative remise à l'issue de la journée",
+    "domaines": [
+      { "id": "gestion_finance",    "label": "Gestion & Finance",                    "themes": 6 },
+      { "id": "bureautique",        "label": "Bureautique & Productivité",            "themes": 5 },
+      { "id": "sage",               "label": "Logiciels de gestion SAGE",             "themes": 4 },
+      { "id": "erp_data",           "label": "ERP, Data & Décisionnel",               "themes": 3 },
+      { "id": "marketing_vente",    "label": "Marketing & Vente",                     "themes": 5 },
+      { "id": "rh_communication",   "label": "Ressources Humaines & Communication",   "themes": 4 },
+      { "id": "management",         "label": "Management & Leadership",               "themes": 4 },
+      { "id": "entrepreneuriat",    "label": "Entrepreneuriat & PME",                 "themes": 4 },
+      { "id": "qhse_logistique",    "label": "QHSE & Logistique",                     "themes": 5 }
+    ],
+    "note": "Les tarifs exacts par thème sont fixés par la base de données formations. La fourchette ci-dessus couvre l'ensemble du catalogue Samedi Pro."
+  },
 
   "contact": {
     "emails": [

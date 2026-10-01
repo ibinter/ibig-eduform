@@ -147,6 +147,7 @@ tr:hover td{background:#f8fafc;}
   <a href="#inter">🏛️ Inter-entreprises</a>
   <a href="#groupe">👥 Groupe</a>
   <a href="#intra">🏢 Intra-entreprise</a>
+  <a href="#samedi">🗓️ Samedi Pro</a>
   <a href="#packs">📦 Packs entreprise</a>
   <a href="#services">🔧 Services connexes</a>
   <a href="#international">🌍 International</a>
@@ -315,6 +316,49 @@ tr:hover td{background:#f8fafc;}
   <?php if (!empty($intra['note'])): ?><p style="font-size:12px;color:var(--muted);margin-top:10px;font-style:italic"><?= htmlspecialchars($intra['note']) ?></p><?php endif; ?>
 </div>
 
+<!-- ⑤b SAMEDI PRO -->
+<?php $sp = $cfg['samedi_pro'] ?? []; if (!empty($sp)): ?>
+<div class="section" id="samedi">
+  <div class="section-hd">
+    <div class="ico" style="background:#fef3c7">🗓️</div>
+    <h2>Programme Samedi Pro</h2>
+    <span class="badge-ref">CATALOGUE DÉDIÉ</span>
+  </div>
+  <div class="alert alert-info"><?= htmlspecialchars($sp['description'] ?? '') ?></div>
+  <div class="grid3" style="margin-bottom:16px">
+    <div class="card-sm">
+      <div class="card-title">Fourchette tarifaire</div>
+      <div class="card-val"><?= fmtF($sp['tarif_min']) ?> – <?= fmtF($sp['tarif_max']) ?></div>
+      <div class="card-note">Par participant / par journée</div>
+    </div>
+    <div class="card-sm">
+      <div class="card-title">Horaires</div>
+      <div class="card-val" style="font-size:16px"><?= htmlspecialchars($sp['horaires'] ?? '') ?></div>
+      <div class="card-note">Chaque samedi à Abidjan + option en ligne</div>
+    </div>
+    <div class="card-sm" style="border-color:#fde68a;background:#fffbeb">
+      <div class="card-title">Early Bird présentiel</div>
+      <div class="card-val" style="color:#d97706">−<?= fmtF($sp['early_bird_remise_presentiel'] ?? 25000) ?></div>
+      <div class="card-note">Sur inscription anticipée</div>
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>Domaine</th><th>Thèmes disponibles</th></tr></thead>
+    <tbody>
+      <?php foreach ($sp['domaines'] ?? [] as $i => $d): ?>
+      <tr>
+        <td style="color:var(--muted);font-size:12px"><?= $i+1 ?></td>
+        <td style="font-weight:700"><?= htmlspecialchars($d['label']) ?></td>
+        <td><span class="tag tag-blue"><?= $d['themes'] ?> thème<?= $d['themes'] > 1 ? 's' : '' ?></span></td>
+      </tr>
+      <?php endforeach; ?>
+    </tbody>
+  </table>
+  <p style="font-size:12px;color:var(--muted);margin-top:10px;font-style:italic"><?= htmlspecialchars($sp['note'] ?? '') ?></p>
+  <p style="font-size:12px;color:var(--muted);margin-top:6px">🏅 <?= htmlspecialchars($sp['attestation'] ?? '') ?></p>
+</div>
+<?php endif; ?>
+
 <!-- ⑥ PACKS -->
 <?php $packs = $cfg['packs_entreprise'] ?? []; ?>
 <div class="section" id="packs">
@@ -428,9 +472,17 @@ tr:hover td{background:#f8fafc;}
   <div class="alert alert-info">Remise maximale cumulable : <strong><?= $cfg['remise_max'] ?? 20 ?>%</strong> · Les remises cumulables s'additionnent dans la limite de ce plafond.</div>
   <?php foreach ($cfg['remises'] ?? [] as $r): ?>
   <div class="remise-item">
-    <div class="remise-val"><?= $r['valeur'] > 0 ? $r['valeur'] . '%' : '<span style="font-size:14px">Accord</span>' ?></div>
+    <div class="remise-val"><?php
+      if (!empty($r['valeur_fixe_en_ligne'])) {
+        echo '<span style="font-size:13px;line-height:1.2">−'.fmt($r['valeur_fixe_presentiel']).'<br><span style="font-size:10px;font-weight:400;color:var(--muted)">présentiel</span></span>';
+      } elseif ($r['valeur'] > 0) {
+        echo $r['valeur'] . '%';
+      } else {
+        echo '<span style="font-size:14px">Accord</span>';
+      }
+    ?></div>
     <div class="remise-body">
-      <div class="remise-type"><?= htmlspecialchars($r['type']) ?></div>
+      <div class="remise-type"><?= htmlspecialchars($r['type']) ?><?php if (!empty($r['valeur_fixe_en_ligne'])): ?> <span style="font-size:11px;color:var(--muted);font-weight:400">(−<?= fmt($r['valeur_fixe_en_ligne']) ?> F en ligne · −<?= fmt($r['valeur_fixe_presentiel']) ?> F présentiel)</span><?php endif; ?></div>
       <div class="remise-cond"><?= htmlspecialchars($r['condition']) ?></div>
     </div>
     <div class="remise-cumul">
