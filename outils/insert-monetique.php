@@ -28,11 +28,11 @@ $public_cible = "Agents de banques, établissements de monnaie électronique (EM
 
 $prerequis = "Bac+2 minimum ou expérience professionnelle dans le secteur bancaire, financier ou des télécommunications.";
 
-$duree           = '25H';
-$mode            = 'hybride';
-$tarif_en_ligne  = 200000;
-$tarif_presentiel = 250000;
-$frais_inscription = 50000;
+$duree            = '25H';
+$mode             = 'hybride';
+$tarif_en_ligne   = 250000;   // 200 000 formation + 50 000 inscription
+$tarif_presentiel = 300000;   // 250 000 formation + 50 000 inscription
+$frais_inscription = 0;
 
 // ─── PREVIEW ──────────────────────────────────────────────────────────────────
 $exists = (int)$pdo->query("SELECT COUNT(*) FROM formations WHERE slug='$slug'")->fetchColumn();
