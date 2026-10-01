@@ -1,9 +1,17 @@
 <?php
 /* =========================================================
    POPUP EXIT-INTENT — Préinscription rapide
-   Inclure AVANT </body> dans formations.php, calendrier.php, etc.
-   Nécessite : core/csrf.php chargé en amont
+   Inclus via footer.php sur toutes les pages
 ========================================================= */
+/* Connexion DB indépendante */
+$_ep_formations = [];
+try {
+    $_ep_pdo = Database::connect();
+    $_ep_stmt = $_ep_pdo->query(
+        "SELECT id, titre, domaine FROM formations WHERE statut='active' ORDER BY domaine, titre LIMIT 400"
+    );
+    $_ep_formations = $_ep_stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $_ep_e) { /* silencieux */ }
 ?>
 <div id="exit-popup-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="exit-popup-title">
   <div id="exit-popup">
@@ -16,6 +24,8 @@
 
     <form id="exit-popup-form" novalidate>
       <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
+      <input type="hidden" id="ep-formation-id"    name="formation_id"    value="">
+      <input type="hidden" id="ep-formation-label" name="formation_label" value="">
 
       <div class="ep-row">
         <div class="ep-field">
@@ -33,32 +43,16 @@
         <input type="tel" id="ep-telephone" name="telephone" placeholder="+225 07 00 00 00 00" autocomplete="tel">
       </div>
 
-      <div class="ep-field">
-        <label for="ep-formation">Formation souhaitée *</label>
-        <select id="ep-formation" name="formation_label" required>
-          <option value="">— Choisissez ou tapez ci-dessous —</option>
-          <?php
-          /* Populate from DB if $pdo available in calling scope */
-          if (!empty($pdo)):
-            try {
-              $stmt = $pdo->query("SELECT id, titre, domaine FROM formations WHERE statut='active' ORDER BY domaine, titre LIMIT 300");
-              $fRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-              $curDomaine = '';
-              foreach ($fRows as $fRow):
-                if ($fRow['domaine'] !== $curDomaine):
-                  if ($curDomaine !== '') echo '</optgroup>';
-                  echo '<optgroup label="' . htmlspecialchars($fRow['domaine'], ENT_QUOTES, 'UTF-8') . '">';
-                  $curDomaine = $fRow['domaine'];
-                endif;
-                echo '<option value="' . htmlspecialchars($fRow['titre'], ENT_QUOTES, 'UTF-8') . '" data-id="' . (int)$fRow['id'] . '">'
-                   . htmlspecialchars($fRow['titre'], ENT_QUOTES, 'UTF-8') . '</option>';
-              endforeach;
-              if ($curDomaine !== '') echo '</optgroup>';
-            } catch (Exception $e) { /* silencieux */ }
-          endif;
-          ?>
-        </select>
-        <input type="text" id="ep-formation-autre" name="formation_autre" placeholder="Ou précisez librement…" style="margin-top:8px">
+      <!-- RECHERCHE FORMATION -->
+      <div class="ep-field ep-search-wrap">
+        <label for="ep-search">Formation souhaitée *</label>
+        <div class="ep-search-box">
+          <span class="ep-search-icon">🔍</span>
+          <input type="text" id="ep-search" placeholder="Tapez pour rechercher…" autocomplete="off" aria-autocomplete="list" aria-controls="ep-results">
+          <button type="button" id="ep-search-clear" aria-label="Effacer" hidden>&times;</button>
+        </div>
+        <ul id="ep-results" role="listbox" aria-label="Formations disponibles"></ul>
+        <p id="ep-selected-label" class="ep-selected-label" hidden></p>
       </div>
 
       <div id="ep-msg" role="alert" aria-live="polite"></div>
@@ -81,177 +75,164 @@
   </div>
 </div>
 
+<!-- Données formations injectées en JSON -->
+<script>
+var EP_FORMATIONS = <?= json_encode(array_map(function($r){
+    return ['id'=>(int)$r['id'],'titre'=>$r['titre'],'domaine'=>$r['domaine']];
+}, $_ep_formations), JSON_UNESCAPED_UNICODE) ?>;
+</script>
+
 <style>
 #exit-popup-overlay{
-  display:none;
-  position:fixed;inset:0;
-  background:rgba(10,20,40,.72);
-  z-index:99999;
-  align-items:center;
-  justify-content:center;
-  padding:16px;
+  display:none;position:fixed;inset:0;
+  background:rgba(10,20,40,.72);z-index:99999;
+  align-items:center;justify-content:center;padding:16px;
   backdrop-filter:blur(4px);
 }
 #exit-popup-overlay.visible{display:flex;}
-
 #exit-popup{
-  background:#fff;
-  border-radius:24px;
-  padding:36px 40px 32px;
-  max-width:560px;
-  width:100%;
-  position:relative;
+  background:#fff;border-radius:24px;padding:32px 36px 28px;
+  max-width:540px;width:100%;position:relative;
   box-shadow:0 32px 80px rgba(10,20,40,.28);
-  animation:epSlideIn .3s cubic-bezier(.22,1,.36,1);
+  animation:epIn .28s cubic-bezier(.22,1,.36,1);
+  max-height:92vh;overflow-y:auto;
 }
-@keyframes epSlideIn{
-  from{opacity:0;transform:translateY(-28px) scale(.97);}
-  to{opacity:1;transform:none;}
-}
-
+@keyframes epIn{from{opacity:0;transform:translateY(-24px) scale(.97)}to{opacity:1;transform:none}}
 #exit-popup-close{
-  position:absolute;top:16px;right:20px;
-  background:none;border:none;font-size:1.6rem;
-  color:#94a3b8;cursor:pointer;line-height:1;
-  transition:color .15s;
+  position:absolute;top:14px;right:18px;
+  background:none;border:none;font-size:1.6rem;color:#94a3b8;cursor:pointer;
 }
 #exit-popup-close:hover{color:#0f172a;}
-
-.ep-icon{font-size:2.4rem;margin-bottom:10px;display:block;text-align:center;}
-
-#exit-popup h2{
-  text-align:center;
-  font-size:1.35rem;
-  color:#0b3c5d;
-  margin:0 0 8px;
-  font-weight:800;
-  line-height:1.3;
+.ep-icon{font-size:2.2rem;text-align:center;display:block;margin-bottom:8px;}
+#exit-popup h2{text-align:center;font-size:1.25rem;color:#0b3c5d;margin:0 0 6px;font-weight:800;}
+.ep-sub{text-align:center;color:#64748b;font-size:.85rem;margin:0 0 20px;}
+.ep-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ep-field{display:flex;flex-direction:column;margin-bottom:12px;}
+.ep-field label{font-size:.75rem;font-weight:700;color:#334155;margin-bottom:4px;}
+.ep-field input[type=text],
+.ep-field input[type=email],
+.ep-field input[type=tel]{
+  border:1.5px solid #e2e8f0;border-radius:10px;
+  padding:9px 12px;font-size:.88rem;color:#0f172a;
+  outline:none;background:#f8fafc;transition:border-color .15s;
 }
-.ep-sub{
-  text-align:center;
-  color:#64748b;
-  font-size:.88rem;
-  margin:0 0 24px;
-}
+.ep-field input:focus{border-color:#2563eb;background:#fff;}
 
-.ep-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.ep-field{display:flex;flex-direction:column;margin-bottom:14px;}
-.ep-field label{font-size:.78rem;font-weight:700;color:#334155;margin-bottom:5px;}
-.ep-field input,
-.ep-field select{
-  border:1.5px solid #e2e8f0;
-  border-radius:10px;
-  padding:10px 13px;
-  font-size:.88rem;
-  color:#0f172a;
-  outline:none;
-  transition:border-color .15s;
-  background:#f8fafc;
+/* SEARCH BOX */
+.ep-search-wrap{position:relative;}
+.ep-search-box{position:relative;display:flex;align-items:center;}
+.ep-search-icon{position:absolute;left:11px;font-size:.85rem;pointer-events:none;}
+#ep-search{
+  width:100%;border:1.5px solid #e2e8f0;border-radius:10px;
+  padding:9px 36px 9px 32px;font-size:.88rem;color:#0f172a;
+  outline:none;background:#f8fafc;transition:border-color .15s;
 }
-.ep-field input:focus,
-.ep-field select:focus{border-color:#2563eb;background:#fff;}
-
-#ep-msg{
-  font-size:.82rem;
-  border-radius:8px;
-  padding:0;
-  margin-bottom:0;
-  min-height:0;
-  transition:all .2s;
+#ep-search:focus{border-color:#2563eb;background:#fff;}
+#ep-search-clear{
+  position:absolute;right:10px;background:none;border:none;
+  font-size:1.1rem;color:#94a3b8;cursor:pointer;padding:0;line-height:1;
 }
-#ep-msg.error{color:#dc2626;background:#fef2f2;padding:10px 14px;margin-bottom:12px;}
-#ep-msg.ok{color:#15803d;background:#f0fdf4;padding:10px 14px;margin-bottom:12px;}
+#ep-search-clear:hover{color:#ef4444;}
 
+#ep-results{
+  list-style:none;margin:4px 0 0;padding:0;
+  border:1.5px solid #e2e8f0;border-radius:12px;
+  background:#fff;max-height:200px;overflow-y:auto;
+  box-shadow:0 8px 28px rgba(10,20,40,.12);
+  display:none;position:absolute;width:100%;z-index:10;
+  top:calc(100% + 4px);left:0;
+}
+#ep-results.open{display:block;}
+#ep-results li{
+  padding:9px 14px;font-size:.84rem;color:#334155;cursor:pointer;
+  border-bottom:1px solid #f1f5f9;line-height:1.3;
+}
+#ep-results li:last-child{border-bottom:none;}
+#ep-results li:hover,#ep-results li.active{background:#eff6ff;color:#1d4ed8;}
+#ep-results li .ep-domaine{font-size:.7rem;color:#94a3b8;display:block;}
+#ep-results li.ep-no-result{color:#94a3b8;cursor:default;font-style:italic;}
+#ep-results li.ep-no-result:hover{background:none;}
+
+.ep-selected-label{
+  margin:6px 0 0;font-size:.8rem;font-weight:700;
+  color:#15803d;background:#f0fdf4;border-radius:8px;
+  padding:6px 10px;display:flex;align-items:center;gap:6px;
+}
+.ep-selected-label::before{content:'✓ Sélectionné : ';}
+
+/* MSG / SUBMIT */
+#ep-msg{font-size:.82rem;border-radius:8px;min-height:0;transition:all .2s;}
+#ep-msg.error{color:#dc2626;background:#fef2f2;padding:10px 14px;margin-bottom:10px;}
 #ep-submit{
-  width:100%;
-  background:linear-gradient(135deg,#2563eb,#1e40af);
-  color:#fff;
-  border:none;
-  border-radius:14px;
-  padding:14px;
-  font-size:.95rem;
-  font-weight:800;
-  cursor:pointer;
+  width:100%;background:linear-gradient(135deg,#2563eb,#1e40af);
+  color:#fff;border:none;border-radius:14px;padding:13px;
+  font-size:.93rem;font-weight:800;cursor:pointer;
   box-shadow:0 10px 28px rgba(37,99,235,.35);
-  transition:transform .15s,box-shadow .15s;
-  margin-top:4px;
+  transition:transform .15s,box-shadow .15s;margin-top:4px;
 }
 #ep-submit:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(37,99,235,.45);}
-#ep-submit:disabled{opacity:.65;cursor:not-allowed;transform:none;}
-
-.ep-rgpd{
-  text-align:center;
-  font-size:.72rem;
-  color:#94a3b8;
-  margin:10px 0 0;
-}
+#ep-submit:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.ep-rgpd{text-align:center;font-size:.7rem;color:#94a3b8;margin:8px 0 0;}
 
 /* SUCCESS */
-#exit-popup-success{text-align:center;padding:16px 0;}
-.ep-success-icon{font-size:3rem;margin-bottom:12px;}
-#exit-popup-success h3{color:#0b3c5d;font-size:1.3rem;margin:0 0 10px;}
-#exit-popup-success p{color:#475569;font-size:.9rem;line-height:1.6;}
+#exit-popup-success{text-align:center;padding:10px 0;}
+.ep-success-icon{font-size:3rem;margin-bottom:10px;}
+#exit-popup-success h3{color:#0b3c5d;font-size:1.2rem;margin:0 0 8px;}
+#exit-popup-success p{color:#475569;font-size:.88rem;line-height:1.6;}
 .ep-btn-close-success{
-  margin-top:20px;
-  background:#2563eb;color:#fff;
-  border:none;border-radius:12px;
-  padding:12px 32px;font-size:.9rem;font-weight:700;
-  cursor:pointer;
+  margin-top:18px;background:#2563eb;color:#fff;border:none;
+  border-radius:12px;padding:11px 28px;font-size:.9rem;font-weight:700;cursor:pointer;
 }
-
-/* MOBILE */
-@media(max-width:540px){
-  #exit-popup{padding:28px 20px 24px;}
+@media(max-width:520px){
+  #exit-popup{padding:24px 18px 20px;}
   .ep-row{grid-template-columns:1fr;}
-  #exit-popup h2{font-size:1.15rem;}
 }
 </style>
 
 <script>
 (function(){
-  const STORAGE_KEY = 'ep_shown';
-  const overlay     = document.getElementById('exit-popup-overlay');
-  const closeBtn    = document.getElementById('exit-popup-close');
-  const form        = document.getElementById('exit-popup-form');
-  const msgEl       = document.getElementById('ep-msg');
-  const submitBtn   = document.getElementById('ep-submit');
-  const submitTxt   = document.getElementById('ep-submit-txt');
-  const submitLoader= document.getElementById('ep-submit-loader');
-  const successBox  = document.getElementById('exit-popup-success');
-  const successClose= document.getElementById('ep-success-close');
+  var STORAGE_KEY = 'ep_shown_v2';
+  var overlay   = document.getElementById('exit-popup-overlay');
+  var closeBtn  = document.getElementById('exit-popup-close');
+  var form      = document.getElementById('exit-popup-form');
+  var msgEl     = document.getElementById('ep-msg');
+  var submitBtn = document.getElementById('ep-submit');
+  var submitTxt = document.getElementById('ep-submit-txt');
+  var submitLdr = document.getElementById('ep-submit-loader');
+  var successBox= document.getElementById('exit-popup-success');
+  var successCls= document.getElementById('ep-success-close');
+
+  var searchInp = document.getElementById('ep-search');
+  var clearBtn  = document.getElementById('ep-search-clear');
+  var resultsList = document.getElementById('ep-results');
+  var selectedLabel = document.getElementById('ep-selected-label');
+  var hiddenId  = document.getElementById('ep-formation-id');
+  var hiddenLbl = document.getElementById('ep-formation-label');
+
+  if (!overlay || !EP_FORMATIONS) return;
 
   /* ---- Ne montrer qu'une fois par session ---- */
-  if (sessionStorage.getItem(STORAGE_KEY)) return;
+  var alreadySeen = false;
+  try { alreadySeen = sessionStorage.getItem(STORAGE_KEY) === '1'; } catch(e){}
+  if (alreadySeen) return;
 
-  /* ---- Exit intent : souris vers le haut ---- */
-  let triggered = false;
+  /* ---- Trigger exit-intent ---- */
+  var triggered = false;
   document.addEventListener('mouseleave', function(e){
-    if (triggered) return;
-    if (e.clientY > 12) return; /* uniquement sortie vers barre d'onglets */
-    triggered = true;
-    showPopup();
+    if (triggered || e.clientY > 10) return;
+    triggered = true; showPopup();
   });
-
-  /* ---- Délai fallback mobile : 45s sans interaction ---- */
-  let mobileTimer = null;
-  function resetTimer(){
-    clearTimeout(mobileTimer);
-    mobileTimer = setTimeout(function(){
-      if(!triggered){ triggered=true; showPopup(); }
-    }, 45000);
-  }
+  /* Mobile fallback 45s */
   if ('ontouchstart' in window) {
-    document.addEventListener('touchstart', resetTimer, {passive:true});
-    resetTimer();
+    setTimeout(function(){ if (!triggered){ triggered=true; showPopup(); } }, 45000);
   }
 
   function showPopup(){
-    sessionStorage.setItem(STORAGE_KEY, '1');
+    try { sessionStorage.setItem(STORAGE_KEY,'1'); } catch(e){}
     overlay.classList.add('visible');
     overlay.setAttribute('aria-hidden','false');
-    document.getElementById('ep-nom').focus();
+    setTimeout(function(){ searchInp.focus(); }, 200);
   }
-
   function hidePopup(){
     overlay.classList.remove('visible');
     overlay.setAttribute('aria-hidden','true');
@@ -260,65 +241,147 @@
   closeBtn.addEventListener('click', hidePopup);
   overlay.addEventListener('click', function(e){ if(e.target===overlay) hidePopup(); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape') hidePopup(); });
-  successClose.addEventListener('click', hidePopup);
+  successCls.addEventListener('click', hidePopup);
 
-  /* ---- Pré-remplir avec la formation active si dispo ---- */
-  const urlParams = new URLSearchParams(window.location.search);
-  const fid = urlParams.get('formation_id');
-  if (fid) {
-    const opt = document.querySelector('#ep-formation option[data-id="'+fid+'"]');
-    if (opt) opt.selected = true;
+  /* ---- Pré-sélection via URL formation_id ---- */
+  var urlFid = new URLSearchParams(location.search).get('formation_id');
+  if (urlFid) {
+    var presel = EP_FORMATIONS.find(function(f){ return f.id == urlFid; });
+    if (presel) selectFormation(presel);
   }
 
-  /* ---- Submit AJAX ---- */
+  /* ---- RECHERCHE ---- */
+  var activeIdx = -1;
+
+  searchInp.addEventListener('input', function(){
+    var q = this.value.trim().toLowerCase();
+    clearBtn.hidden = !q;
+    if (!q) { closeList(); return; }
+    var matches = EP_FORMATIONS.filter(function(f){
+      return f.titre.toLowerCase().includes(q) || f.domaine.toLowerCase().includes(q);
+    }).slice(0, 30);
+    renderList(matches, q);
+  });
+
+  searchInp.addEventListener('keydown', function(e){
+    var items = resultsList.querySelectorAll('li:not(.ep-no-result)');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown'){
+      e.preventDefault();
+      activeIdx = Math.min(activeIdx+1, items.length-1);
+      highlightItem(items);
+    } else if (e.key === 'ArrowUp'){
+      e.preventDefault();
+      activeIdx = Math.max(activeIdx-1, 0);
+      highlightItem(items);
+    } else if (e.key === 'Enter'){
+      e.preventDefault();
+      if (activeIdx >= 0 && items[activeIdx]) items[activeIdx].click();
+    } else if (e.key === 'Escape'){
+      closeList();
+    }
+  });
+
+  function highlightItem(items){
+    items.forEach(function(it,i){ it.classList.toggle('active', i===activeIdx); });
+    if (items[activeIdx]) items[activeIdx].scrollIntoView({block:'nearest'});
+  }
+
+  clearBtn.addEventListener('click', function(){
+    searchInp.value = '';
+    clearBtn.hidden = true;
+    hiddenId.value = '';
+    hiddenLbl.value = '';
+    selectedLabel.hidden = true;
+    selectedLabel.textContent = '';
+    closeList();
+    searchInp.focus();
+  });
+
+  document.addEventListener('click', function(e){
+    if (!e.target.closest('.ep-search-wrap')) closeList();
+  });
+
+  function renderList(matches, q){
+    resultsList.innerHTML = '';
+    activeIdx = -1;
+    if (!matches.length){
+      var li = document.createElement('li');
+      li.className = 'ep-no-result';
+      li.textContent = 'Aucune formation trouvée pour "'+q+'"';
+      resultsList.appendChild(li);
+    } else {
+      matches.forEach(function(f){
+        var li = document.createElement('li');
+        li.setAttribute('role','option');
+        li.setAttribute('data-id', f.id);
+        li.setAttribute('data-titre', f.titre);
+        /* Highlight matching text */
+        var hl = f.titre.replace(new RegExp('('+escapeReg(q)+')','gi'),'<mark>$1</mark>');
+        li.innerHTML = hl + '<span class="ep-domaine">'+escapeHtml(f.domaine)+'</span>';
+        li.addEventListener('click', function(){ selectFormation(f); });
+        resultsList.appendChild(li);
+      });
+    }
+    resultsList.classList.add('open');
+  }
+
+  function selectFormation(f){
+    hiddenId.value  = f.id;
+    hiddenLbl.value = f.titre;
+    searchInp.value = f.titre;
+    selectedLabel.textContent = f.titre;
+    selectedLabel.hidden = false;
+    clearBtn.hidden = false;
+    closeList();
+  }
+
+  function closeList(){
+    resultsList.classList.remove('open');
+    resultsList.innerHTML = '';
+    activeIdx = -1;
+  }
+
+  function escapeReg(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+  function escapeHtml(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+  /* ---- Submit ---- */
   form.addEventListener('submit', async function(e){
     e.preventDefault();
     msgEl.className = '';
     msgEl.textContent = '';
 
-    const nom   = document.getElementById('ep-nom').value.trim();
-    const email = document.getElementById('ep-email').value.trim();
-    const formation = document.getElementById('ep-formation').value
-                   || document.getElementById('ep-formation-autre').value.trim();
+    var nom   = document.getElementById('ep-nom').value.trim();
+    var email = document.getElementById('ep-email').value.trim();
+    var label = hiddenLbl.value.trim() || searchInp.value.trim();
 
-    if (!nom)       { showErr('Veuillez indiquer votre nom.'); return; }
+    if (!nom)   { showErr('Veuillez indiquer votre nom.'); return; }
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-                    { showErr('Email invalide.'); return; }
-    if (!formation) { showErr('Veuillez choisir une formation.'); return; }
+                { showErr('Email invalide.'); return; }
+    if (!label) { showErr('Veuillez sélectionner une formation dans la liste.'); return; }
 
     submitBtn.disabled = true;
     submitTxt.hidden   = true;
-    submitLoader.hidden= false;
+    submitLdr.hidden   = false;
 
-    const body = new FormData(form);
-    /* formation_label peut être le select OU le champ libre */
-    if (!body.get('formation_label') && document.getElementById('ep-formation-autre').value.trim()){
-      body.set('formation_label', document.getElementById('ep-formation-autre').value.trim());
-    }
+    var body = new FormData(form);
 
     try {
-      const res  = await fetch('ajax-popup-preinscription.php', {method:'POST', body});
-      const data = await res.json();
-      if (data.ok) {
-        form.hidden         = true;
-        successBox.hidden   = false;
+      var res  = await fetch('/ajax-popup-preinscription.php', {method:'POST', body});
+      var data = await res.json();
+      if (data.ok){
+        form.hidden      = true;
+        successBox.hidden = false;
       } else {
-        showErr(data.message || 'Erreur. Veuillez réessayer.');
-        submitBtn.disabled  = false;
-        submitTxt.hidden    = false;
-        submitLoader.hidden = true;
+        showErr(data.message || 'Erreur. Réessayez.');
+        submitBtn.disabled = false; submitTxt.hidden = false; submitLdr.hidden = true;
       }
-    } catch(err) {
+    } catch(err){
       showErr('Connexion impossible. Réessayez dans un instant.');
-      submitBtn.disabled  = false;
-      submitTxt.hidden    = false;
-      submitLoader.hidden = true;
+      submitBtn.disabled = false; submitTxt.hidden = false; submitLdr.hidden = true;
     }
   });
 
-  function showErr(msg){
-    msgEl.className = 'error';
-    msgEl.textContent = msg;
-  }
+  function showErr(msg){ msgEl.className='error'; msgEl.textContent=msg; }
 })();
 </script>
