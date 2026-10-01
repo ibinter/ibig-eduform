@@ -1026,7 +1026,12 @@ body{background:var(--light); color:var(--text); font-family:Inter,system-ui,san
 
 <!-- BANDEAU ANNONCE -->
 <div class="announce-bar">
-  🎓 Inscriptions ouvertes — Programme Septembre → Décembre 2026
+  🎓 Inscriptions ouvertes — Programme <?php
+$_mfr=['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+$_m=(int)date('n'); $_y=(int)date('Y');
+$_fq=$_m<=3?3:($_m<=6?6:($_m<=9?9:12));
+echo $_mfr[$_m].' → '.$_mfr[$_fq].' '.$_y;
+?>
   <span class="ab-sep">|</span>
   🐦 Tarif early bird disponible sur certaines formations
   <span class="ab-sep">|</span>
