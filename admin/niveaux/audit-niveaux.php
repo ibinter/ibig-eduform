@@ -332,7 +332,7 @@ ob_start();
     <tr>
       <td style="color:#94a3b8"><?= $i + 1 ?></td>
       <td>
-        <a href="/formation-detail.php?slug=<?= e($f['slug']) ?>" target="_blank" style="color:#1e40af;text-decoration:none;font-weight:600">
+        <a href="/formation/<?= urlencode((string)$f['slug']) ?>" target="_blank" style="color:#1e40af;text-decoration:none;font-weight:600">
           <?= e($f['titre']) ?>
         </a>
       </td>

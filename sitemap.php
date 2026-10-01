@@ -19,7 +19,6 @@ $pages = [
     ['/a-propos.php', '0.6', 'monthly'],
     ['/entreprises.php', '0.7', 'monthly'],
     ['/partenaires.php', '0.6', 'monthly'],
-    ['/catalogue-formations.php', '0.7', 'monthly'],
 ];
 
 // Formations locales depuis la DB
@@ -31,7 +30,7 @@ try {
     $rows = $pdo->query("SELECT slug FROM formations WHERE statut='active' AND slug != '' ORDER BY updated_at DESC")->fetchAll(PDO::FETCH_ASSOC);
     foreach ($rows as $r) {
         if (!empty($r['slug'])) {
-            $formation_urls[] = '/formation-detail.php?slug=' . rawurlencode($r['slug']);
+            $formation_urls[] = '/formation/' . rawurlencode($r['slug']);
         }
     }
 } catch (Throwable $e) { /* silencieux */ }
