@@ -90,51 +90,54 @@ function fetch_formation(string $slug): ?array {
     return null;
 }
 
-$f = fetch_formation($slug);
-
-/* Fallback : chercher dans la BD locale si l'API ne retourne rien */
-if (!$f) {
-    require_once __DIR__ . '/core/config.php';
-    require_once __DIR__ . '/core/database.php';
-    try {
-        $pdo  = Database::connect();
-        $stmt = $pdo->prepare("
-            SELECT id, titre, description, tarif_en_ligne, tarif_presentiel, tarif_hybride,
-                   domaine, duree, slug
-            FROM formations
-            WHERE slug = :slug
-              AND statut = 'active'
-              AND (annee IS NULL OR annee = 0 OR annee = YEAR(CURDATE()))
-            LIMIT 1
-        ");
-        $stmt->execute([':slug' => $slug]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($row) {
-            $f = [
-                'id'          => (int)$row['id'],
-                'name'        => (string)$row['titre'],
-                'description' => (string)($row['description'] ?? ''),
-                'price'       => (int)($row['tarif_en_ligne'] ?? 0),
-                'price_pres'  => (int)($row['tarif_presentiel'] ?? 0),
-                'price_hyb'   => (int)($row['tarif_hybride'] ?? 0),
-                'category'    => (string)($row['domaine'] ?? 'Autres'),
-                'slug'        => (string)$row['slug'],
-                '_duree'      => (string)($row['duree'] ?? ''),
-                '_local'      => true,
-            ];
-            // Charger les niveaux actifs de cette formation
-            try {
-                $niv_stmt = $pdo->prepare("
-                    SELECT niveau, duree_heures, tarif_en_ligne, tarif_presentiel, tarif_hybride, ordre_affichage
-                    FROM formation_niveaux
-                    WHERE formation_id = :fid AND statut = 'actif'
-                    ORDER BY ordre_affichage ASC
-                ");
-                $niv_stmt->execute([':fid' => (int)$row['id']]);
-                $f['_niveaux'] = $niv_stmt->fetchAll(PDO::FETCH_ASSOC);
+/* ─── BD locale en priorité (données maîtrisées), API en fallback ── */
+$f = null;
+require_once __DIR__ . '/core/config.php';
+require_once __DIR__ . '/core/database.php';
+try {
+    $pdo  = Database::connect();
+    $stmt = $pdo->prepare("
+        SELECT id, titre, description, objectifs, modules, tarif_en_ligne, tarif_presentiel, tarif_hybride,
+               domaine, duree, slug
+        FROM formations
+        WHERE slug = :slug
+          AND statut = 'active'
+          AND (annee IS NULL OR annee = 0 OR annee = YEAR(CURDATE()))
+        LIMIT 1
+    ");
+    $stmt->execute([':slug' => $slug]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row) {
+        $f = [
+            'id'          => (int)$row['id'],
+            'name'        => (string)$row['titre'],
+            'description' => (string)($row['description'] ?? ''),
+            'price'       => (int)($row['tarif_en_ligne'] ?? 0),
+            'price_pres'  => (int)($row['tarif_presentiel'] ?? 0),
+            'price_hyb'   => (int)($row['tarif_hybride'] ?? 0),
+            'category'    => (string)($row['domaine'] ?? 'Autres'),
+            'slug'        => (string)$row['slug'],
+            '_duree'      => (string)($row['duree'] ?? ''),
+            '_local'      => true,
+        ];
+        // Charger les niveaux actifs de cette formation
+        try {
+            $niv_stmt = $pdo->prepare("
+                SELECT niveau, duree_heures, tarif_en_ligne, tarif_presentiel, tarif_hybride, ordre_affichage
+                FROM formation_niveaux
+                WHERE formation_id = :fid AND statut = 'actif'
+                ORDER BY ordre_affichage ASC
+            ");
+            $niv_stmt->execute([':fid' => (int)$row['id']]);
+            $f['_niveaux'] = $niv_stmt->fetchAll(PDO::FETCH_ASSOC);
             } catch (\Exception $_e) { $f['_niveaux'] = []; }
         }
     } catch (\Exception $e) { /* silence */ }
+}
+
+/* Fallback API si pas trouvé en BD locale */
+if (!$f) {
+    $f = fetch_formation($slug);
 }
 
 if (!$f) {
