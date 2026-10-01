@@ -5,15 +5,23 @@
 ========================================================= */
 $_ep_data = [];
 try {
-    /* Réutilise $pdo de la page appelante si dispo, sinon crée une connexion */
     $_ep_conn = isset($pdo) && $pdo instanceof PDO ? $pdo : Database::connect();
+    /* Essai 1 : formations actives */
     $_ep_rows = $_ep_conn->query(
         "SELECT id, titre, domaine FROM formations WHERE statut='active' ORDER BY titre LIMIT 5000"
     )->fetchAll(PDO::FETCH_ASSOC);
+    /* Fallback : toutes les formations si résultat vide */
+    if (empty($_ep_rows)) {
+        $_ep_rows = $_ep_conn->query(
+            "SELECT id, titre, domaine FROM formations ORDER BY titre LIMIT 5000"
+        )->fetchAll(PDO::FETCH_ASSOC);
+    }
     foreach ($_ep_rows as $_r) {
         $_ep_data[] = [(int)$_r['id'], $_r['titre'], $_r['domaine']];
     }
-} catch (Exception $_ep_ex) { /* silencieux */ }
+} catch (Throwable $_ep_ex) {
+    error_log('[popup-exit] ' . $_ep_ex->getMessage());
+}
 <div id="exit-popup-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="exit-popup-title">
   <div id="exit-popup">
 
