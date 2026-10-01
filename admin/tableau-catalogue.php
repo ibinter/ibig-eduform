@@ -24,6 +24,25 @@ if ($act === 'delete' && isset($_POST['id'])) {
     } catch (Throwable $e) { $pdo->rollBack(); echo json_encode(['ok'=>false,'err'=>$e->getMessage()]); exit; }
 }
 
+// Recalcul bulk de tous les tarifs hybrides
+if ($act === 'fix_hybride_all') {
+    $pdo->beginTransaction();
+    try {
+        $rows = $pdo->query("SELECT id, tarif_en_ligne, tarif_presentiel FROM formations WHERE tarif_en_ligne > 0 AND tarif_presentiel > 0")->fetchAll(PDO::FETCH_ASSOC);
+        $sf = $pdo->prepare("UPDATE formations SET tarif_hybride=?, updated_at=NOW() WHERE id=?");
+        $sn = $pdo->prepare("UPDATE formation_niveaux SET tarif_hybride=?, updated_at=NOW() WHERE formation_id=?");
+        $nb = 0;
+        foreach ($rows as $r) {
+            $hy = (int)(round(($r['tarif_en_ligne'] + $r['tarif_presentiel']) / 2 / 5000) * 5000);
+            $sf->execute([$hy, $r['id']]);
+            $sn->execute([$hy, $r['id']]);
+            $nb++;
+        }
+        $pdo->commit();
+        echo json_encode(['ok'=>true,'nb'=>$nb]); exit;
+    } catch (Throwable $e) { $pdo->rollBack(); echo json_encode(['ok'=>false,'err'=>$e->getMessage()]); exit; }
+}
+
 // Mise à jour inline (titre, duree, tarif_en_ligne, tarif_presentiel, tarif_hybride)
 if ($act === 'update' && isset($_POST['id'])) {
     $id  = (int)$_POST['id'];
@@ -87,29 +106,25 @@ foreach ($all as $r) {
     $hyb_attendu = $el > 0 && $pr > 0 ? r5((int)(($el + $pr) / 2)) : 0;
 
     $bugs = [];
-    // Doublons slug (uniquement vrais doublons, pas les slugs vides)
+    // Doublons slug
     if (!empty($r['slug']) && count($slug_count[$r['slug']]) > 1)
         $bugs[] = ['type'=>'doublon_slug','msg'=>'Slug dupliqué : ' . $r['slug']];
     // Doublons titre exact
     if (count($titre_count[strtolower(trim($r['titre']))]) > 1)
         $bugs[] = ['type'=>'doublon_titre','msg'=>'Titre en doublon dans le catalogue'];
-    // Durée hors plage (seuil bas abaissé à 8H pour formations courtes légitimes)
-    if ($h === null)
-        $bugs[] = ['type'=>'duree','msg'=>'Durée illisible : "' . $r['duree'] . '"'];
-    elseif ($h < 8)
-        $bugs[] = ['type'=>'duree','msg'=>"Durée très courte : {$h}H — à vérifier"];
-    elseif ($h > 300)
-        $bugs[] = ['type'=>'duree','msg'=>"Durée hors norme : {$h}H — à vérifier"];
-    // Tarifs manquants (0 = non renseigné)
-    if ($el <= 0)
-        $bugs[] = ['type'=>'tarif','msg'=>'Tarif en ligne à 0 — non renseigné'];
-    if ($pr <= 0)
-        $bugs[] = ['type'=>'tarif','msg'=>'Tarif présentiel à 0 — non renseigné'];
-    // Incohérence présentiel < en ligne
+    // Durée : uniquement si champ vide/nul (pas si format différent de H)
+    if (trim((string)$r['duree']) === '' || trim((string)$r['duree']) === '0')
+        $bugs[] = ['type'=>'duree','msg'=>'Durée non renseignée'];
+    elseif ($h !== null && $h < 8)
+        $bugs[] = ['type'=>'duree','msg'=>"Durée très courte : {$h}H"];
+    // Tarifs : signaler seulement les DEUX à 0 en même temps (formation non tarifée)
+    if ($el <= 0 && $pr <= 0)
+        $bugs[] = ['type'=>'tarif','msg'=>'Aucun tarif renseigné (en ligne et présentiel à 0)'];
+    // Incohérence présentiel < en ligne (vrai bug de saisie)
     if ($el > 0 && $pr > 0 && $pr < $el)
         $bugs[] = ['type'=>'tarif','msg'=>"Présentiel (" . number_format($pr,0,',',' ') . ") < En ligne (" . number_format($el,0,',',' ') . ") — incohérent"];
-    // Hybride incohérent (tolérance 10 000 FCFA, ignoré si hybride = 0)
-    if ($hy > 0 && $hyb_attendu > 0 && abs($hy - $hyb_attendu) > 10000)
+    // Hybride très incohérent (tolérance 20 000 FCFA — couvre arrondi + variations légitimes)
+    if ($hy > 0 && $hyb_attendu > 0 && abs($hy - $hyb_attendu) > 20000)
         $bugs[] = ['type'=>'tarif','msg'=>"Hybride " . number_format($hy,0,',',' ') . " ≠ attendu " . number_format($hyb_attendu,0,',',' ') . " FCFA"];
 
     if ($bugs) $alertes[$id] = $bugs;
@@ -214,7 +229,8 @@ tr.has-alert:hover td{background:#220d0d}
         <div class="stat"><strong><?= $stats['total'] ?></strong><span>formations</span></div>
         <div class="stat"><strong><?= $stats['actives'] ?></strong><span>actives</span></div>
         <div class="stat"><strong><?= $stats['domaines'] ?></strong><span>domaines</span></div>
-        <div class="stat <?= $stats['alertes'] > 0 ? 'danger' : '' ?>"><strong><?= $stats['alertes'] ?></strong><span>alertes</span></div>
+        <div class="stat <?= $stats['alertes'] > 0 ? 'danger' : '' ?>"><strong id="alertes-stat"><?= $stats['alertes'] ?></strong><span>alertes</span></div>
+        <button onclick="fixHybrideAll()" style="background:#f59e0b;color:#000;border:none;padding:7px 14px;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">⚡ Recalculer hybrides</button>
     </div>
 </header>
 
@@ -513,6 +529,21 @@ function filterRows() {
     });
 
     document.getElementById('count-display').textContent = visible + ' formation(s) affichée(s)';
+}
+
+// ── Recalcul bulk hybride ──────────────────────────────────────────────────
+function fixHybrideAll() {
+    if (!confirm('Recalculer le tarif hybride de TOUTES les formations ?\n(formule : arrondi((en_ligne + présentiel) / 2 / 5 000) × 5 000)\n\nCette action impacte immédiatement les pages publiques.')) return;
+    fetch('tableau-catalogue.php', {
+        method:'POST',
+        headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:'act=fix_hybride_all'
+    }).then(r=>r.json()).then(d => {
+        if (d.ok) {
+            toast('✅ ' + d.nb + ' hybrides recalculés — visible immédiatement sur le site.');
+            setTimeout(() => location.reload(), 2000);
+        } else toast('❌ ' + d.err, false);
+    });
 }
 
 // ── Toggle domaine ─────────────────────────────────────────────────────────
