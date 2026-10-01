@@ -28,8 +28,8 @@ $corrections = [
         'duree_old'   => '25 heures',
         'duree_new'   => '40 heures',
         'heures_new'  => 40,
-        'en_ligne'    => 450000,
-        'presentiel'  => 570000,
+        'en_ligne'    => 620000,
+        'presentiel'  => 775000,
     ],
 ];
 
