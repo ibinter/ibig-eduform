@@ -3,16 +3,25 @@
    POPUP EXIT-INTENT — Préinscription rapide
    Données formations chargées en PHP + filtre JS client-side
 ========================================================= */
-$_ep_data = [];
+$_ep_data  = [];
+$_ep_debug = '';
 try {
-    $_ep_db   = Database::connect();
-    $_ep_rows = $_ep_db->query(
-        "SELECT id, titre, domaine FROM formations WHERE statut='active' ORDER BY titre LIMIT 5000"
-    )->fetchAll(PDO::FETCH_ASSOC);
-    foreach ($_ep_rows as $_r) {
-        $_ep_data[] = [(int)$_r['id'], $_r['titre'], $_r['domaine']];
+    if (!class_exists('Database')) {
+        $_ep_debug = 'Database class not found';
+    } else {
+        $_ep_db   = Database::connect();
+        $_ep_stmt = $_ep_db->query(
+            "SELECT id, titre, domaine FROM formations WHERE statut='active' ORDER BY titre LIMIT 5000"
+        );
+        $_ep_rows = $_ep_stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($_ep_rows as $_r) {
+            $_ep_data[] = [(int)$_r['id'], $_r['titre'], $_r['domaine']];
+        }
+        $_ep_debug = count($_ep_data) . ' formations chargées';
     }
-} catch (Exception $_ep_ex) { /* silencieux */ }
+} catch (Throwable $_ep_ex) {
+    $_ep_debug = get_class($_ep_ex) . ': ' . $_ep_ex->getMessage();
+}
 <div id="exit-popup-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="exit-popup-title">
   <div id="exit-popup">
 
@@ -248,8 +257,10 @@ try {
   }
 
   /* ---- DONNÉES FORMATIONS (PHP → JS) ---- */
-  /* Format compact : [[id, titre, domaine], ...] */
   var EP_DATA = <?= json_encode($_ep_data, JSON_UNESCAPED_UNICODE) ?>;
+  var EP_DEBUG = <?= json_encode($_ep_debug) ?>;
+  /* Debug temporaire — affiche dans le label de la recherche */
+  document.getElementById('ep-search').setAttribute('title', 'DEBUG: ' + EP_DEBUG + ' | count=' + EP_DATA.length);
 
   /* ---- RECHERCHE LOCALE ---- */
   var activeIdx = -1;
