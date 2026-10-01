@@ -80,4 +80,51 @@ foreach ($formation_urls as $url) {
     echo "  </url>\n";
 }
 
+// Pages SEO ville / domaine
+$seo_villes = ['abidjan', 'bouake', 'yamoussoukro', 'san-pedro', 'daloa', 'en-ligne'];
+$seo_domaines = [
+    'comptabilite', 'management', 'rh', 'informatique',
+    'qhse', 'logistique', 'marketing', 'ohada', 'excel', 'sap', 'ia',
+];
+
+// Pages ville seule (ex: /formation-abidjan)
+foreach ($seo_villes as $v) {
+    echo "  <url>\n";
+    echo "    <loc>" . htmlspecialchars($BASE . '/formation-' . $v) . "</loc>\n";
+    echo "    <lastmod>$today</lastmod>\n";
+    echo "    <changefreq>weekly</changefreq>\n";
+    echo "    <priority>0.85</priority>\n";
+    echo "  </url>\n";
+}
+
+// Pages domaine seul (ex: /formation-comptabilite)
+foreach ($seo_domaines as $d) {
+    echo "  <url>\n";
+    echo "    <loc>" . htmlspecialchars($BASE . '/formation-' . $d) . "</loc>\n";
+    echo "    <lastmod>$today</lastmod>\n";
+    echo "    <changefreq>weekly</changefreq>\n";
+    echo "    <priority>0.85</priority>\n";
+    echo "  </url>\n";
+}
+
+// Pages domaine + ville (ex: /formation-comptabilite-abidjan)
+foreach ($seo_domaines as $d) {
+    foreach ($seo_villes as $v) {
+        echo "  <url>\n";
+        echo "    <loc>" . htmlspecialchars($BASE . '/formation-' . $d . '-' . $v) . "</loc>\n";
+        echo "    <lastmod>$today</lastmod>\n";
+        echo "    <changefreq>weekly</changefreq>\n";
+        echo "    <priority>0.80</priority>\n";
+        echo "  </url>\n";
+    }
+}
+
+// Page satisfaction (publique)
+echo "  <url>\n";
+echo "    <loc>" . htmlspecialchars($BASE . '/satisfaction') . "</loc>\n";
+echo "    <lastmod>$today</lastmod>\n";
+echo "    <changefreq>monthly</changefreq>\n";
+echo "    <priority>0.3</priority>\n";
+echo "  </url>\n";
+
 echo '</urlset>';

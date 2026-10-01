@@ -5,13 +5,36 @@ Allow: /
 Disallow: /admin/
 Disallow: /candidat/
 Disallow: /entreprise/
+Disallow: /apprenant/
 Disallow: /core/
 Disallow: /includes/
 Disallow: /partials/
+Disallow: /outils/
+Disallow: /migrations/
+Disallow: /uploads/
+Disallow: /vendor/
 Disallow: /track.php
+Disallow: /verify/
 
 # Paramètres inutiles pour le SEO
 Disallow: /*?page=*&q=*
 Disallow: /catalogue-formations.php?page=*&cat=*&q=*
+
+# Pages SEO ville/domaine — à indexer
+Allow: /formation-abidjan
+Allow: /formation-bouake
+Allow: /formation-yamoussoukro
+Allow: /formation-en-ligne
+Allow: /formation-comptabilite
+Allow: /formation-management
+Allow: /formation-rh
+Allow: /formation-informatique
+Allow: /formation-qhse
+Allow: /formation-logistique
+Allow: /formation-marketing
+Allow: /formation-ohada
+Allow: /formation-excel
+Allow: /formation-sap
+Allow: /formation-ia
 
 Sitemap: https://ibig-eduform.com/sitemap.xml
