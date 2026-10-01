@@ -16,7 +16,14 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--amber);}
 textarea{resize:vertical;min-height:70px;}
 .layout{display:flex;gap:0;height:100vh;overflow:hidden;}
 .sidebar{width:370px;min-width:300px;background:var(--card);border-right:1px solid var(--border);overflow-y:auto;padding:16px;flex-shrink:0;}
-.preview{flex:1;overflow-y:auto;background:#c8cdd6;padding:20px;}
+.preview{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.prev-bar{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:#1e293b;flex-shrink:0;gap:8px;}
+.prev-bar-title{font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:.5px;text-transform:uppercase;}
+.prev-bar-btns{display:flex;gap:6px;align-items:center;}
+.pbtn{padding:4px 10px;border:1px solid #475569;border-radius:5px;background:transparent;color:#94a3b8;font-size:11px;font-weight:600;cursor:pointer;transition:.15s;}
+.pbtn:hover{border-color:#f59e0b;color:#f59e0b;}
+.pbtn.on{background:#f59e0b;border-color:#f59e0b;color:#0d1f3c;}
+.preview-scroll{flex:1;overflow-y:auto;background:#c8cdd6;padding:20px;}
 .sec-block{border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px;background:#fff;}
 .type-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;}
 .type-btn{flex:1;min-width:80px;padding:8px 4px;border:2px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-size:12px;font-weight:600;text-align:center;color:var(--muted);transition:.15s;}
@@ -51,46 +58,22 @@ textarea{resize:vertical;min-height:70px;}
 
 /* ═══ APERÇU DOCUMENT — FORMAT PDF OFFICIEL IBIG EDUFORM ═══ */
 #dw{display:flex;justify-content:center;align-items:flex-start;}
-
-/* Page A4 blanche */
 .tdr-page{
-  width:190mm;
-  min-height:297mm;
-  background:#fff;
-  box-shadow:0 4px 24px rgba(0,0,0,.25);
-  margin-bottom:8px;
-  font-family:'Segoe UI',Arial,sans-serif;
-  font-size:10.5pt;
-  color:#1a1a2e;
-  position:relative;
-  overflow:visible;
+  width:190mm;min-height:297mm;background:#fff;
+  box-shadow:0 4px 24px rgba(0,0,0,.25);margin-bottom:8px;
+  font-family:'Segoe UI',Arial,sans-serif;font-size:10.5pt;
+  color:#1a1a2e;position:relative;overflow:visible;
 }
-/* Filigrane diagonal */
 .tdr-page::before{
-  content:"IBIG EDUFORM";
-  position:absolute;
-  top:50%;left:50%;
-  transform:translate(-50%,-50%) rotate(-35deg);
-  font-size:72pt;
-  font-weight:900;
-  color:rgba(13,31,60,.06);
-  white-space:nowrap;
-  pointer-events:none;
-  z-index:0;
-  letter-spacing:4px;
+  content:"IBIG EDUFORM";position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-35deg);font-size:72pt;
+  font-weight:900;color:rgba(13,31,60,.06);white-space:nowrap;
+  pointer-events:none;z-index:0;letter-spacing:4px;
 }
 .tdr-page>*{position:relative;z-index:1;}
-
-/* En-tête de page (répété) */
-.pg-header{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:8px 20px 6px;
-  border-bottom:3px solid #f59e0b;
-}
+.pg-header{display:flex;justify-content:space-between;align-items:center;padding:8px 20px 6px;border-bottom:3px solid #f59e0b;}
 .pg-header img.logo-eduform{height:64px;}
 .pg-header img.logo-ibi{height:40px;}
-
-/* Titre principal (1ère page) */
 .pg-title{text-align:center;padding:16px 24px 10px;}
 .pg-title .org-name{font-size:14pt;font-weight:700;color:#1a1a2e;letter-spacing:.5px;}
 .pg-title .org-sub{font-size:8.5pt;color:#475569;margin:2px 0 8px;}
@@ -99,29 +82,18 @@ textarea{resize:vertical;min-height:70px;}
 .pg-title .form-titre{font-size:13pt;font-weight:700;color:#1a1a2e;margin:4px 0 3px;}
 .pg-title .form-sub{font-size:9.5pt;color:#64748b;font-style:italic;}
 .title-sep{height:3px;background:linear-gradient(90deg,#f59e0b,#0d1f3c,#f59e0b);margin:12px 24px;}
-
-/* Fiche signalétique */
 .pg-body{padding:0 24px 16px;}
 .fiche-table{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:18px;}
 .fiche-table thead th{background:#0d1f3c;color:#fff;padding:7px 10px;font-size:9pt;text-transform:uppercase;letter-spacing:.5px;text-align:left;}
 .fiche-table td{padding:5px 10px;border:1px solid #e2e8f0;vertical-align:top;}
 .fiche-table td:first-child{width:36%;background:#f8fafc;font-weight:600;color:#334155;}
 .fiche-table .cout-row td:last-child{font-size:12pt;font-weight:800;color:#f59e0b;}
-
-/* Sections numérotées */
 .tdr-section{margin:0 0 16px;}
-.tdr-section h2{
-  font-size:10.5pt;font-weight:700;color:#1a1a2e;
-  text-transform:uppercase;letter-spacing:.8px;
-  margin:0 0 2px;padding-bottom:4px;
-  border-bottom:2px solid #f59e0b;
-}
+.tdr-section h2{font-size:10.5pt;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:.8px;margin:0 0 2px;padding-bottom:4px;border-bottom:2px solid #f59e0b;}
 .tdr-section .sub-h{font-size:9.5pt;font-weight:700;color:#f59e0b;margin:8px 0 3px;}
 .tdr-section p{margin:0 0 6px;font-size:9.5pt;line-height:1.65;text-align:justify;}
 .tdr-ul{margin:4px 0 6px 0;padding-left:20px;}
 .tdr-ul li{font-size:9.5pt;margin:3px 0;line-height:1.5;}
-
-/* Tableaux internes */
 .inner-table{width:100%;border-collapse:collapse;font-size:9pt;margin:6px 0 8px;}
 .inner-table thead th{background:#0d1f3c;color:#fff;padding:5px 8px;text-align:left;}
 .inner-table thead th.center{text-align:center;}
@@ -130,8 +102,6 @@ textarea{resize:vertical;min-height:70px;}
 .inner-table .total-row td{background:#0d1f3c;color:#fff;font-weight:700;text-align:right;}
 .inner-table .total-row td:last-child{text-align:center;}
 .inner-table .th-orange{background:#f59e0b;color:#1a1a2e;font-weight:700;}
-
-/* Bloc tarif */
 .tarif-table{width:100%;border-collapse:collapse;font-size:9.5pt;}
 .tarif-table th{background:#0d1f3c;color:#fff;padding:6px 10px;text-align:center;}
 .tarif-table th:first-child{text-align:left;}
@@ -139,22 +109,12 @@ textarea{resize:vertical;min-height:70px;}
 .tarif-table td:first-child{text-align:left;font-weight:700;color:#0d1f3c;}
 .tarif-table .prix-cell{font-size:11pt;font-weight:800;color:#0d1f3c;}
 .tarif-table .devis-row td{background:#f8fafc;font-style:italic;text-align:center;color:#64748b;}
-
-/* Bloc signature */
 .sig-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:9.5pt;}
 .sig-table td{border:1px solid #cbd5e1;padding:10px;vertical-align:top;width:50%;}
 .sig-table .sig-head{font-weight:700;color:#0d1f3c;margin-bottom:4px;}
 .sig-table .sig-space{height:40px;}
 .sig-bon{font-style:italic;color:#475569;font-size:9pt;margin-top:8px;}
-
-/* Pied de page */
-.pg-footer{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:5px 20px;
-  border-top:1px solid #e2e8f0;
-  font-size:8pt;color:#94a3b8;
-  margin-top:auto;
-}
+.pg-footer{display:flex;justify-content:space-between;align-items:center;padding:5px 20px;border-top:1px solid #e2e8f0;font-size:8pt;color:#94a3b8;margin-top:auto;}
 .pg-confidentiel{text-align:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:8px;font-size:8.5pt;color:#64748b;margin:12px 24px 0;}
 </style>
 </head>
@@ -238,7 +198,6 @@ textarea{resize:vertical;min-height:70px;}
     <textarea id="resultats" rows="3" placeholder="Résultat 1&#10;Résultat 2" oninput="liveUpdate()"></textarea>
   </div>
 
-  <!-- Détails spécifiques par type -->
   <!-- FORMATION -->
   <div id="sec-formation" class="sec-block">
     <h2>④ Détails formation</h2>
@@ -339,13 +298,13 @@ textarea{resize:vertical;min-height:70px;}
     <h2>⑦ Format du document PDF</h2>
     <div style="display:flex;gap:6px">
       <label style="flex:1;margin:0;cursor:pointer">
-        <input type="radio" name="fmt_niveau" value="simplifie" style="width:auto"> <span style="font-size:12px">Simplifié<br><span style="color:var(--muted);font-weight:400">~2 pages · Essentiel</span></span>
+        <input type="radio" name="fmt_niveau" value="simplifie" onchange="liveUpdate()" style="width:auto"> <span style="font-size:12px">Simplifié<br><span style="color:var(--muted);font-weight:400">~2 pages · Essentiel</span></span>
       </label>
       <label style="flex:1;margin:0;cursor:pointer">
-        <input type="radio" name="fmt_niveau" value="moyen" checked style="width:auto"> <span style="font-size:12px">Standard<br><span style="color:var(--muted);font-weight:400">~5 pages · Complet</span></span>
+        <input type="radio" name="fmt_niveau" value="moyen" checked onchange="liveUpdate()" style="width:auto"> <span style="font-size:12px">Standard<br><span style="color:var(--muted);font-weight:400">~5 pages · Complet</span></span>
       </label>
       <label style="flex:1;margin:0;cursor:pointer">
-        <input type="radio" name="fmt_niveau" value="detaille" style="width:auto"> <span style="font-size:12px">Détaillé<br><span style="color:var(--muted);font-weight:400">~10 pages · Exhaustif</span></span>
+        <input type="radio" name="fmt_niveau" value="detaille" onchange="liveUpdate()" style="width:auto"> <span style="font-size:12px">Détaillé<br><span style="color:var(--muted);font-weight:400">~10 pages · Exhaustif</span></span>
       </label>
     </div>
   </div>
@@ -365,11 +324,20 @@ textarea{resize:vertical;min-height:70px;}
 
 <!-- ═══ PREVIEW ═══ -->
 <div class="preview">
-  <div id="dw">
-    <div style="text-align:center;color:#94a3b8;padding:80px 20px;">
-      <div style="font-size:48px;margin-bottom:12px;">📄</div>
-      <div style="font-size:16px;font-weight:600;margin-bottom:6px;">Aperçu du TDR</div>
-      <div style="font-size:13px;">Remplissez les champs puis cliquez sur <strong>Aperçu</strong></div>
+  <div class="prev-bar">
+    <span class="prev-bar-title">📄 Aperçu du document</span>
+    <div class="prev-bar-btns">
+      <button class="pbtn" id="btn-ar" onclick="toggleAutoRefresh()" title="Rafraîchissement automatique à chaque frappe">⚡ Auto : OFF</button>
+      <button class="pbtn" onclick="generate()" style="background:#0d1f3c;color:#fff;border-color:#0d1f3c;">🔄 Rafraîchir</button>
+    </div>
+  </div>
+  <div class="preview-scroll">
+    <div id="dw">
+      <div style="text-align:center;color:#94a3b8;padding:80px 20px;">
+        <div style="font-size:48px;margin-bottom:12px;">📄</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:6px;">Aperçu du TDR</div>
+        <div style="font-size:13px;">Remplissez les champs puis cliquez sur <strong>Aperçu</strong> — ou activez <strong>⚡ Auto</strong> pour un rafraîchissement en temps réel.</div>
+      </div>
     </div>
   </div>
 </div>
@@ -380,6 +348,40 @@ const LOGO = 'https://ibig-eduform.com/assets/images/logo.png';
 let currentType = 'formation';
 let autoRefresh = false;
 let aiData = null;
+let catCurrentSlug = null;
+
+/* ── Initialisation ─────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  const yr = new Date().getFullYear();
+  const seq = String(Math.floor(Math.random() * 900) + 100);
+  const refEl = document.getElementById('ref_doc');
+  if (refEl && !refEl.value) refEl.value = 'IBIG-TDR/' + yr + '/' + seq;
+});
+
+/* ── Utilitaires ─────────────────────────────────── */
+function g(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function fcfa(n) { return new Intl.NumberFormat('fr-FR').format(n) + ' F CFA'; }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtNiveau() { return document.querySelector('input[name="fmt_niveau"]:checked')?.value || 'moyen'; }
+function set(id, val) { const el = document.getElementById(id); if (el) el.value = val || ''; }
+
+function toUL(raw) {
+  const ls = (raw||'').split('\n').map(l => l.trim()).filter(Boolean);
+  return ls.length ? '<ul class="tdr-ul">' + ls.map(l => '<li>' + esc(l) + '</li>').join('') + '</ul>' : '';
+}
+
+function typeLabel(t) {
+  return {formation:'Formation',mission:'Mission de conseil',projet:'Projet',evaluation:'Évaluation'}[t] || t;
+}
+
+function typeTDRBanner(t) {
+  return {
+    formation: 'PROGRAMME DE FORMATION PROFESSIONNELLE',
+    mission:   'TERMES DE RÉFÉRENCE — MISSION DE CONSEIL',
+    projet:    'TERMES DE RÉFÉRENCE — GESTION DE PROJET',
+    evaluation:'TERMES DE RÉFÉRENCE — ÉVALUATION'
+  }[t] || 'TERMES DE RÉFÉRENCE';
+}
 
 function setType(t, btn) {
   currentType = t;
@@ -394,8 +396,7 @@ function setType(t, btn) {
 
 function togglePrixFields() {
   const fmt = g('fmt_tarif');
-  const pf = document.getElementById('prix-fields');
-  pf.classList.toggle('hidden', fmt === 'devis');
+  document.getElementById('prix-fields').classList.toggle('hidden', fmt === 'devis');
   updatePrixHint();
 }
 
@@ -418,215 +419,332 @@ function updatePrixHint() {
   else hint.style.display = 'none';
 }
 
-function g(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
-function fcfa(n) { return new Intl.NumberFormat('fr-FR').format(n) + ' F CFA'; }
-function toUL(raw) {
-  const ls = raw.split('\n').map(l => l.trim()).filter(Boolean);
-  return ls.length ? '<ul style="margin:4px 0 4px 18px;padding:0;">' + ls.map(l => '<li>' + esc(l) + '</li>').join('') + '</ul>' : '';
-}
-function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function typeLabel(t) {
-  return {formation:'Formation',mission:'Mission de conseil',projet:'Projet',evaluation:'Évaluation'}[t] || t;
+function toggleAutoRefresh() {
+  autoRefresh = !autoRefresh;
+  const btn = document.getElementById('btn-ar');
+  btn.textContent = '⚡ Auto : ' + (autoRefresh ? 'ON' : 'OFF');
+  btn.classList.toggle('on', autoRefresh);
+  if (autoRefresh) generate();
 }
 
 function liveUpdate() { if (autoRefresh) generate(); }
 
+/* ═══════════════════════════════════════════════════
+   GENERATE — construit l'aperçu du document TDR
+   ═══════════════════════════════════════════════════ */
 function generate() {
-  autoRefresh = true;
-  const titre    = g('titre') || 'Sans titre';
-  const prospect = g('prospect') || '';
-  const refDoc   = g('ref_doc') || ('TDR-IBIG-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*900)+100));
-  const cat      = g('categorie') || '';
-  const duree    = (aiData?.volume_total) || g('duree') || '25 heures / 5 jours';
-  const fmt      = g('fmt_tarif') || 'devis';
-  const po       = parseInt(g('prix_en_ligne'))   || 0;
-  const pp       = parseInt(g('prix_presentiel')) || 0;
-  const nb       = parseInt(g('nb_participants')) || 1;
-  const sigIbig  = g('sig_ibig')  || 'Direction IBIG EDUFORM';
-  const sigClient= g('sig_client') || prospect || 'Le Bénéficiaire';
-  const certif   = (aiData?.certification) || g('certif') || ('Certificat professionnel IBIG EDUFORM — ' + titre);
-  const modeVal  = g('mode_formation') || 'hybride';
-  const modeLabel= {en_ligne:'Classe virtuelle (en ligne)',presentiel:'Présentiel',hybride:'Hybride (présentiel + en ligne)'}[modeVal]||'Hybride';
+  const titre     = g('titre') || 'Sans titre';
+  const prospect  = g('prospect') || '';
+  const refDoc    = g('ref_doc') || ('TDR-IBIG-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*900)+100));
+  const cat       = g('categorie') || '';
+  const fmt       = g('fmt_tarif') || 'devis';
+  const po        = parseInt(g('prix_en_ligne'))   || 0;
+  const pp        = parseInt(g('prix_presentiel')) || 0;
+  const nb        = parseInt(g('nb_participants')) || 1;
+  const sigIbig   = g('sig_ibig')  || 'Direction IBIG EDUFORM';
+  const sigClient = g('sig_client') || prospect || 'Le Bénéficiaire';
+  const niveau    = fmtNiveau();
 
-  const aiList = arr => (Array.isArray(arr) && arr.length) ? '<ul class="tdr-ul">' + arr.map(i=>`<li>${esc(String(i))}</li>`).join('') + '</ul>' : '';
+  const aiList = arr => (Array.isArray(arr) && arr.length) ?
+    '<ul class="tdr-ul">' + arr.map(i=>`<li>${esc(String(i))}</li>`).join('') + '</ul>' : '';
+
   const fmList = raw => {
-    const ls=(raw||'').split('\n').map(l=>l.trim()).filter(Boolean);
-    return ls.length?'<ul class="tdr-ul">'+ls.map(l=>`<li>${esc(l.replace(/^[•\-\*]\s*/,''))}</li>`).join('')+'</ul>':'';
+    const ls = (raw||'').split('\n').map(l=>l.trim()).filter(Boolean);
+    return ls.length ? '<ul class="tdr-ul">'+ls.map(l=>`<li>${esc(l.replace(/^[•\-\*]\s*/,''))}</li>`).join('')+'</ul>' : '';
   };
 
-  /* 1 — Contexte */
+  /* ══ Sections communes (formation & autres) ══ */
   let s1 = '';
   if (aiData?.contexte) s1 = aiData.contexte.split('\n').filter(Boolean).map(p=>`<p>${esc(p)}</p>`).join('');
   else { const c=g('contexte'); s1=c?c.split('\n').map(p=>`<p>${esc(p)}</p>`).join(''):'<p>À compléter.</p>'; }
 
-  /* 2 — Objectif général */
   const s2 = `<p>${esc((aiData?.obj_general)||g('obj_gen')||'À définir.')}</p>`;
-
-  /* 3 — Objectifs spécifiques */
   const s3 = aiData?.obj_specifiques?.length ? aiList(aiData.obj_specifiques) : fmList(g('obj_spec'));
 
-  /* 4 — Résultats + indicateurs */
   let s4 = '';
   if (Array.isArray(aiData?.resultats) && aiData.resultats.length) {
     s4 = '<table class="inner-table"><thead><tr><th style="width:55%">Résultats attendus</th><th>Indicateurs de vérification</th></tr></thead><tbody>' +
       aiData.resultats.map(r=>`<tr><td>${esc(r.resultat||'')}</td><td>${esc(r.indicateur||'')}</td></tr>`).join('') + '</tbody></table>';
   } else { const r=g('resultats'); s4=r?fmList(r):'<p>À définir.</p>'; }
 
-  /* 5 — Profil concerné */
-  const s5 = `<p>${esc((aiData?.profil_concerne)||g('cible')||'Professionnels souhaitant développer leurs compétences.')}</p>`;
-
-  /* 6 — Prérequis */
-  let s6 = '';
-  if (aiData) {
-    s6 = `<div class="sub-h">Prérequis pédagogiques</div><p>${esc(aiData.prerequis_ped||'Aucun prérequis spécifique.')}</p>`;
-    if (aiData.prerequis_tech?.length) s6 += '<div class="sub-h">Prérequis techniques</div>' + aiList(aiData.prerequis_tech);
-    if (aiData.accessibilite) s6 += `<div class="sub-h">Accessibilité</div><p>${esc(aiData.accessibilite)}</p>`;
-  } else { const pr=g('prerequis'); s6=pr?`<p>${esc(pr)}</p>`:'<p>Aucun prérequis spécifique.</p>'; }
-
-  /* 7 — Modules */
-  let s7 = '';
-  if (Array.isArray(aiData?.modules) && aiData.modules.length) {
-    s7 = '<table class="inner-table"><thead><tr><th style="width:8%">N°</th><th style="width:30%">Module</th><th>Contenus</th><th style="width:12%;text-align:center">Durée</th></tr></thead><tbody>' +
-      aiData.modules.map(m=>`<tr><td style="font-weight:700;color:#0d1f3c">${esc(m.num||'')}</td><td style="font-weight:600">${esc(m.titre||'')}</td><td>${esc(m.contenus||'')}</td><td style="text-align:center">${esc(m.duree||'')}</td></tr>`).join('') +
-      `<tr class="total-row"><td colspan="3">VOLUME HORAIRE TOTAL</td><td style="text-align:center">${esc(duree)}</td></tr></tbody></table>`;
-  } else {
-    const raw=g('modules');
-    if (raw) { let k=0; s7='<table class="inner-table"><thead><tr><th style="width:8%">N°</th><th>Module</th></tr></thead><tbody>'+raw.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>`<tr><td>${++k}</td><td>${esc(l.replace(/^M\d+\s*[-:—]\s*/i,'').replace(/^MODULE\s+\d+\s*:\s*/i,''))}</td></tr>`).join('')+'</tbody></table>'; }
-    else s7='<p>Programme à définir.</p>';
-  }
-
-  /* 8 — Approche pédagogique */
-  const s8 = (Array.isArray(aiData?.approche) && aiData.approche.length) ? aiList(aiData.approche) :
-    `<ul class="tdr-ul"><li>Pédagogie active <strong>70% pratique / 30% théorie</strong></li>
-    <li>Études de cas réels issus du contexte africain</li>
-    <li>Ateliers pratiques et simulations professionnelles</li>
-    <li>Projet fil rouge évalué tout au long de la formation</li>
-    <li>Supports pédagogiques complets et outils professionnels</li></ul>` +
-    (g('methode') ? `<p style="margin-top:4px">${esc(g('methode'))}</p>` : '');
-
-  /* 9 — Dispositif technique */
-  let s9 = '';
-  if (Array.isArray(aiData?.dispositif_technique) && aiData.dispositif_technique.length) {
-    s9='<table class="inner-table"><thead><tr><th style="width:35%">Composante</th><th>Description</th></tr></thead><tbody>'+
-      aiData.dispositif_technique.map(d=>`<tr><td style="font-weight:600">${esc(d.composante||'')}</td><td>${esc(d.description||'')}</td></tr>`).join('')+'</tbody></table>';
-  } else {
-    s9=`<ul class="tdr-ul"><li>Plateforme e-learning IBIG EDUFORM</li><li>Visioconférence interactive (Zoom/Teams)</li><li>Supports pédagogiques numériques</li><li>Espace collaboratif et forum d'échanges</li></ul>`;
-  }
-
-  /* 10 — Déroulement */
-  let s10 = '';
-  if (Array.isArray(aiData?.deroulement) && aiData.deroulement.length) {
-    s10='<table class="inner-table"><thead><tr><th>Étape</th><th>Activité</th><th>Repère temporel</th></tr></thead><tbody>'+
-      aiData.deroulement.map(d=>`<tr><td style="font-weight:600">${esc(d.etape||'')}</td><td>${esc(d.activite||'')}</td><td style="text-align:center">${esc(d.repere||'')}</td></tr>`).join('')+'</tbody></table>';
-  } else {
-    s10=`<ul class="tdr-ul"><li>Accueil et cadrage des objectifs</li><li>Apports théoriques et conceptuels</li><li>Exercices pratiques et mises en situation</li><li>Synthèse et évaluation finale</li></ul>`;
-  }
-
-  /* 11 — Formules & rythme */
-  let s11 = '';
-  if (Array.isArray(aiData?.formules_rythme) && aiData.formules_rythme.length) {
-    s11='<table class="inner-table"><thead><tr><th>Formule</th><th>Fréquence</th><th>Durée totale</th></tr></thead><tbody>'+
-      aiData.formules_rythme.map(r=>`<tr><td style="font-weight:600">${esc(r.formule||'')}</td><td>${esc(r.frequence||'')}</td><td style="text-align:center">${esc(r.duree_totale||'')}</td></tr>`).join('')+'</tbody></table>';
-  } else s11='<p>Sessions planifiées selon disponibilités — Contactez-nous pour les dates.</p>';
-
-  /* 12 — Profil formateur */
-  const s12 = (Array.isArray(aiData?.profil_formateur) && aiData.profil_formateur.length) ? aiList(aiData.profil_formateur) :
-    `<ul class="tdr-ul"><li>Expert métier avec expérience professionnelle significative</li>
-    <li>Compétences pédagogiques certifiées</li><li>Maîtrise des contextes économiques africains</li></ul>`;
-
-  /* 13 — Évaluation & certification */
-  let s13 = '';
-  if (Array.isArray(aiData?.evaluation_types) && aiData.evaluation_types.length) {
-    s13='<table class="inner-table"><thead><tr><th>Type d\'évaluation</th><th>Modalité</th></tr></thead><tbody>'+
-      aiData.evaluation_types.map(e=>`<tr><td style="font-weight:600">${esc(e.type||'')}</td><td>${esc(e.modalite||'')}</td></tr>`).join('')+'</tbody></table>';
-  } else {
-    const ev=g('evaluation');
-    s13=ev?`<p>${esc(ev)}</p>`:`<ul class="tdr-ul"><li>Évaluation continue (exercices pratiques)</li><li>Quiz de validation des acquis</li><li>Étude de cas finale</li></ul>`;
-  }
-  s13 += `<div class="sub-h">Certification</div>
-    <p><strong>${esc(certif)}</strong></p>
-    <p style="font-size:8.5pt;color:#64748b">Délivré aux participants justifiant d'une assiduité ≥ 80% et de la validation des évaluations. Reconnu dans les 17 pays membres de l'OHADA.</p>`;
-
-  /* 14 — Livrables */
-  const s14 = (Array.isArray(aiData?.livrables) && aiData.livrables.length) ? aiList(aiData.livrables) :
-    `<ul class="tdr-ul"><li>Supports de cours complets (PDF)</li><li>Certificat de participation IBIG EDUFORM</li><li>Accès à l'espace numérique pendant 3 mois</li></ul>`;
-
-  /* 15 — Obligations des parties */
-  let s15 = '';
-  if (aiData) {
-    s15='<table class="inner-table"><thead><tr><th>IBIG EDUFORM s\'engage à :</th><th>Le Bénéficiaire s\'engage à :</th></tr></thead><tbody><tr>'+
-      `<td style="vertical-align:top">${esc(aiData.obligations_ibig||'').replace(/\n/g,'<br>')}</td>`+
-      `<td style="vertical-align:top">${esc(aiData.obligations_beneficiaire||'').replace(/\n/g,'<br>')}</td></tr></tbody></table>`;
-  } else {
-    s15='<table class="inner-table"><thead><tr><th>IBIG EDUFORM s\'engage à :</th><th>Le Bénéficiaire s\'engage à :</th></tr></thead><tbody><tr>'+
-      '<td>Fournir des formateurs qualifiés, des supports pédagogiques complets et un suivi personnalisé</td>'+
-      '<td>Assurer sa présence et sa participation active, régler les frais selon les modalités convenues</td></tr></tbody></table>';
-  }
-
-  /* 16 — Tarifs */
-  let s16 = '';
+  /* ══ Tarification (commune) ══ */
+  let s_tarif = '';
   if (fmt==='devis'||(!po&&!pp)) {
-    s16='<table class="tarif-table"><thead><tr><th>Modalité</th><th>Tarif</th><th>Observations</th></tr></thead><tbody>'+
+    s_tarif='<table class="tarif-table"><thead><tr><th>Modalité</th><th>Tarif</th><th>Observations</th></tr></thead><tbody>'+
       '<tr class="devis-row"><td colspan="3">Tarification sur devis personnalisé — Contactez-nous</td></tr></tbody></table>'+
-      '<p style="font-size:9pt;color:#64748b;margin-top:6px">📧 formation@ibig-eduform.com &nbsp;|&nbsp; 📞 +225 27 22 27 60 14 &nbsp;|&nbsp; 🌐 ibig-eduform.com</p>';
+      '<p style="font-size:9pt;color:#64748b;margin-top:6px">📧 formation@ibig-eduform.com &nbsp;|&nbsp; 📞 +225 07 78 88 25 92 &nbsp;|&nbsp; 🌐 ibig-eduform.com</p>';
   } else {
     const isG=fmt==='groupe'&&nb>1;
     let rows='';
     if (po) rows+=`<tr><td>💻 En ligne${isG?' (groupe)':''}</td><td class="prix-cell">${fcfa(po)}</td><td>${isG?fcfa(Math.round(po/nb))+'/pers. pour '+nb+' participants':'Par participant'}</td></tr>`;
     if (pp) rows+=`<tr><td>🏛️ Présentiel${isG?' (groupe)':''}</td><td class="prix-cell">${fcfa(pp)}</td><td>${isG?fcfa(Math.round(pp/nb))+'/pers. pour '+nb+' participants':'Par participant'}</td></tr>`;
-    s16='<table class="tarif-table"><thead><tr><th>Modalité</th><th style="text-align:center">Tarif</th><th>Observations</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    s_tarif='<table class="tarif-table"><thead><tr><th>Modalité</th><th style="text-align:center">Tarif</th><th>Observations</th></tr></thead><tbody>'+rows+'</tbody></table>'+
       '<p style="font-size:9pt;color:#64748b;margin-top:6px">Frais d\'inscription : 50 000 FCFA (non remboursables). Facilités de paiement disponibles sur demande.</p>';
   }
 
-  /* 17 — Valeur ajoutée */
-  let s17 = '';
+  /* ══ Obligations des parties (commune) ══ */
+  let s_oblig = '';
+  if (aiData) {
+    s_oblig='<table class="inner-table"><thead><tr><th>IBIG EDUFORM s\'engage à :</th><th>Le Bénéficiaire s\'engage à :</th></tr></thead><tbody><tr>'+
+      `<td style="vertical-align:top">${esc(aiData.obligations_ibig||'').replace(/\n/g,'<br>')}</td>`+
+      `<td style="vertical-align:top">${esc(aiData.obligations_beneficiaire||'').replace(/\n/g,'<br>')}</td></tr></tbody></table>`;
+  } else {
+    s_oblig='<table class="inner-table"><thead><tr><th>IBIG EDUFORM s\'engage à :</th><th>Le Bénéficiaire s\'engage à :</th></tr></thead><tbody><tr>'+
+      '<td>Fournir des formateurs qualifiés, des supports pédagogiques complets et un suivi personnalisé</td>'+
+      '<td>Assurer sa présence et sa participation active, régler les frais selon les modalités convenues</td></tr></tbody></table>';
+  }
+
+  /* ══ Valeur ajoutée (commune) ══ */
+  let s_va = '';
   if (Array.isArray(aiData?.valeur_ajoutee) && aiData.valeur_ajoutee.length) {
-    s17='<table class="inner-table"><thead><tr><th style="width:35%">Point différenciateur</th><th>Détail</th></tr></thead><tbody>'+
+    s_va='<table class="inner-table"><thead><tr><th style="width:35%">Point différenciateur</th><th>Détail</th></tr></thead><tbody>'+
       aiData.valeur_ajoutee.map(v=>`<tr><td style="font-weight:600">${esc(v.point||'')}</td><td>${esc(v.detail||'')}</td></tr>`).join('')+'</tbody></table>';
   } else {
-    s17=`<ul class="tdr-ul"><li>Formateurs experts en activité dans leurs domaines</li>
+    s_va=`<ul class="tdr-ul"><li>Formateurs experts en activité dans leurs domaines</li>
       <li>Contenus ancrés dans les réalités professionnelles africaines</li>
       <li>+90% de satisfaction sur plus de 1 000 apprenants formés</li>
       <li>Certification reconnue dans les 17 pays OHADA</li></ul>`;
   }
 
-  const confidHTML = (aiData?.confidentialite)||'Ce document est confidentiel et destiné exclusivement à son destinataire. Toute reproduction sans autorisation écrite d\'IBIG EDUFORM est interdite.';
+  const confid = (aiData?.confidentialite)||'Ce document est confidentiel et destiné exclusivement à son destinataire. Toute reproduction sans autorisation écrite d\'IBIG EDUFORM est interdite.';
 
-  const rythme0 = aiData?.formules_rythme?.[0]?.frequence || 'À définir selon disponibilités';
+  /* ════════════════════════
+     Sections par type
+  ════════════════════════ */
+  let sections = [];
+  let ficheRows = [];
+  let sigNum = 1;
 
-  const sections = [
-    ['1. CONTEXTE ET JUSTIFICATION', s1],
-    ['2. OBJECTIF GÉNÉRAL', s2],
-    ['3. OBJECTIFS SPÉCIFIQUES', s3],
-    ['4. RÉSULTATS ATTENDUS ET INDICATEURS', s4],
-    ['5. PROFIL DES APPRENANTS CONCERNÉS', s5],
-    ['6. CONDITIONS D\'ADMISSION ET PRÉREQUIS', s6],
-    ['7. CONTENU PÉDAGOGIQUE DÉTAILLÉ', s7],
-    ['8. APPROCHE PÉDAGOGIQUE', s8],
-    ['9. DISPOSITIF TECHNIQUE ET OUTILS', s9],
-    ['10. DÉROULEMENT TYPE DE LA FORMATION', s10],
-    ['11. FORMULES ET RYTHME DE FORMATION', s11],
-    ['12. PROFIL DU FORMATEUR', s12],
-    ['13. ÉVALUATION ET CERTIFICATION', s13],
-    ['14. LIVRABLES DE LA FORMATION', s14],
-    ['15. OBLIGATIONS DES PARTIES', s15],
-    ['16. BUDGET ET CONDITIONS FINANCIÈRES', s16],
-    ['17. VALEUR AJOUTÉE IBIG EDUFORM', s17],
-  ];
+  if (currentType === 'formation') {
+    const duree    = (aiData?.volume_total) || g('duree') || '25 heures / 5 jours';
+    const certif   = (aiData?.certification) || g('certif') || ('Certificat professionnel IBIG EDUFORM — ' + titre);
+    const modeVal  = g('mode_formation') || 'hybride';
+    const modeLabel= {en_ligne:'Classe virtuelle (en ligne)',presentiel:'Présentiel',hybride:'Hybride (présentiel + en ligne)'}[modeVal]||'Hybride';
+    const rythme0  = aiData?.formules_rythme?.[0]?.frequence || 'À définir selon disponibilités';
 
-  const sectionsHTML = sections.map(s=>
-    `<div class="tdr-section"><h2>${s[0]}</h2>${s[1]}</div>`
+    ficheRows = [
+      ['Intitulé du programme', `<strong>${esc(titre)}</strong>`],
+      ['Bénéficiaire / Commanditaire', esc(prospect||'—')],
+      ['Format', esc(modeLabel)],
+      ['Volume horaire', esc(duree)],
+      ['Rythme / Créneau', esc(rythme0)],
+      ['Sanction / Certification', esc(certif)],
+      ['Coût individuel (en ligne)', po?fcfa(po):'Sur devis', 'cout-row'],
+      ['Référence document', esc(refDoc)],
+    ];
+
+    /* ─ Profil ─ */
+    const s5 = `<p>${esc((aiData?.profil_concerne)||g('cible')||'Professionnels souhaitant développer leurs compétences.')}</p>`;
+
+    /* ─ Prérequis ─ */
+    let s6 = '';
+    if (aiData) {
+      s6 = `<div class="sub-h">Prérequis pédagogiques</div><p>${esc(aiData.prerequis_ped||'Aucun prérequis spécifique.')}</p>`;
+      if (aiData.prerequis_tech?.length) s6 += '<div class="sub-h">Prérequis techniques</div>' + aiList(aiData.prerequis_tech);
+      if (aiData.accessibilite) s6 += `<div class="sub-h">Accessibilité</div><p>${esc(aiData.accessibilite)}</p>`;
+    } else { const pr=g('prerequis'); s6=pr?`<p>${esc(pr)}</p>`:'<p>Aucun prérequis spécifique.</p>'; }
+
+    /* ─ Modules ─ */
+    let s7 = '';
+    if (Array.isArray(aiData?.modules) && aiData.modules.length) {
+      s7 = '<table class="inner-table"><thead><tr><th style="width:8%">N°</th><th style="width:30%">Module</th><th>Contenus</th><th style="width:12%;text-align:center">Durée</th></tr></thead><tbody>' +
+        aiData.modules.map(m=>`<tr><td style="font-weight:700;color:#0d1f3c">${esc(m.num||'')}</td><td style="font-weight:600">${esc(m.titre||'')}</td><td>${esc(m.contenus||'')}</td><td style="text-align:center">${esc(m.duree||'')}</td></tr>`).join('') +
+        `<tr class="total-row"><td colspan="3">VOLUME HORAIRE TOTAL</td><td style="text-align:center">${esc(duree)}</td></tr></tbody></table>`;
+    } else {
+      const raw=g('modules');
+      if (raw) { let k=0; s7='<table class="inner-table"><thead><tr><th style="width:8%">N°</th><th>Module</th></tr></thead><tbody>'+raw.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>`<tr><td>${++k}</td><td>${esc(l.replace(/^M\d+\s*[-:—]\s*/i,'').replace(/^MODULE\s+\d+\s*:\s*/i,''))}</td></tr>`).join('')+'</tbody></table>'; }
+      else s7='<p>Programme à définir.</p>';
+    }
+
+    /* ─ Approche ─ */
+    const s8 = (Array.isArray(aiData?.approche) && aiData.approche.length) ? aiList(aiData.approche) :
+      `<ul class="tdr-ul"><li>Pédagogie active <strong>70% pratique / 30% théorie</strong></li>
+      <li>Études de cas réels issus du contexte africain</li>
+      <li>Ateliers pratiques et simulations professionnelles</li>
+      <li>Projet fil rouge évalué tout au long de la formation</li>
+      <li>Supports pédagogiques complets et outils professionnels</li></ul>` +
+      (g('methode') ? `<p style="margin-top:4px">${esc(g('methode'))}</p>` : '');
+
+    /* ─ Dispositif technique ─ */
+    let s9 = '';
+    if (Array.isArray(aiData?.dispositif_technique) && aiData.dispositif_technique.length) {
+      s9='<table class="inner-table"><thead><tr><th style="width:35%">Composante</th><th>Description</th></tr></thead><tbody>'+
+        aiData.dispositif_technique.map(d=>`<tr><td style="font-weight:600">${esc(d.composante||'')}</td><td>${esc(d.description||'')}</td></tr>`).join('')+'</tbody></table>';
+    } else {
+      s9=`<ul class="tdr-ul"><li>Plateforme e-learning IBIG EDUFORM</li><li>Visioconférence interactive (Zoom/Teams)</li><li>Supports pédagogiques numériques</li><li>Espace collaboratif et forum d'échanges</li></ul>`;
+    }
+
+    /* ─ Déroulement ─ */
+    let s10 = '';
+    if (Array.isArray(aiData?.deroulement) && aiData.deroulement.length) {
+      s10='<table class="inner-table"><thead><tr><th>Étape</th><th>Activité</th><th>Repère temporel</th></tr></thead><tbody>'+
+        aiData.deroulement.map(d=>`<tr><td style="font-weight:600">${esc(d.etape||'')}</td><td>${esc(d.activite||'')}</td><td style="text-align:center">${esc(d.repere||'')}</td></tr>`).join('')+'</tbody></table>';
+    } else {
+      s10=`<ul class="tdr-ul"><li>Accueil et cadrage des objectifs</li><li>Apports théoriques et conceptuels</li><li>Exercices pratiques et mises en situation</li><li>Synthèse et évaluation finale</li></ul>`;
+    }
+
+    /* ─ Formules ─ */
+    let s11 = '';
+    if (Array.isArray(aiData?.formules_rythme) && aiData.formules_rythme.length) {
+      s11='<table class="inner-table"><thead><tr><th>Formule</th><th>Fréquence</th><th>Durée totale</th></tr></thead><tbody>'+
+        aiData.formules_rythme.map(r=>`<tr><td style="font-weight:600">${esc(r.formule||'')}</td><td>${esc(r.frequence||'')}</td><td style="text-align:center">${esc(r.duree_totale||'')}</td></tr>`).join('')+'</tbody></table>';
+    } else s11='<p>Sessions planifiées selon disponibilités — Contactez-nous pour les dates.</p>';
+
+    /* ─ Formateur ─ */
+    const s12 = (Array.isArray(aiData?.profil_formateur) && aiData.profil_formateur.length) ? aiList(aiData.profil_formateur) :
+      `<ul class="tdr-ul"><li>Expert métier avec expérience professionnelle significative</li>
+      <li>Compétences pédagogiques certifiées</li><li>Maîtrise des contextes économiques africains</li></ul>`;
+
+    /* ─ Évaluation & certification ─ */
+    let s13 = '';
+    if (Array.isArray(aiData?.evaluation_types) && aiData.evaluation_types.length) {
+      s13='<table class="inner-table"><thead><tr><th>Type d\'évaluation</th><th>Modalité</th></tr></thead><tbody>'+
+        aiData.evaluation_types.map(e=>`<tr><td style="font-weight:600">${esc(e.type||'')}</td><td>${esc(e.modalite||'')}</td></tr>`).join('')+'</tbody></table>';
+    } else {
+      const ev=g('evaluation');
+      s13=ev?`<p>${esc(ev)}</p>`:`<ul class="tdr-ul"><li>Évaluation continue (exercices pratiques)</li><li>Quiz de validation des acquis</li><li>Étude de cas finale</li></ul>`;
+    }
+    s13 += `<div class="sub-h">Certification</div>
+      <p><strong>${esc(certif)}</strong></p>
+      <p style="font-size:8.5pt;color:#64748b">Délivré aux participants justifiant d'une assiduité ≥ 80% et de la validation des évaluations. Reconnu dans les 17 pays membres de l'OHADA.</p>`;
+
+    /* ─ Livrables ─ */
+    const s14 = (Array.isArray(aiData?.livrables) && aiData.livrables.length) ? aiList(aiData.livrables) :
+      `<ul class="tdr-ul"><li>Supports de cours complets (PDF)</li><li>Certificat de participation IBIG EDUFORM</li><li>Accès à l'espace numérique pendant 3 mois</li></ul>`;
+
+    /* ── Sélection des sections selon fmt_niveau ── */
+    if (niveau === 'simplifie') {
+      sigNum = 8;
+      sections = [
+        ['1. CONTEXTE ET JUSTIFICATION', s1],
+        ['2. OBJECTIF GÉNÉRAL', s2],
+        ['3. OBJECTIFS SPÉCIFIQUES', s3],
+        ['4. CONTENU PÉDAGOGIQUE', s7],
+        ['5. APPROCHE PÉDAGOGIQUE', s8],
+        ['6. ÉVALUATION ET CERTIFICATION', s13],
+        ['7. BUDGET ET CONDITIONS FINANCIÈRES', s_tarif],
+      ];
+    } else {
+      /* standard + détaillé : 17 sections */
+      sigNum = 18;
+      sections = [
+        ['1. CONTEXTE ET JUSTIFICATION', s1],
+        ['2. OBJECTIF GÉNÉRAL', s2],
+        ['3. OBJECTIFS SPÉCIFIQUES', s3],
+        ['4. RÉSULTATS ATTENDUS ET INDICATEURS', s4],
+        ['5. PROFIL DES APPRENANTS CONCERNÉS', s5],
+        ['6. CONDITIONS D\'ADMISSION ET PRÉREQUIS', s6],
+        ['7. CONTENU PÉDAGOGIQUE DÉTAILLÉ', s7],
+        ['8. APPROCHE PÉDAGOGIQUE', s8],
+        ['9. DISPOSITIF TECHNIQUE ET OUTILS', s9],
+        ['10. DÉROULEMENT TYPE DE LA FORMATION', s10],
+        ['11. FORMULES ET RYTHME DE FORMATION', s11],
+        ['12. PROFIL DU FORMATEUR', s12],
+        ['13. ÉVALUATION ET CERTIFICATION', s13],
+        ['14. LIVRABLES DE LA FORMATION', s14],
+        ['15. OBLIGATIONS DES PARTIES', s_oblig],
+        ['16. BUDGET ET CONDITIONS FINANCIÈRES', s_tarif],
+        ['17. VALEUR AJOUTÉE IBIG EDUFORM', s_va],
+      ];
+      /* Pour le détaillé, ajouter une note complémentaire sur certaines sections clés */
+      if (niveau === 'detaille') {
+        sections.push(['18. DISPOSITIONS LÉGALES ET CONFIDENTIALITÉ',
+          `<p>${esc(confid)}</p>
+           <div class="sub-h">Propriété intellectuelle</div>
+           <p>L'ensemble des contenus, supports et outils pédagogiques produits dans le cadre de cette formation sont la propriété intellectuelle exclusive d'IBIG EDUFORM. Toute reproduction, diffusion ou adaptation est soumise à l'accord écrit préalable d'IBIG EDUFORM.</p>
+           <div class="sub-h">Force majeure</div>
+           <p>En cas d'événement de force majeure empêchant la tenue de la formation, IBIG EDUFORM s'engage à proposer une nouvelle date ou un remboursement intégral des sommes versées.</p>`
+        ]);
+        sigNum = 19;
+      }
+    }
+
+  } else if (currentType === 'mission') {
+    const mDuree = g('m_duree') || 'À définir';
+    ficheRows = [
+      ['Objet de la mission', `<strong>${esc(titre)}</strong>`],
+      ['Commanditaire', esc(prospect||'—')],
+      ['Durée / Calendrier', esc(mDuree)],
+      ['Référence document', esc(refDoc)],
+    ];
+    const livrable = fmList(g('m_livrables'));
+    sigNum = 8;
+    sections = [
+      ['1. CONTEXTE ET JUSTIFICATION', s1],
+      ['2. OBJECTIF DE LA MISSION', s2],
+      ['3. OBJECTIFS SPÉCIFIQUES', s3],
+      ['4. PÉRIMÈTRE ET ÉTENDUE', g('m_perimetre') ? `<p>${esc(g('m_perimetre'))}</p>` : '<p>À définir.</p>'],
+      ['5. LIVRABLES ATTENDUS', livrable || '<p>À définir.</p>'],
+      ['6. ÉQUIPE ET INTERVENANTS', g('m_equipe') ? `<p>${esc(g('m_equipe'))}</p>` : '<ul class="tdr-ul"><li>Consultant senior IBIG EDUFORM</li><li>Équipe support</li></ul>'],
+      ['7. BUDGET ET CONDITIONS FINANCIÈRES', s_tarif],
+    ];
+
+  } else if (currentType === 'projet') {
+    const pDuree = g('p_duree') || 'À définir';
+    ficheRows = [
+      ['Intitulé du projet', `<strong>${esc(titre)}</strong>`],
+      ['Maître d\'ouvrage', esc(prospect||'—')],
+      ['Durée estimée', esc(pDuree)],
+      ['Référence document', esc(refDoc)],
+    ];
+    const phases = fmList(g('p_phases'));
+    sigNum = 8;
+    sections = [
+      ['1. CONTEXTE ET JUSTIFICATION', s1],
+      ['2. OBJECTIF DU PROJET', s2],
+      ['3. RÉSULTATS ATTENDUS', s4 || s3],
+      ['4. DESCRIPTION DU PROJET', g('p_desc') ? `<p>${esc(g('p_desc'))}</p>` : '<p>À définir.</p>'],
+      ['5. PHASES ET JALONS', phases || '<p>À définir.</p>'],
+      ['6. RESSOURCES NÉCESSAIRES', g('p_ressources') ? `<p>${esc(g('p_ressources'))}</p>` : '<p>À définir.</p>'],
+      ['7. BUDGET ET CONDITIONS FINANCIÈRES', s_tarif],
+    ];
+
+  } else { /* evaluation */
+    ficheRows = [
+      ['Objet de l\'évaluation', `<strong>${esc(titre)}</strong>`],
+      ['Commanditaire', esc(prospect||'—')],
+      ['Type', esc(g('e_type')||'Bilan de compétences')],
+      ['Durée', esc(g('e_duree')||'À définir')],
+      ['Référence document', esc(refDoc)],
+    ];
+    sigNum = 7;
+    sections = [
+      ['1. CONTEXTE ET OBJECTIFS', s1 + s2],
+      ['2. TYPE ET CRITÈRES D\'ÉVALUATION', (g('e_type')?`<p>${esc(g('e_type'))}</p>`:'')+fmList(g('e_criteres'))],
+      ['3. OUTILS ET MÉTHODES', g('e_outils')?`<p>${esc(g('e_outils'))}</p>`:`<ul class="tdr-ul"><li>QCM en ligne</li><li>Mises en situation professionnelle</li><li>Entretiens individuels</li></ul>`],
+      ['4. RÉSULTATS ATTENDUS', s4 || '<p>À définir.</p>'],
+      ['5. LIVRABLES', `<ul class="tdr-ul"><li>Rapport d'évaluation individuel</li><li>Recommandations personnalisées</li><li>Attestation de participation</li></ul>`],
+      ['6. BUDGET ET CONDITIONS FINANCIÈRES', s_tarif],
+    ];
+  }
+
+  /* ══ Construction HTML ══ */
+  const ficheHTML = ficheRows.map(r => {
+    const cls = r[2] ? ` class="${esc(r[2])}"` : '';
+    return `<tr${cls}><td>${esc(r[0])}</td><td>${r[1]}</td></tr>`;
+  }).join('');
+
+  const sectionsHTML = sections.map(s =>
+    `<div class="tdr-section"><h2>${esc(s[0])}</h2>${s[1]}</div>`
   ).join('');
 
   const sigSection = `<div class="tdr-section">
-    <h2>18. VALIDATION ET SIGNATURES</h2>
+    <h2>${sigNum}. VALIDATION ET SIGNATURES</h2>
     <p style="font-size:9pt;color:#64748b;margin-bottom:8px">Lu et approuvé — les parties déclarent avoir pris connaissance des présents TDR et s'engagent à les respecter dans leur intégralité.</p>
     <table class="sig-table"><tr>
       <td><div class="sig-head">Pour IBIG EDUFORM</div><div class="sig-bon">Bon pour accord</div><div class="sig-space"></div><div style="font-size:9pt;color:#475569">${esc(sigIbig)}</div></td>
       <td><div class="sig-head">Le Bénéficiaire / Client</div><div class="sig-bon">Bon pour accord</div><div class="sig-space"></div><div style="font-size:9pt;color:#475569">${esc(sigClient)}</div></td>
     </tr></table>
-    <p style="margin-top:10px;font-size:8pt;color:#94a3b8;font-style:italic">${esc(confidHTML)}</p>
+    <p style="margin-top:10px;font-size:8pt;color:#94a3b8;font-style:italic">${esc(confid)}</p>
   </div>`;
+
+  /* Lien préinscription */
+  const preinscHref = catCurrentSlug
+    ? 'https://ibig-eduform.com/preinscription-generale.php?catalogue_nom=' + encodeURIComponent(titre)
+      + '&formation_slug=' + encodeURIComponent(catCurrentSlug)
+      + '&domaine=' + encodeURIComponent(cat)
+      + '&catalogue_prix=' + (po || 200000)
+    : 'https://ibig-eduform.com/preinscription';
 
   document.getElementById('dw').innerHTML = `
 <div class="tdr-page" id="tdrdoc">
@@ -638,7 +756,7 @@ function generate() {
     <div class="org-name">IBIG EDUFORM</div>
     <div class="org-sub">Institut international de formation professionnelle &amp; certifications</div>
     <div class="tdr-label">TERMES DE RÉFÉRENCE (TDR)</div>
-    <div class="tdr-type">PROGRAMME DE FORMATION PROFESSIONNELLE</div>
+    <div class="tdr-type">${esc(typeTDRBanner(currentType))}</div>
     <div class="form-titre">${esc(titre)}</div>
     ${cat?`<div class="form-sub">Domaine : ${esc(cat)}</div>`:''}
   </div>
@@ -646,33 +764,27 @@ function generate() {
   <div class="pg-body">
     <table class="fiche-table">
       <thead><tr><th colspan="2">FICHE SIGNALÉTIQUE</th></tr></thead>
-      <tbody>
-        <tr><td>Intitulé du programme</td><td><strong>${esc(titre)}</strong></td></tr>
-        <tr><td>Bénéficiaire / Commanditaire</td><td>${esc(prospect||'—')}</td></tr>
-        <tr><td>Format</td><td>${esc(modeLabel)}</td></tr>
-        <tr><td>Volume horaire</td><td>${esc(duree)}</td></tr>
-        <tr><td>Rythme / Créneau</td><td>${esc(rythme0)}</td></tr>
-        <tr><td>Sanction / Certification</td><td>${esc(certif)}</td></tr>
-        <tr class="cout-row"><td>Coût individuel (en ligne)</td><td>${po?fcfa(po):'Sur devis'}</td></tr>
-        <tr><td>Référence document</td><td>${esc(refDoc)}</td></tr>
-      </tbody>
+      <tbody>${ficheHTML}</tbody>
     </table>
     ${sectionsHTML}
     ${sigSection}
     <div class="tdr-section">
       <h2>CONTACTS ET PRÉINSCRIPTION</h2>
-      <p>📞 +225 27 22 27 60 14 &nbsp;|&nbsp; ✉️ formation@ibig-eduform.com &nbsp;|&nbsp; 🌐 ibig-eduform.com</p>
-      <p style="margin-top:4px">Préinscription gratuite et sans engagement : <strong><a href="https://ibig-eduform.com/${catCurrentSlug ? 'preinscription-generale.php?catalogue_nom=' + encodeURIComponent(titre) + '&formation_slug=' + catCurrentSlug + '&domaine=' + encodeURIComponent(cat) + '&catalogue_prix=' + (po || 200000) : 'preinscription'}" style="color:#0a1733;text-decoration:underline">ibig-eduform.com/preinscription</a></strong></p>
+      <p>📞 +225 07 78 88 25 92 &nbsp;|&nbsp; ✉️ formation@ibig-eduform.com &nbsp;|&nbsp; 🌐 ibig-eduform.com</p>
+      <p style="margin-top:4px">Préinscription gratuite et sans engagement : <strong><a href="${esc(preinscHref)}" style="color:#0a1733;text-decoration:underline">ibig-eduform.com/preinscription</a></strong></p>
     </div>
   </div>
   <div class="pg-footer">
     <span>IBIG EDUFORM — Document confidentiel</span>
     <span>Réf. ${esc(refDoc)} — ${new Date().toLocaleDateString('fr-FR')}</span>
-    <span id="pg-num">Page 1 / 1</span>
+    <span>Page 1 / 1</span>
   </div>
 </div>`;
 }
 
+/* ══════════════════════════════════════════════
+   EXPORT PDF
+   ══════════════════════════════════════════════ */
 function exportPDF() {
   generate();
   const doc = document.getElementById('tdrdoc');
@@ -680,46 +792,25 @@ function exportPDF() {
   if (typeof html2pdf === 'undefined') { alert('Bibliothèque PDF non disponible — vérifiez votre connexion.'); return; }
   const msg = document.getElementById('status-msg');
   const nom = (g('titre') || 'TDR').replace(/\s+/g,'-').replace(/[^a-zA-Z0-9\-_]/g,'');
-  const refDoc = doc.querySelector('.tdr-runhead span:last-child')?.textContent || 'TDR-IBIG';
+  const refDoc = g('ref_doc') || 'TDR-IBIG';
   msg.textContent = '⏳ Génération du PDF…';
 
-  /* ── Déplacement de l'élément dans un conteneur isolé à (0,0) ─────────────
-     html2canvas calcule la position de l'élément dans le layout réel du
-     navigateur, puis rend un viewport virtuel de windowWidth px. Si l'élément
-     n'est pas à la même coordonnée dans les deux contextes → coupe.
-     Solution : placer l'élément à x=0,y=0 dans un div propre, sans flex ni
-     overflow, avant la capture.                                               */
   const docParent  = doc.parentNode;
   const docNextSib = doc.nextSibling;
-
-  /* Supprimer le layout du DOM pendant la capture (plus fiable que visibility:hidden) */
   const layout = document.querySelector('.layout');
   const layoutNext = layout.nextSibling;
   layout.remove();
 
-  /* Conteneur isolé placé en haut à gauche, largeur 794px, hors flux */
   const pdfWrap = document.createElement('div');
   pdfWrap.id = '__pdf-wrap__';
-  pdfWrap.style.cssText = [
-    'position:absolute',
-    'left:0',
-    'top:0',
-    'width:800px',
-    'background:#fff',
-    'overflow:visible',
-    'z-index:999999'
-  ].join(';');
+  pdfWrap.style.cssText = 'position:absolute;left:0;top:0;width:800px;background:#fff;overflow:visible;z-index:999999';
   document.body.appendChild(pdfWrap);
   pdfWrap.appendChild(doc);
   const savedShadow = doc.style.boxShadow;
   doc.style.boxShadow = 'none';
-  /* Forcer text-align:left sur tous les paragraphes : text-align:justify
-     pousse les mots au bord exact du contenu, ce qui fait couper html2canvas */
+
   const justifiedEls = doc.querySelectorAll('p, li, td, th');
-  justifiedEls.forEach(el => {
-    el._savedTA = el.style.textAlign;
-    el.style.textAlign = 'left';
-  });
+  justifiedEls.forEach(el => { el._savedTA = el.style.textAlign; el.style.textAlign = 'left'; });
   window.scrollTo(0, 0);
 
   const restore = () => {
@@ -732,17 +823,14 @@ function exportPDF() {
     else            document.body.appendChild(layout);
   };
 
-  /* 150ms pour que le reflow soit complet avant la capture */
   setTimeout(function() {
-    /* Largeur réelle rendue + 8px buffer contre tout débordement sub-pixel du texte justifié */
     const captureW = Math.max(doc.scrollWidth, doc.offsetWidth) + 8;
     const opt = {
       margin:      [10, 10, 16, 10],
       filename:    'TDR-' + nom + '.pdf',
       image:       { type: 'jpeg', quality: 0.97 },
       html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff',
-                     scrollX: 0, scrollY: 0, windowWidth: 800,
-                     x: 0, y: 0, width: captureW },
+                     scrollX: 0, scrollY: 0, windowWidth: 800, x: 0, y: 0, width: captureW },
       jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak:   { mode: ['css', 'legacy'] }
     };
@@ -767,8 +855,80 @@ function exportPDF() {
   }, 100);
 }
 
-function set(id, val) { const el = document.getElementById(id); if (el) el.value = val || ''; }
+/* ══════════════════════════════════════════════
+   EXPORT WORD — CSS aligné sur les classes réelles
+   ══════════════════════════════════════════════ */
+function exportWord() {
+  generate();
+  const doc = document.getElementById('tdrdoc');
+  if (!doc) { alert('Cliquez d\'abord sur Aperçu pour générer le document.'); return; }
 
+  const clone = doc.cloneNode(true);
+  clone.style.boxShadow = 'none';
+  clone.style.width = '100%';
+  /* Supprimer le pseudo-élément watermark n'est pas possible en JS,
+     mais il ne s'exporte pas dans Word car c'est du CSS ::before */
+
+  const wordCSS = `
+body{font-family:Arial,sans-serif;font-size:11pt;color:#1a1a2e;margin:2cm;}
+.tdr-page{width:100%;}
+.pg-header{display:flex;justify-content:space-between;border-bottom:3pt solid #f59e0b;padding-bottom:8pt;margin-bottom:12pt;}
+.logo-eduform{height:50pt;}
+.logo-ibi{height:32pt;}
+.pg-title{text-align:center;margin-bottom:12pt;}
+.org-name{font-size:14pt;font-weight:bold;color:#1a1a2e;}
+.org-sub{font-size:8.5pt;color:#475569;}
+.tdr-label{font-size:16pt;font-weight:bold;letter-spacing:3px;color:#1a1a2e;margin:10pt 0 4pt;display:block;}
+.tdr-type{font-size:10pt;font-weight:bold;color:#b45309;letter-spacing:1px;display:block;}
+.form-titre{font-size:13pt;font-weight:bold;display:block;}
+.form-sub{font-size:9.5pt;color:#64748b;font-style:italic;display:block;}
+.title-sep{border-bottom:3pt solid #f59e0b;margin:10pt 0;}
+.pg-body{margin-top:12pt;}
+.fiche-table{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:16pt;}
+.fiche-table thead th{background:#0d1f3c;color:#fff;padding:6pt 8pt;text-transform:uppercase;letter-spacing:.5px;text-align:left;}
+.fiche-table td{padding:5pt 8pt;border:1pt solid #e2e8f0;vertical-align:top;}
+.fiche-table td:first-child{background:#f8fafc;font-weight:bold;color:#334155;}
+.fiche-table .cout-row td:last-child{font-size:12pt;font-weight:bold;color:#b45309;}
+.tdr-section{margin-bottom:14pt;}
+.tdr-section h2{font-size:10.5pt;font-weight:bold;text-transform:uppercase;letter-spacing:.8px;color:#1a1a2e;border-bottom:2pt solid #f59e0b;padding-bottom:3pt;margin-bottom:6pt;}
+.sub-h{font-size:9.5pt;font-weight:bold;color:#b45309;margin:6pt 0 3pt;display:block;}
+.tdr-section p{font-size:9.5pt;line-height:1.65;margin-bottom:5pt;}
+.tdr-ul{margin:4pt 0 6pt 18pt;padding:0;}
+.tdr-ul li{font-size:9.5pt;margin:3pt 0;line-height:1.5;}
+.inner-table{width:100%;border-collapse:collapse;font-size:9pt;margin:6pt 0 8pt;}
+.inner-table thead th{background:#0d1f3c;color:#fff;padding:5pt 8pt;text-align:left;}
+.inner-table td{padding:5pt 8pt;border:1pt solid #e2e8f0;vertical-align:top;}
+.inner-table .total-row td{background:#0d1f3c;color:#fff;font-weight:bold;}
+.tarif-table{width:100%;border-collapse:collapse;font-size:9.5pt;}
+.tarif-table th{background:#0d1f3c;color:#fff;padding:6pt 8pt;text-align:center;}
+.tarif-table th:first-child{text-align:left;}
+.tarif-table td{padding:6pt 8pt;border:1pt solid #e2e8f0;text-align:center;}
+.tarif-table td:first-child{text-align:left;font-weight:bold;color:#0d1f3c;}
+.tarif-table .prix-cell{font-size:11pt;font-weight:bold;}
+.tarif-table .devis-row td{background:#f8fafc;font-style:italic;color:#64748b;}
+.sig-table{width:100%;border-collapse:collapse;margin-top:10pt;font-size:9.5pt;}
+.sig-table td{border:1pt solid #cbd5e1;padding:10pt;vertical-align:top;width:50%;}
+.sig-table .sig-head{font-weight:bold;color:#0d1f3c;display:block;}
+.sig-table .sig-space{height:40pt;display:block;}
+.sig-bon{font-style:italic;color:#475569;font-size:9pt;display:block;margin-top:8pt;}
+.pg-footer{border-top:1pt solid #e2e8f0;padding-top:5pt;font-size:8pt;color:#94a3b8;margin-top:16pt;display:flex;justify-content:space-between;}
+`;
+
+  const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset='utf-8'><style>${wordCSS}</style></head>
+<body>${clone.outerHTML}</body></html>`;
+
+  const blob = new Blob([html], {type:'application/msword'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const nom = (g('titre') || 'TDR').replace(/\s+/g,'-').replace(/[^a-zA-Z0-9\-_]/g,'');
+  a.href = url; a.download = 'TDR-' + nom + '.doc'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ══════════════════════════════════════════════
+   IA — Génération automatique du contenu
+   ══════════════════════════════════════════════ */
 async function generateIA() {
   const titre = g('titre');
   if (!titre) { alert('Remplissez d\'abord le Titre avant de générer par IA.'); return; }
@@ -790,8 +950,6 @@ async function generateIA() {
     if (!r.ok || json.error) throw new Error(json.error || 'Erreur serveur');
     const d = json.data;
     aiData = d;
-
-    /* Mise à jour des champs formulaire avec les données IA */
     set('contexte',  d.contexte || '');
     set('obj_gen',   d.obj_general || '');
     set('obj_spec',  Array.isArray(d.obj_specifiques) ? d.obj_specifiques.join('\n') : String(d.obj_specifiques||''));
@@ -803,7 +961,6 @@ async function generateIA() {
     if (Array.isArray(d.approche)) set('methode', d.approche.map(a=>String(a||'')).join('\n'));
     if (Array.isArray(d.evaluation_types) && d.evaluation_types.length) set('evaluation', d.evaluation_types.map(e=>typeof e==='object'?((e.type||'')+': '+(e.modalite||'')):String(e||'')).join('\n'));
     if (d.certification) set('certif', d.certification);
-
     status.textContent = '✅ TDR généré avec succès — vérifiez et ajustez si besoin.';
     status.style.color = '#059669';
     generate();
@@ -819,7 +976,6 @@ async function generateIA() {
    CATALOGUE SEARCH — recherche & import auto
    ══════════════════════════════════════════════ */
 let catTimer = null;
-let catCurrentSlug = null;
 
 function catSearch(val) {
   const dd = document.getElementById('cat-dropdown');
@@ -867,27 +1023,22 @@ async function catLoad(slug, name) {
     if (!json.ok || !json.formation) throw new Error('Formation introuvable');
     const f = json.formation;
 
-    // 1. Remplir les champs du formulaire
-    set('titre',          f.name || name);
-    set('categorie',      f.category || '');
-    set('prix_en_ligne',  f.prix_en_ligne  || 200000);
-    set('prix_presentiel',f.prix_presentiel || 250000);
-    set('duree',          (f.duree_h || 25) + ' heures');
-    // Pré-remplir le contexte avec la description de la formation
+    set('titre',           f.name || name);
+    set('categorie',       f.category || '');
+    set('prix_en_ligne',   f.prix_en_ligne  || 200000);
+    set('prix_presentiel', f.prix_presentiel || 250000);
+    set('duree',           (f.duree_h || 25) + ' heures');
     if (f.description) set('contexte', f.description);
 
-    // Activer le format tarifaire individuel et afficher les champs prix
     const fmtSel = document.getElementById('fmt_tarif');
     if (fmtSel) { fmtSel.value = 'individuel'; togglePrixFields(); }
 
-    // 2. Charger le contenu statique depuis la base (modules, objectifs, etc.)
     loaded.innerHTML = `<span>⏳ Chargement du contenu de <strong>${f.name}</strong>…</span>`;
     try {
       const rb = await fetch('tdr-base-content.php?slug=' + encodeURIComponent(slug));
       const jb = await rb.json();
       if (jb.ok) {
         const d = jb;
-        // Remplir tous les champs de contenu depuis les templates IBIG EDUFORM
         set('contexte',  d.contexte || '');
         set('obj_gen',   d.obj_general || '');
         set('obj_spec',  Array.isArray(d.obj_specifiques) ? d.obj_specifiques.join('\n') : '');
@@ -897,14 +1048,12 @@ async function catLoad(slug, name) {
         if (Array.isArray(d.modules)) set('modules', d.modules.map(m=>(m.num||'')+'—'+(m.titre||'')+': '+(m.contenus||'')).join('\n'));
         if (Array.isArray(d.approche)) set('methode', d.approche.join('\n'));
         if (d.certification) set('certif', d.certification);
-        // Stocker dans aiData pour que generate() utilise les données structurées
         aiData = d;
       }
-    } catch(_e) { /* silencieux — l'aperçu de base restera visible */ }
+    } catch(_e) { /* silencieux */ }
 
     generate();
 
-    // 3. Message de confirmation — PAS de génération IA automatique
     loaded.innerHTML = `<span>✅ <strong>${f.name}</strong> importé — cliquez sur <strong>✨ Générer par IA</strong> pour enrichir le TDR.</span>
       <button class="btn-cat-clear" onclick="catReset()">✕ Effacer</button>`;
 
@@ -912,13 +1061,6 @@ async function catLoad(slug, name) {
     loaded.innerHTML = `<span style="color:#dc2626">❌ Erreur : ${e.message}</span>
       <button class="btn-cat-clear" onclick="catReset()">✕ Effacer</button>`;
   }
-}
-
-function deconnexion() {
-  if (!confirm('Voulez-vous vraiment vous déconnecter ?')) return;
-  /* Sur Chrome/Firefox, fermer la session Basic Auth nécessite de quitter la zone protégée.
-     On redirige vers la page d'accueil publique — la session /outils/ expire à la fermeture du navigateur. */
-  location.href = 'https://ibig-eduform.com/';
 }
 
 function catReset() {
@@ -929,39 +1071,18 @@ function catReset() {
   catCurrentSlug = null;
 }
 
-/* Ferme le dropdown au clic extérieur */
 document.addEventListener('click', function(e) {
   if (!document.getElementById('cat-wrap').contains(e.target)) {
     document.getElementById('cat-dropdown').style.display = 'none';
   }
 });
 
-function exportWord() {
-  const doc = document.getElementById('tdrdoc');
-  if (!doc) { alert('Cliquez d\'abord sur Aperçu.'); return; }
-  const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head><meta charset='utf-8'><style>
-body{font-family:Arial;font-size:11pt;color:#1a1a2e;}
-.hd{text-align:center;border-bottom:3pt solid #f59e0b;padding-bottom:10pt;margin-bottom:14pt;}
-.hd-title{font-size:15pt;font-weight:bold;color:#0d1f3c;}
-.hd-inst{font-size:8.5pt;color:#475569;}
-.tdr-title{font-size:13pt;font-weight:bold;color:#0d1f3c;}
-.tdr-nom{font-size:12pt;font-weight:bold;color:#b45309;}
-.sec-hd{background:#0d1f3c;color:#fff;padding:6pt 12pt;font-size:10.5pt;font-weight:bold;}
-.sec-body{border:1pt solid #cbd5e1;padding:10pt 12pt;}
-.fiche td{padding:5pt 8pt;border:1pt solid #e2e8f0;}
-.fiche td:first-child{background:#f8fafc;font-weight:bold;}
-.tbl th{background:#0d1f3c;color:#fff;padding:5pt 8pt;}
-.tbl td{padding:5pt 8pt;border:1pt solid #e2e8f0;}
-.prix-box{border:2pt solid #f59e0b;padding:10pt;background:#fffbeb;}
-.foot{text-align:center;font-size:8.5pt;color:#94a3b8;border-top:2pt solid #f59e0b;margin-top:16pt;padding-top:8pt;}
-</style></head><body>${doc.outerHTML}</body></html>`;
-  const blob = new Blob([html], {type:'application/msword'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const nom = (g('titre') || 'TDR').replace(/\s+/g,'-').replace(/[^a-zA-Z0-9\-_]/g,'');
-  a.href = url; a.download = 'TDR-' + nom + '.doc'; a.click();
-  URL.revokeObjectURL(url);
+/* ══════════════════════════════════════════════
+   DÉCONNEXION
+   ══════════════════════════════════════════════ */
+function deconnexion() {
+  if (!confirm('Voulez-vous vraiment vous déconnecter ?')) return;
+  location.href = '/admin/auth/logout.php';
 }
 </script>
 </body>
