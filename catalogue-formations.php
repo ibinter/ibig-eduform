@@ -1044,6 +1044,13 @@ function showToast(msg){
   function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   /* ── Filtre ── */
+  /* Normalise : minuscules + suppression des accents (é→e, à→a, etc.) */
+  function norm(s){
+    return (s||'').toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g,'')
+      .replace(/['']/g,"'");
+  }
+
   function matches(f){
     if (cur.cat && f.cat !== cur.cat) return false;
     if (cur.mode){
@@ -1075,9 +1082,11 @@ function showToast(msg){
       if (!hasNiv) return false;
     }
     if (cur.q){
-      var needle = cur.q.toLowerCase();
-      var hay = (f.name + ' ' + f.cat + ' ' + f.desc).toLowerCase();
-      if (hay.indexOf(needle) < 0) return false;
+      var hay = norm(f.name + ' ' + f.cat + ' ' + (f.desc||''));
+      var words = norm(cur.q).split(/\s+/).filter(function(w){return w.length>0;});
+      for (var wi=0; wi<words.length; wi++){
+        if (hay.indexOf(words[wi]) < 0) return false;
+      }
     }
     return true;
   }
