@@ -95,7 +95,7 @@ var EP_FORMATIONS = <?= json_encode(array_map(function($r){
   max-width:540px;width:100%;position:relative;
   box-shadow:0 32px 80px rgba(10,20,40,.28);
   animation:epIn .28s cubic-bezier(.22,1,.36,1);
-  max-height:92vh;overflow-y:auto;
+  max-height:92vh;overflow-y:auto;overflow-x:visible;
 }
 @keyframes epIn{from{opacity:0;transform:translateY(-24px) scale(.97)}to{opacity:1;transform:none}}
 #exit-popup-close{
@@ -137,10 +137,8 @@ var EP_FORMATIONS = <?= json_encode(array_map(function($r){
 #ep-results{
   list-style:none;margin:4px 0 0;padding:0;
   border:1.5px solid #e2e8f0;border-radius:12px;
-  background:#fff;max-height:200px;overflow-y:auto;
-  box-shadow:0 8px 28px rgba(10,20,40,.12);
-  display:none;position:absolute;width:100%;z-index:10;
-  top:calc(100% + 4px);left:0;
+  background:#f8fafc;max-height:190px;overflow-y:auto;
+  display:none;
 }
 #ep-results.open{display:block;}
 #ep-results li{
