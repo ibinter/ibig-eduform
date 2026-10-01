@@ -292,55 +292,10 @@
   </a>
 </div>
 
-<!-- POP-UP DE SORTIE (capture d'intention) -->
-<div class="ib-exit" id="ibExit" aria-hidden="true">
-  <div class="ib-exit-card">
-    <button class="ib-exit-x" id="ibExitX" aria-label="Fermer">&times;</button>
-    <div class="ib-exit-emoji">🎓</div>
-    <h3>Attendez&nbsp;! Ne repartez pas les mains vides.</h3>
-    <p>Recevez <b>gratuitement le programme complet Août → Décembre 2026</b> et le calendrier des sessions, directement sur WhatsApp.</p>
-    <div class="ib-exit-act">
-      <a class="ib-exit-wa" href="https://wa.me/2250778882592?text=<?= rawurlencode('Bonjour IBIG EDUFORM, je souhaite recevoir le programme complet et le calendrier 2026.') ?>" target="_blank" rel="noopener" id="ibExitWa">💬 Recevoir sur WhatsApp</a>
-      <a class="ib-exit-cal" href="/calendrier.php" id="ibExitCal">📅 Voir le calendrier</a>
-    </div>
-    <small class="ib-exit-note">Réponse rapide · Sans engagement</small>
-  </div>
-</div>
-<style>
-.ib-exit{position:fixed;inset:0;z-index:100000;background:rgba(6,12,28,.62);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:20px;font-family:Inter,system-ui,sans-serif}
-.ib-exit.show{display:flex;animation:ibExitIn .25s ease}
-@keyframes ibExitIn{from{opacity:0}to{opacity:1}}
-.ib-exit-card{position:relative;max-width:460px;width:100%;background:linear-gradient(180deg,#0a1733,#12275e);color:#eaf1ff;border-radius:24px;padding:38px 34px 30px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08)}
-.ib-exit-x{position:absolute;top:12px;right:16px;background:none;border:0;color:#9fb2d8;font-size:30px;line-height:1;cursor:pointer}
-.ib-exit-x:hover{color:#fff}
-.ib-exit-emoji{font-size:46px;margin-bottom:6px}
-.ib-exit-card h3{font-size:23px;font-weight:900;color:#fff;margin:0 0 10px;line-height:1.25}
-.ib-exit-card p{font-size:15.5px;color:#c7d5f0;margin:0 0 22px;line-height:1.5}
-.ib-exit-act{display:flex;flex-direction:column;gap:12px}
-.ib-exit-wa{background:linear-gradient(135deg,#25d366,#1aa851);color:#04240f;font-weight:900;font-size:16px;padding:15px;border-radius:14px;text-decoration:none;box-shadow:0 14px 30px rgba(37,211,102,.3)}
-.ib-exit-wa:hover{filter:brightness(1.05)}
-.ib-exit-cal{color:#eaf1ff;font-weight:700;font-size:15px;text-decoration:none;border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:13px}
-.ib-exit-cal:hover{background:rgba(255,255,255,.08)}
-.ib-exit-note{display:block;margin-top:16px;color:#8ba0c9;font-size:12.5px}
-</style>
-<script>
-(function(){
-  var KEY='ib_exit_seen';
-  var box=document.getElementById('ibExit'); if(!box) return;
-  var x=document.getElementById('ibExitX');
-  var seen=false; try{ seen=sessionStorage.getItem(KEY)==='1'; }catch(e){}
-  function show(){ if(seen) return; seen=true; try{sessionStorage.setItem(KEY,'1');}catch(e){} box.classList.add('show'); box.setAttribute('aria-hidden','false'); }
-  function hide(){ box.classList.remove('show'); box.setAttribute('aria-hidden','true'); }
-  /* Desktop : intention de sortie (souris vers le haut) */
-  document.addEventListener('mouseout', function(e){ if(!e.relatedTarget && e.clientY<=0) show(); });
-  /* Mobile : filet de sécurité après 55 s d'inactivité de scroll */
-  var t=setTimeout(function(){ if(window.matchMedia('(max-width:820px)').matches) show(); }, 55000);
-  x.addEventListener('click', hide);
-  box.addEventListener('click', function(e){ if(e.target===box) hide(); });
-  document.addEventListener('keydown', function(e){ if(e.key==='Escape') hide(); });
-  box.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', hide); });
-})();
-</script>
+<!-- POP-UP DE SORTIE (capture d'intention) — inclus via popup-exit.php sur les pages concernées -->
+<?php if (function_exists('csrf_token')): ?>
+<?php include_once __DIR__ . '/popup-exit.php'; ?>
+<?php endif; ?>
 
 <!--Start of Tawk.to Script — IBIG EDUFORM-->
 <script type="text/javascript">
