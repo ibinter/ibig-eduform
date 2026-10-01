@@ -11,10 +11,12 @@ $fix_all   = $action === 'fix_all';
 $delete_one = $action === 'delete' && $delete_id > 0;
 
 // Tarif cible validé par l'admin : 40H — 620 000 en ligne / 775 000 présentiel
+// Hybride = round((en_ligne + presentiel) / 2 / 5000) * 5000
 const DUREE_CIBLE      = '40 heures';
 const HEURES_CIBLE     = 40;
 const EN_LIGNE_CIBLE   = 620000;
 const PRESENTIEL_CIBLE = 775000;
+const HYBRIDE_CIBLE    = 700000; // (620000 + 775000) / 2 = 697500 → 700 000
 
 // ─── SUPPRESSION UNITAIRE ─────────────────────────────────────────────────────
 if ($delete_one) {
@@ -47,11 +49,11 @@ $rows = $pdo->query("
 if ($fix_all) {
     $pdo->beginTransaction();
     try {
-        $sf = $pdo->prepare("UPDATE formations SET duree=?, tarif_en_ligne=?, tarif_presentiel=?, updated_at=NOW() WHERE id=?");
-        $sn = $pdo->prepare("UPDATE formation_niveaux SET duree_heures=?, tarif_en_ligne=?, tarif_presentiel=?, updated_at=NOW() WHERE formation_id=?");
+        $sf = $pdo->prepare("UPDATE formations SET duree=?, tarif_en_ligne=?, tarif_presentiel=?, tarif_hybride=?, updated_at=NOW() WHERE id=?");
+        $sn = $pdo->prepare("UPDATE formation_niveaux SET duree_heures=?, tarif_en_ligne=?, tarif_presentiel=?, tarif_hybride=?, updated_at=NOW() WHERE formation_id=?");
         foreach ($rows as $r) {
-            $sf->execute([DUREE_CIBLE, EN_LIGNE_CIBLE, PRESENTIEL_CIBLE, $r['id']]);
-            $sn->execute([HEURES_CIBLE, EN_LIGNE_CIBLE, PRESENTIEL_CIBLE, $r['id']]);
+            $sf->execute([DUREE_CIBLE, EN_LIGNE_CIBLE, PRESENTIEL_CIBLE, HYBRIDE_CIBLE, $r['id']]);
+            $sn->execute([HEURES_CIBLE, EN_LIGNE_CIBLE, PRESENTIEL_CIBLE, HYBRIDE_CIBLE, $r['id']]);
         }
         $pdo->commit();
     } catch (Throwable $e) {
@@ -99,7 +101,7 @@ tr:hover td{background:#1a3358}
 
 <div class="cible">
     <strong class="ok">Cible validée :</strong>
-    40H — En ligne <strong>620 000 FCFA</strong> | Présentiel <strong>775 000 FCFA</strong>
+    40H — En ligne <strong>620 000 FCFA</strong> | Présentiel <strong>775 000 FCFA</strong> | Hybride <strong>700 000 FCFA</strong>
 </div>
 
 <p><?= count($rows) ?> formation(s) DAF trouvée(s) dans le catalogue :</p>
