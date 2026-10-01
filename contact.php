@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 /* ---------- Coordonnées dynamiques (réglages) ---------- */
 $st = static fn(string $k, string $d): string => function_exists('setting') ? (string)setting($k, $d) : $d;
 $cEmail   = $st('contact_email', 'formation@intermark-business.com');
-$cPhones  = $st('contact_phones', "+225 27 22 27 60 14\n+225 07 78 88 25 92");
+$cPhones  = $st('contact_phones', "+225 07 78 88 25 92\n+225 07 78 88 25 92");
 $cAdresse = $st('contact_adresse', 'Abidjan, Cocody Riviera Palmeraie (non loin de la pharmacie Rue Ministre)');
 $cMaps    = $st('contact_maps', '');
 $firstPhone = trim(strtok($cPhones, "\n"));

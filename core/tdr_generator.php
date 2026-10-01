@@ -472,7 +472,7 @@ function generate_tdr_html(array $f, string $nomProspect = '', array $opts = [])
       <tr><th>Coordonnée</th><th>Information</th></tr>
       <tr><td>Structure</td><td>IBIG EDUFORM — Institut de Formation Professionnelle</td></tr>
       <tr><td>Téléphone / WhatsApp</td><td>+225 07 78 88 25 92</td></tr>
-      <tr><td>Téléphones</td><td>+225 27 22 27 60 14 &nbsp;·&nbsp; +225 05 65 90 47 79 &nbsp;·&nbsp; +225 01 53 59 55 44</td></tr>
+      <tr><td>Téléphones</td><td>+225 07 78 88 25 92 &nbsp;·&nbsp; +225 05 65 90 47 79 &nbsp;·&nbsp; +225 01 53 59 55 44</td></tr>
       <tr><td>E-mail</td><td>formation@ibig-eduform.com &nbsp;·&nbsp; formation@intermark-business.com</td></tr>
       <tr><td>Site web</td><td>https://ibig-eduform.com</td></tr>
       <tr><td>Horaires</td><td>Lundi – Vendredi : 8h00 – 18h00 | Samedi : 9h00 – 13h00</td></tr>
