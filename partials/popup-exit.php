@@ -3,25 +3,17 @@
    POPUP EXIT-INTENT — Préinscription rapide
    Données formations chargées en PHP + filtre JS client-side
 ========================================================= */
-$_ep_data  = [];
-$_ep_debug = '';
+$_ep_data = [];
 try {
-    if (!class_exists('Database')) {
-        $_ep_debug = 'Database class not found';
-    } else {
-        $_ep_db   = Database::connect();
-        $_ep_stmt = $_ep_db->query(
-            "SELECT id, titre, domaine FROM formations WHERE statut='active' ORDER BY titre LIMIT 5000"
-        );
-        $_ep_rows = $_ep_stmt->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($_ep_rows as $_r) {
-            $_ep_data[] = [(int)$_r['id'], $_r['titre'], $_r['domaine']];
-        }
-        $_ep_debug = count($_ep_data) . ' formations chargées';
+    /* Réutilise $pdo de la page appelante si dispo, sinon crée une connexion */
+    $_ep_conn = isset($pdo) && $pdo instanceof PDO ? $pdo : Database::connect();
+    $_ep_rows = $_ep_conn->query(
+        "SELECT id, titre, domaine FROM formations WHERE statut='active' ORDER BY titre LIMIT 5000"
+    )->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($_ep_rows as $_r) {
+        $_ep_data[] = [(int)$_r['id'], $_r['titre'], $_r['domaine']];
     }
-} catch (Throwable $_ep_ex) {
-    $_ep_debug = get_class($_ep_ex) . ': ' . $_ep_ex->getMessage();
-}
+} catch (Exception $_ep_ex) { /* silencieux */ }
 <div id="exit-popup-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="exit-popup-title">
   <div id="exit-popup">
 
@@ -193,7 +185,7 @@ try {
 
 <script>
 (function(){
-  var STORAGE_KEY = 'ep_shown_v5';
+  var STORAGE_KEY = 'ep_shown_v6';
   var overlay   = document.getElementById('exit-popup-overlay');
   var closeBtn  = document.getElementById('exit-popup-close');
   var form      = document.getElementById('exit-popup-form');
@@ -258,9 +250,6 @@ try {
 
   /* ---- DONNÉES FORMATIONS (PHP → JS) ---- */
   var EP_DATA = <?= json_encode($_ep_data, JSON_UNESCAPED_UNICODE) ?>;
-  var EP_DEBUG = <?= json_encode($_ep_debug) ?>;
-  /* Debug temporaire — affiche dans le label de la recherche */
-  document.getElementById('ep-search').setAttribute('title', 'DEBUG: ' + EP_DEBUG + ' | count=' + EP_DATA.length);
 
   /* ---- RECHERCHE LOCALE ---- */
   var activeIdx = -1;
