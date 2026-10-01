@@ -1,8 +1,18 @@
 <?php
 /* =========================================================
    POPUP EXIT-INTENT — Préinscription rapide
-   Inclus via footer.php — recherche AJAX via ajax-search-formations.php
+   Données formations chargées en PHP + filtre JS client-side
 ========================================================= */
+$_ep_data = [];
+try {
+    $_ep_db   = Database::connect();
+    $_ep_rows = $_ep_db->query(
+        "SELECT id, titre, domaine FROM formations WHERE statut='active' ORDER BY titre LIMIT 5000"
+    )->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($_ep_rows as $_r) {
+        $_ep_data[] = [(int)$_r['id'], $_r['titre'], $_r['domaine']];
+    }
+} catch (Exception $_ep_ex) { /* silencieux */ }
 <div id="exit-popup-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="exit-popup-title">
   <div id="exit-popup">
 
@@ -174,7 +184,7 @@
 
 <script>
 (function(){
-  var STORAGE_KEY = 'ep_shown_v4';
+  var STORAGE_KEY = 'ep_shown_v5';
   var overlay   = document.getElementById('exit-popup-overlay');
   var closeBtn  = document.getElementById('exit-popup-close');
   var form      = document.getElementById('exit-popup-form');
@@ -229,43 +239,36 @@
   /* ---- Pré-sélection via URL formation_id ---- */
   var urlFid = new URLSearchParams(location.search).get('formation_id');
   if (urlFid) {
-    fetch('/ajax-search-formations.php?q=' + encodeURIComponent(urlFid))
-      .then(function(r){ return r.json(); })
-      .then(function(rows){
-        var found = rows.find(function(f){ return f.id == urlFid; });
-        if (found) selectFormation(found);
-      }).catch(function(){});
+    for (var _i = 0; _i < EP_DATA.length; _i++) {
+      if (EP_DATA[_i][0] == urlFid) {
+        selectFormation({id:EP_DATA[_i][0], titre:EP_DATA[_i][1], domaine:EP_DATA[_i][2]});
+        break;
+      }
+    }
   }
 
-  /* ---- RECHERCHE AJAX ---- */
+  /* ---- DONNÉES FORMATIONS (PHP → JS) ---- */
+  /* Format compact : [[id, titre, domaine], ...] */
+  var EP_DATA = <?= json_encode($_ep_data, JSON_UNESCAPED_UNICODE) ?>;
+
+  /* ---- RECHERCHE LOCALE ---- */
   var activeIdx = -1;
-  var debounceTimer = null;
 
   searchInp.addEventListener('input', function(){
     var q = this.value.trim();
     clearBtn.hidden = !q;
-    clearTimeout(debounceTimer);
     if (q.length < 2) { closeList(); return; }
-    debounceTimer = setTimeout(function(){ doSearch(q); }, 220);
+    var ql = q.toLowerCase();
+    var matches = [];
+    for (var i = 0; i < EP_DATA.length; i++) {
+      var f = EP_DATA[i];
+      if (f[1].toLowerCase().indexOf(ql) !== -1 || f[2].toLowerCase().indexOf(ql) !== -1) {
+        matches.push({id:f[0], titre:f[1], domaine:f[2]});
+        if (matches.length >= 40) break;
+      }
+    }
+    renderList(matches, q);
   });
-
-  function doSearch(q){
-    resultsList.innerHTML = '<li style="color:#64748b;padding:10px 14px;font-size:.82rem">Recherche…</li>';
-    resultsList.classList.add('open');
-    fetch('/ajax-search-formations.php?q=' + encodeURIComponent(q))
-      .then(function(r){
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.text();
-      })
-      .then(function(txt){
-        var rows;
-        try { rows = JSON.parse(txt); } catch(e){ rows = []; }
-        renderList(rows, q);
-      })
-      .catch(function(err){
-        resultsList.innerHTML = '<li style="color:#dc2626;padding:10px 14px;font-size:.82rem">Erreur de connexion. Saisissez la formation manuellement ci-dessous.</li>';
-      });
-  }
 
   searchInp.addEventListener('keydown', function(e){
     var items = resultsList.querySelectorAll('li:not(.ep-no-result)');
