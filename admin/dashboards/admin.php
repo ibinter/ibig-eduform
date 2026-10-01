@@ -46,6 +46,47 @@ try {
   $topFormations = $pdo->query("SELECT f.titre, COUNT(p.id) AS nb FROM preinscriptions p JOIN formations f ON f.id=p.formation_id GROUP BY p.formation_id ORDER BY nb DESC LIMIT 5")->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {}
 
+/* Inscriptions par semaine sur les 8 dernières semaines */
+$inscrSemaines = [];
+try {
+  $rows = $pdo->query("
+    SELECT YEARWEEK(created_at, 1) AS yw,
+           DATE_FORMAT(MIN(created_at), '%d/%m') AS label,
+           COUNT(*) AS nb
+    FROM preinscriptions
+    WHERE created_at >= NOW() - INTERVAL 8 WEEK
+    GROUP BY yw ORDER BY yw ASC
+  ")->fetchAll(PDO::FETCH_ASSOC);
+  foreach ($rows as $r) { $inscrSemaines[] = ['label' => $r['label'], 'nb' => (int)$r['nb']]; }
+} catch (Throwable $e) {}
+
+/* Répartition statuts inscriptions */
+$statutsChart = ['nouvelle' => 0, 'traitee' => 0, 'confirme' => 0, 'rejete' => 0];
+try {
+  $rs = $pdo->query("SELECT statut, COUNT(*) AS nb FROM preinscriptions GROUP BY statut")->fetchAll(PDO::FETCH_ASSOC);
+  foreach ($rs as $r) {
+    $s = strtolower((string)$r['statut']);
+    if (in_array($s, ['traitee','traitée'], true)) $statutsChart['traitee'] += (int)$r['nb'];
+    elseif (in_array($s, ['confirme','confirmee','valide','inscrit'], true)) $statutsChart['confirme'] += (int)$r['nb'];
+    elseif (in_array($s, ['rejete','rejetee','rejeté','refuse','refusee'], true)) $statutsChart['rejete'] += (int)$r['nb'];
+    else $statutsChart['nouvelle'] += (int)$r['nb'];
+  }
+} catch (Throwable $e) {}
+
+/* Moyenne notes satisfaction */
+$satStats = ['nb' => 0, 'avg' => 0, 'recommande_pct' => 0];
+try {
+  $ss = $pdo->query("
+    SELECT COUNT(*) AS nb,
+           ROUND(AVG(note_globale),1) AS avg_note,
+           ROUND(SUM(CASE WHEN recommande=1 THEN 1 ELSE 0 END)*100.0/NULLIF(COUNT(CASE WHEN recommande IS NOT NULL THEN 1 END),0),0) AS recommande_pct
+    FROM satisfaction_reponses
+  ")->fetch(PDO::FETCH_ASSOC);
+  if ($ss && (int)$ss['nb'] > 0) {
+    $satStats = ['nb' => (int)$ss['nb'], 'avg' => (float)($ss['avg_note'] ?? 0), 'recommande_pct' => (int)($ss['recommande_pct'] ?? 0)];
+  }
+} catch (Throwable $e) {}
+
 /* =====================================================
    LISTES
 ===================================================== */
@@ -222,6 +263,111 @@ ob_start();
   </div>
 
 </div>
+
+<!-- GRAPHIQUES -->
+<div style="display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-top:20px">
+
+  <!-- Inscriptions / semaine -->
+  <div class="da-card">
+    <div class="da-card-head">
+      <h3>📈 Inscriptions (8 dernières semaines)</h3>
+    </div>
+    <?php if ($inscrSemaines): ?>
+    <canvas id="chartSemaines" height="120"></canvas>
+    <?php else: ?>
+    <p style="color:#94a3b8;font-size:13px">Pas encore de données.</p>
+    <?php endif; ?>
+  </div>
+
+  <!-- Répartition statuts -->
+  <div class="da-card">
+    <div class="da-card-head">
+      <h3>🥧 Statuts des inscriptions</h3>
+    </div>
+    <canvas id="chartStatuts" height="160"></canvas>
+  </div>
+
+</div>
+
+<!-- Satisfaction -->
+<?php if ($satStats['nb'] > 0): ?>
+<div class="da-card" style="margin-top:18px">
+  <div class="da-card-head">
+    <h3>⭐ Satisfaction apprenants</h3>
+    <a href="/admin/satisfaction/index.php">Tout voir →</a>
+  </div>
+  <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center">
+    <div style="text-align:center;min-width:80px">
+      <div style="font-size:2.5rem;font-weight:900;color:#f59e0b"><?= number_format($satStats['avg'], 1); ?></div>
+      <div style="font-size:11px;font-weight:700;color:#6b7280">Note / 5</div>
+      <div style="font-size:11px;color:#94a3b8"><?= $satStats['nb']; ?> avis</div>
+    </div>
+    <div style="flex:1;min-width:200px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="width:120px;height:10px;background:#e5e7eb;border-radius:5px;overflow:hidden">
+          <div style="height:10px;background:#f59e0b;width:<?= min(100, (int)round($satStats['avg']/5*100)); ?>%;border-radius:5px"></div>
+        </div>
+        <span style="font-size:12px;color:#6b7280"><?= min(100, (int)round($satStats['avg']/5*100)); ?>% de satisfaction</span>
+      </div>
+      <div style="font-size:13px;color:#16a34a;font-weight:700">
+        👍 <?= $satStats['recommande_pct']; ?>% recommandent IBIG EDUFORM
+      </div>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+<?php if ($inscrSemaines): ?>
+new Chart(document.getElementById('chartSemaines'), {
+  type: 'bar',
+  data: {
+    labels: <?= json_encode(array_column($inscrSemaines, 'label')); ?>,
+    datasets: [{
+      label: 'Inscriptions',
+      data: <?= json_encode(array_column($inscrSemaines, 'nb')); ?>,
+      backgroundColor: 'rgba(31,63,224,.7)',
+      borderRadius: 6,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: '#f1f5f9' } },
+      x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+    }
+  }
+});
+<?php endif; ?>
+
+new Chart(document.getElementById('chartStatuts'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Nouvelle', 'Traitée', 'Confirmée', 'Rejetée'],
+    datasets: [{
+      data: [
+        <?= (int)$statutsChart['nouvelle']; ?>,
+        <?= (int)$statutsChart['traitee']; ?>,
+        <?= (int)$statutsChart['confirme']; ?>,
+        <?= (int)$statutsChart['rejete']; ?>
+      ],
+      backgroundColor: ['#3b82f6', '#f59e0b', '#22c55e', '#ef4444'],
+      borderWidth: 2,
+      borderColor: '#fff',
+    }]
+  },
+  options: {
+    responsive: true,
+    cutout: '60%',
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } }
+    }
+  }
+});
+</script>
 
 <?php
 $content = ob_get_clean();

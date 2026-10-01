@@ -312,6 +312,9 @@ include __DIR__ . '/../partials/header.php';
           <?php elseif ($estPaye && !$estConfirme): ?>
             <span class="ins-btn" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#4ade80;cursor:default">✅ Paiement reçu</span>
           <?php endif; ?>
+          <?php if ($estConfirme): ?>
+            <a href="/apprenant/certificat-pdf.php?id=<?= (int)$ins['id'] ?>" class="ins-btn ins-btn-outline" title="Télécharger votre certificat de participation">🎓 Certificat</a>
+          <?php endif; ?>
         </div>
 
       </div>

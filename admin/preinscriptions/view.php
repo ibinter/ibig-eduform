@@ -76,8 +76,18 @@ $mailBody = "Bonjour " . $prenom . ",\n\n"
 $mailHref = $email !== '' ? 'mailto:' . $email . '?subject=' . rawurlencode($mailSubject) . '&body=' . rawurlencode($mailBody) : '';
 $telHref  = $tel !== '' ? 'tel:' . preg_replace('/[^\d+]/', '', $tel) : '';
 
+$flashSuccess = $_SESSION['flash_success'] ?? null; unset($_SESSION['flash_success']);
+$flashError   = $_SESSION['flash_error']   ?? null; unset($_SESSION['flash_error']);
+
 ob_start();
 ?>
+
+<?php if ($flashSuccess): ?>
+<div style="background:#dcfce7;border:1px solid #86efac;color:#166534;padding:12px 16px;border-radius:8px;margin-bottom:16px">✅ <?= e($flashSuccess); ?></div>
+<?php endif; ?>
+<?php if ($flashError): ?>
+<div style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:12px 16px;border-radius:8px;margin-bottom:16px">❌ <?= e($flashError); ?></div>
+<?php endif; ?>
 
 <style>
 .pv-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:6px}
@@ -207,6 +217,21 @@ hr{border:0;border-top:1px solid #eef2f7;margin:18px 0}
       <a class="btn btn-secondary" href="index.php">← Retour à la liste</a>
     </div>
   </form>
+
+  <?php if ($canEdit && $email !== ''): ?>
+  <hr>
+  <!-- ACTIONS POST-FORMATION -->
+  <p class="sect-title">Actions post-formation</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <form method="post" action="send-satisfaction.php">
+      <?= csrf_field(); ?>
+      <input type="hidden" name="id" value="<?= (int)$p['id']; ?>">
+      <button class="btn btn-secondary" type="submit" title="Envoie un lien de formulaire d'évaluation à l'apprenant">
+        ⭐ Envoyer formulaire satisfaction
+      </button>
+    </form>
+  </div>
+  <?php endif; ?>
 
 </div>
 

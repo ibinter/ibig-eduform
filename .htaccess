@@ -92,6 +92,22 @@ RewriteRule ^formation/([0-9]+)/?$ formation.php?id=$1 [L,QSA]
 RewriteRule ^preinscription/([0-9]+)/?$ preinscription.php?formation=$1 [L,QSA]
 
 # =========================================================
+# PAGES SEO VILLE / DOMAINE
+# /formation-abidjan               → ville seule
+# /formation-comptabilite-abidjan  → domaine + ville
+# /formation-comptabilite          → domaine seul
+# Ordre : domaine+ville AVANT ville seule AVANT domaine seul
+# =========================================================
+RewriteRule ^formation-(comptabilite|management|rh|ressources-humaines|informatique|qhse|logistique|marketing|ohada|droit|excel|sap|ia|bureautique)-(abidjan|bouake|yamoussoukro|san-pedro|daloa|en-ligne)/?$ formation-seo.php?domaine=$1&ville=$2 [L,QSA,NC]
+RewriteRule ^formation-(abidjan|bouake|yamoussoukro|san-pedro|daloa|en-ligne)/?$ formation-seo.php?ville=$1 [L,QSA,NC]
+RewriteRule ^formation-(comptabilite|management|rh|ressources-humaines|informatique|qhse|logistique|marketing|ohada|droit|excel|sap|ia|bureautique)/?$ formation-seo.php?domaine=$1 [L,QSA,NC]
+
+# =========================================================
+# SATISFACTION POST-FORMATION
+# =========================================================
+RewriteRule ^satisfaction/?$ satisfaction.php [L,QSA]
+
+# =========================================================
 # SUPPRIMER .php
 # =========================================================
 RewriteCond %{REQUEST_URI} !^/formations/
