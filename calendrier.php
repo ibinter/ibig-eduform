@@ -23,6 +23,8 @@ $stmt = $pdo->query("
   FROM formations f
   WHERE f.statut = 'active'
     AND f.date_debut IS NOT NULL
+    AND f.date_debut > '0000-00-00'
+    AND f.date_debut != ''
     AND COALESCE(f.date_fin, f.date_debut) >= CURDATE()
   ORDER BY f.date_debut ASC
 ");
