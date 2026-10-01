@@ -1,6 +1,6 @@
 {
-  "version": "2026-4",
-  "date_maj": "2026-09-28",
+  "version": "2026-10",
+  "date_maj": "2026-10-01",
 
   "tranches_horaires": [
     { "label": "Parcours initiation",   "duree": "10 à 15 heures",   "seances": "4 à 6",   "en_ligne": 200000, "presentiel": 250000, "hybride": 225000 },
@@ -177,11 +177,9 @@
 
   "contact": {
     "emails": [
-      "formation@ibig-eduform.com",
-      "formation@intermark-business.com"
+      "formation@ibig-eduform.com"
     ],
     "telephones": [
-      { "numero": "+225 27 22 27 60 14", "type": "Fixe" },
       { "numero": "+225 07 78 88 25 92", "type": "WhatsApp" },
       { "numero": "+225 05 65 90 47 79", "type": "Mobile" },
       { "numero": "+225 01 53 59 55 44", "type": "Mobile" }
