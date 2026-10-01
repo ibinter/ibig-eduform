@@ -1,4 +1,7 @@
-<?php /* IBIG EDUFORM — Générateur TDR (outils internes) */ ?>
+<?php
+require_once __DIR__ . '/../core/auth.php';
+if (!auth_check()) { http_response_code(403); exit('Accès non autorisé. <a href="/admin/auth/login.php">Se connecter</a>'); }
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>

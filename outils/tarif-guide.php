@@ -4,6 +4,9 @@ declare(strict_types=1);
  * IBIG EDUFORM — /outils/tarif-guide.php
  * Guide tarifaire de référence — document interne IBIG EDUFORM.
  */
+require_once __DIR__ . '/../core/auth.php';
+if (!auth_check()) { http_response_code(403); exit('Accès non autorisé.'); }
+
 $configFile = __DIR__ . '/tarif-config.json';
 $cfg = json_decode(file_get_contents($configFile), true) ?? [];
 

@@ -6,6 +6,8 @@ declare(strict_types=1);
  * Protégé par .htpasswd du dossier /outils/.
  */
 require_once __DIR__ . '/../core/config.php';
+require_once __DIR__ . '/../core/auth.php';
+if (!auth_check()) { http_response_code(403); exit('Accès non autorisé.'); }
 
 try {
     $pdo = new PDO('mysql:host='.DB_HOST.';dbname='.DB_NAME.';charset=utf8mb4', DB_USER, DB_PASS, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);

@@ -6,8 +6,11 @@ declare(strict_types=1);
  * les données d'une formation pour pré-remplir le générateur TDR.
  * Accessible uniquement depuis /outils/ (protégé par .htpasswd).
  */
+require_once __DIR__ . '/../core/auth.php';
+if (!auth_check()) { http_response_code(403); echo json_encode(['error' => 'Non autorisé.']); exit; }
+
 header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: public, max-age=300'); // cache 5 min
+header('Cache-Control: private, no-store');
 
 $q    = trim($_GET['q'] ?? '');
 $slug = trim($_GET['slug'] ?? '');

@@ -6,6 +6,8 @@ declare(strict_types=1);
  * Retourne JSON avec toutes les sections structurées.
  */
 require_once __DIR__ . '/../core/config.php';
+require_once __DIR__ . '/../core/auth.php';
+if (!auth_check()) { http_response_code(403); echo json_encode(['error' => 'Non autorisé.']); exit; }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); exit; }
 header('Content-Type: application/json; charset=utf-8');

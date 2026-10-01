@@ -5,6 +5,9 @@ declare(strict_types=1);
  * Retourne le contenu statique (sans IA) d'un TDR pour pré-remplir le générateur.
  * Utilise les templates de core/tdr_generator.php.
  */
+require_once __DIR__ . '/../core/auth.php';
+if (!auth_check()) { http_response_code(403); echo json_encode(['error' => 'Non autorisé.']); exit; }
+
 header('Content-Type: application/json; charset=utf-8');
 
 $slug = trim($_GET['slug'] ?? '');

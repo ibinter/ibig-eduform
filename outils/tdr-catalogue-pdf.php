@@ -7,6 +7,9 @@ declare(strict_types=1);
  * Protégé par .htpasswd du dossier /outils/.
  */
 
+require_once __DIR__ . '/../core/auth.php';
+if (!auth_check()) { http_response_code(403); exit('Accès non autorisé.'); }
+
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../core/tdr_generator.php';
 
