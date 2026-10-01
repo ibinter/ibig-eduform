@@ -585,9 +585,7 @@ if (!empty($f['id'])) {
         'catalogue_prix'  => (int)($f['tarif_en_ligne'] ?? 0),
     ]);
 }
-$ficheURL = !empty($f['id'])
-    ? ($app . '/formation/' . $slugF)
-    : ($app . '/formation-detail.php?slug=' . urlencode($slugF));
+$ficheURL = $app . '/formation/' . rawurlencode($slugF);
 $S[] = ['Préinscription en ligne', '<p>Préinscrivez-vous (gratuit et sans engagement) à cette formation :</p><p><a href="' . hh($preinscURL) . '"><b>' . hh($preinscURL) . '</b></a></p><p style="font-size:13px;color:#5b6b8c">Fiche complète : ' . hh($ficheURL) . '</p>'];
 $S[] = ['Validation / approbation', '<p>' . hh($val('validation') ?: 'Document validé par IBIG EDUFORM — INTERMARK BUSINESS INTERNATIONAL GROUP SARL.') . '</p>'];
 

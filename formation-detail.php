@@ -245,7 +245,7 @@ $_descRaw  = strip_tags($desc);
 $ogDesc    = $_descRaw !== ''
     ? mb_substr($_descRaw, 0, 155, 'UTF-8') . (mb_strlen($_descRaw, 'UTF-8') > 155 ? '…' : '')
     : 'Formation professionnelle certifiante IBIG — ' . $cat . '. Disponible en ligne et en présentiel dans l\'espace OHADA.';
-$ogUrl     = 'https://ibig-eduform.com/formation-detail.php?slug=' . urlencode($slug);
+$ogUrl     = 'https://ibig-eduform.com/formation/' . rawurlencode($slug);
 $ogImage   = 'https://ibig-eduform.com/assets/images/logo.png';
 
 $extraHead = '<link rel="canonical" href="' . htmlspecialchars($ogUrl, ENT_QUOTES, 'UTF-8') . '">';
@@ -769,7 +769,7 @@ function fdProgTab(btn, id) {
 
     <!-- Partage réseaux sociaux -->
     <?php
-    $shareUrl   = 'https://ibig-eduform.com/formation-detail.php?slug=' . urlencode($slug);
+    $shareUrl   = 'https://ibig-eduform.com/formation/' . rawurlencode($slug);
     $shareText  = 'Découvrez cette formation certifiante : ' . $nom . ' — IBIG EDUFORM (espace OHADA)';
     $waUrl      = 'https://wa.me/?text=' . rawurlencode($shareText . "\n" . $shareUrl);
     $fbUrl      = 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode($shareUrl);
@@ -872,7 +872,7 @@ $similaires = fd_similaires($cat, $slug);
         $sSlug = htmlspecialchars((string)($s['slug']  ?? ''), ENT_QUOTES, 'UTF-8');
         $sPrix = (int)($s['price'] ?? 0);
         if ($sPrix > 0 && $sPrix < 200000) $sPrix = 200000;
-        $sUrl  = '/formation-detail.php?slug=' . $sSlug;
+        $sUrl  = '/formation/' . $sSlug;
       ?>
       <a href="<?= $sUrl ?>" class="fd-sim-card">
         <div class="fd-sim-cat"><?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?></div>
