@@ -1,5 +1,4 @@
 <?php
-// v2026-10-01
 declare(strict_types=1);
 /**
  * IBIG EDUFORM — formation-detail.php
@@ -126,14 +125,13 @@ if (!$f) {
             // Charger les niveaux actifs de cette formation
             try {
                 $niv_stmt = $pdo->prepare("
-                    SELECT id AS niveau_id, niveau, duree_heures, tarif_en_ligne, tarif_presentiel, tarif_hybride, ordre_affichage
+                    SELECT niveau, duree_heures, tarif_en_ligne, tarif_presentiel, tarif_hybride, ordre_affichage
                     FROM formation_niveaux
                     WHERE formation_id = :fid AND statut = 'actif'
                     ORDER BY ordre_affichage ASC
                 ");
                 $niv_stmt->execute([':fid' => (int)$row['id']]);
                 $f['_niveaux'] = $niv_stmt->fetchAll(PDO::FETCH_ASSOC);
-                /* Les modules ne sont pas chargés ici — TDR réservé aux inscrits */
             } catch (\Exception $_e) { $f['_niveaux'] = []; }
         }
     } catch (\Exception $e) { /* silence */ }
@@ -186,58 +184,6 @@ if ($prix > 0 && !$_isSamPro && !$_isLocal) {
 
 $g         = $prix > 0 ? grille_d($prix) : null;
 
-/* ── Mode d'enseignement (tags hero) ── */
-if (!$_isLocal) {
-    [$_mo, $_mp, $_mh] = [true, true, true];
-} else {
-    [$_mo, $_mp, $_mh] = [($f['price']??0)>0, ($f['price_pres']??0)>0, ($f['price_hyb']??0)>0];
-    if (!empty($f['_niveaux'])) {
-        [$_mo, $_mp, $_mh] = [false, false, false];
-        foreach ($f['_niveaux'] as $_nv) {
-            if ((int)$_nv['tarif_en_ligne']>0)   $_mo = true;
-            if ((int)$_nv['tarif_presentiel']>0) $_mp = true;
-            if ((int)$_nv['tarif_hybride']>0)    $_mh = true;
-        }
-    }
-    if (!$_mo && !$_mp) [$_mo, $_mp, $_mh] = [true, true, true];
-}
-
-/* ── Niveaux, durées & nb modules depuis la BD (API + local) ── */
-$_niv_dur    = []; // ['debutant' => 20, ...]
-$_mod_counts = []; // ['debutant' => 6, ...]
-$niv_labels  = ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'];
-try {
-    if (!isset($pdo)) {
-        require_once __DIR__ . '/core/config.php';
-        require_once __DIR__ . '/core/database.php';
-        $pdo = Database::connect();
-    }
-    $_mc = $pdo->prepare("
-        SELECT fn.niveau, fn.duree_heures, COUNT(fnm.id) AS nb
-        FROM formations f
-        JOIN formation_niveaux fn ON fn.formation_id = f.id AND fn.statut = 'actif'
-        LEFT JOIN formation_niveau_modules fnm ON fnm.niveau_id = fn.id
-        WHERE f.slug = :slug
-        GROUP BY fn.niveau, fn.duree_heures
-        ORDER BY FIELD(fn.niveau,'debutant','intermediaire','expert')
-    ");
-    $_mc->execute([':slug' => $slug]);
-    foreach ($_mc->fetchAll(PDO::FETCH_ASSOC) as $_r) {
-        $_niv_dur[$_r['niveau']]    = (int)$_r['duree_heures'];
-        $_mod_counts[$_r['niveau']] = (int)$_r['nb'];
-    }
-} catch (\Exception $_e) {}
-
-/* Durée min/max pour le tag hero */
-$_durs = array_filter($_niv_dur);
-if (empty($_durs) && !empty($f['_niveaux'])) {
-    foreach ($f['_niveaux'] as $_nv) {
-        if ((int)$_nv['duree_heures'] > 0) $_durs[] = (int)$_nv['duree_heures'];
-    }
-}
-$_dur_min = $_durs ? min($_durs) : 0;
-$_dur_max = $_durs ? max($_durs) : 0;
-
 $pageTitle = $nom . ' — IBIG EDUFORM';
 $ogTitle   = $nom . ' — Formation certifiante IBIG EDUFORM';
 $inscUrl   = '/preinscription-generale.php?catalogue_nom=' . urlencode($nom) . '&formation_slug=' . urlencode($slug) . '&domaine=' . urlencode($cat) . ($prix > 0 ? '&catalogue_prix=' . $prix : '');
@@ -246,7 +192,7 @@ $_descRaw  = strip_tags($desc);
 $ogDesc    = $_descRaw !== ''
     ? mb_substr($_descRaw, 0, 155, 'UTF-8') . (mb_strlen($_descRaw, 'UTF-8') > 155 ? '…' : '')
     : 'Formation professionnelle certifiante IBIG — ' . $cat . '. Disponible en ligne et en présentiel dans l\'espace OHADA.';
-$ogUrl     = 'https://ibig-eduform.com/formation/' . rawurlencode($slug);
+$ogUrl     = 'https://ibig-eduform.com/formation-detail.php?slug=' . urlencode($slug);
 $ogImage   = 'https://ibig-eduform.com/assets/images/logo.png';
 
 $extraHead = '<link rel="canonical" href="' . htmlspecialchars($ogUrl, ENT_QUOTES, 'UTF-8') . '">';
@@ -337,34 +283,6 @@ require_once __DIR__ . '/partials/header.php';
 .fd-niv-tab.fd-niv-expert.active{background:#fce7f3;color:#9d174d;border-color:#f9a8d4}
 .fd-niv-panel{display:none}.fd-niv-panel.active{display:block}
 .fd-niv-dur{font-size:.75rem;color:var(--muted);margin-bottom:8px}
-.fd-modules-toggle{margin-top:10px}
-.fd-modules-btn{width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:.75rem;font-weight:700;color:#475569;cursor:pointer;text-align:left}
-.fd-modules-btn:hover{background:#f1f5f9}
-.fd-modules-list{margin-top:6px;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden}
-.fd-module-row{display:flex;gap:8px;align-items:flex-start;padding:7px 10px;border-bottom:1px solid #f1f5f9;font-size:.75rem}
-.fd-module-row:last-child{border-bottom:none}
-.fd-module-num{width:20px;height:20px;background:#1e40af;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0;margin-top:1px}
-.fd-module-info{flex:1}
-.fd-module-titre{font-weight:700;color:#1e293b;margin-bottom:2px}
-.fd-module-contenus{color:#64748b;font-size:.7rem;line-height:1.4}
-.fd-module-dur{font-size:.7rem;font-weight:700;color:#1e40af;white-space:nowrap;flex-shrink:0}
-
-/* Programme & modules (onglets par niveau) */
-.fd-prog-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.fd-prog-tab{padding:6px 14px;border-radius:999px;border:1.5px solid #e2e8f0;background:#f8fafc;font-size:.8rem;font-weight:700;cursor:pointer;color:#475569;transition:all .15s}
-.fd-prog-tab:hover{background:#f1f5f9}
-.fd-prog-tab.fd-niv-debutant.active{background:#dcfce7;color:#166534;border-color:#86efac}
-.fd-prog-tab.fd-niv-intermediaire.active{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
-.fd-prog-tab.fd-niv-expert.active{background:#fce7f3;color:#9d174d;border-color:#f9a8d4}
-.fd-prog-panel{display:none}.fd-prog-panel.active{display:block}
-.fd-prog-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
-.fd-prog-item{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px}
-.fd-prog-titre{font-weight:700;font-size:.88rem;color:#1e293b;margin-bottom:4px}
-.fd-prog-contenus{font-size:.78rem;color:#64748b;line-height:1.5;margin-bottom:4px}
-.fd-prog-dur{font-size:.72rem;font-weight:700;color:#1e40af}
-.fd-prog-cta{margin-top:16px;text-align:center}
-.fd-prog-cta a{display:inline-block;background:#0a1733;color:#fff;font-weight:700;font-size:.82rem;padding:10px 20px;border-radius:999px;text-decoration:none}
-.fd-prog-cta a:hover{background:#1d4ed8}
 
 /* TDR */
 .fd-tdr-card{background:#f0fdf4;border:1px solid #86efac;border-radius:var(--radius);padding:18px}
@@ -415,14 +333,6 @@ function fdToggleFaq(btn) {
   a.classList.toggle('open');
   arrow.style.transform = a.classList.contains('open') ? 'rotate(180deg)' : '';
 }
-function fdProgTab(btn, id) {
-  var card = btn.closest('.fd-card');
-  card.querySelectorAll('.fd-prog-tab').forEach(function(t){ t.classList.remove('active'); });
-  card.querySelectorAll('.fd-prog-panel').forEach(function(p){ p.classList.remove('active'); });
-  btn.classList.add('active');
-  var panel = document.getElementById(id);
-  if (panel) panel.classList.add('active');
-}
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════ HERO -->
@@ -434,12 +344,8 @@ function fdProgTab(btn, id) {
   <p class="fd-hero-sub"><?= htmlspecialchars(mb_substr($desc, 0, 200, 'UTF-8'), ENT_QUOTES, 'UTF-8') ?><?= mb_strlen($desc, 'UTF-8') > 200 ? '…' : '' ?></p>
   <?php endif; ?>
   <div class="fd-hero-tags">
-    <?php if ($_mo): ?><span class="fd-tag">💻 En ligne</span><?php endif; ?>
-    <?php if ($_mh): ?><span class="fd-tag">🔀 Hybride</span><?php endif; ?>
-    <?php if ($_mp): ?><span class="fd-tag">🏛️ Présentiel</span><?php endif; ?>
-    <?php if ($_dur_min > 0): ?>
-      <span class="fd-tag">⏱️ <?= $_dur_min === $_dur_max ? $_dur_min.'H' : $_dur_min.'–'.$_dur_max.'H' ?></span>
-    <?php endif; ?>
+    <span class="fd-tag">🔀 Hybride</span>
+    <span class="fd-tag">🏛️ Présentiel</span>
     <span class="fd-tag">📜 Certificat IBIG</span>
     <span class="fd-tag">🌍 Espace OHADA</span>
   </div>
@@ -505,35 +411,9 @@ function fdProgTab(btn, id) {
       <p style="margin-top:10px;font-size:.8rem;color:#64748b">* Prérequis spécifiques précisés dans le TDR de la formation.</p>
     </div>
 
-    <!-- Programme / Modules -->
+    <!-- Programme / Modules — verrouillé -->
     <div class="fd-card">
       <h2><span class="fd-ico">📚</span> Programme &amp; Modules</h2>
-      <?php $_total_mod = array_sum($_mod_counts); if ($_total_mod > 0): ?>
-      <div class="fd-prog-tabs">
-        <?php $_pi = 0; foreach ($_mod_counts as $_pnv => $_pnb): $_pi++; ?>
-        <button type="button" class="fd-prog-tab fd-niv-<?= $_pnv ?><?= $_pi === 1 ? ' active' : '' ?>"
-                onclick="fdProgTab(this,'fd-prog-<?= $_pnv ?>')"><?= $niv_labels[$_pnv] ?? $_pnv ?>
-          <span style="font-weight:400;opacity:.7;font-size:.7em;margin-left:4px">(<?= $_pnb ?> modules)</span>
-        </button>
-        <?php endforeach; ?>
-      </div>
-      <?php $_pi = 0; foreach ($_mod_counts as $_pnv => $_pnb): $_pi++; ?>
-      <div class="fd-prog-panel<?= $_pi === 1 ? ' active' : '' ?>" id="fd-prog-<?= $_pnv ?>">
-        <div class="fd-locked">
-          <ul class="fd-modules fd-locked-inner">
-            <?php for ($_pm = 1; $_pm <= min($_pnb, 8); $_pm++): ?>
-            <li class="fd-module">Module <?= $_pm ?></li>
-            <?php endfor; ?>
-          </ul>
-          <div class="fd-locked-overlay">
-            <div class="fd-lock-icon">🔒</div>
-            <p>Ce niveau comprend <strong><?= $_pnb ?> module<?= $_pnb > 1 ? 's' : '' ?></strong><?php if (isset($_niv_dur[$_pnv]) && $_niv_dur[$_pnv] > 0): ?> — <?= $_niv_dur[$_pnv] ?>h<?php endif; ?>.<br>Le programme complet est réservé aux personnes inscrites.</p>
-            <a href="<?= htmlspecialchars($inscUrl, ENT_QUOTES, 'UTF-8') ?>">✍️ S'inscrire pour accéder</a>
-          </div>
-        </div>
-      </div>
-      <?php endforeach; ?>
-      <?php else: ?>
       <div class="fd-locked">
         <ul class="fd-modules fd-locked-inner">
           <li class="fd-module">Module 1 — Introduction et fondamentaux</li>
@@ -548,7 +428,6 @@ function fdProgTab(btn, id) {
           <a href="<?= htmlspecialchars($inscUrl, ENT_QUOTES, 'UTF-8') ?>">✍️ S'inscrire pour accéder</a>
         </div>
       </div>
-      <?php endif; ?>
     </div>
 
     <!-- Méthodologie -->
@@ -566,24 +445,17 @@ function fdProgTab(btn, id) {
     <!-- Ce que vous allez apprendre -->
     <div class="fd-card">
       <h2><span class="fd-ico">💡</span> Ce que vous allez apprendre</h2>
-      <?php
-        $skill_items = [
-            'Maîtriser les concepts fondamentaux du domaine',
-            'Utiliser les outils et méthodes professionnels',
-            'Analyser et résoudre des problèmes réels',
-            'Communiquer efficacement dans le contexte métier',
-            'Piloter des projets et des équipes',
-            'Produire des livrables conformes aux standards',
-            "S'adapter aux évolutions du secteur",
-            'Valoriser votre profil sur le marché africain',
-        ];
-      ?>
       <div class="fd-skills-grid">
-        <?php foreach ($skill_items as $_sk): ?>
-          <div class="fd-skill"><?= htmlspecialchars($_sk, ENT_QUOTES, 'UTF-8') ?></div>
-        <?php endforeach; ?>
+        <div class="fd-skill">Maîtriser les concepts fondamentaux du domaine</div>
+        <div class="fd-skill">Utiliser les outils et méthodes professionnels</div>
+        <div class="fd-skill">Analyser et résoudre des problèmes réels</div>
+        <div class="fd-skill">Communiquer efficacement dans le contexte métier</div>
+        <div class="fd-skill">Piloter des projets et des équipes</div>
+        <div class="fd-skill">Produire des livrables conformes aux standards</div>
+        <div class="fd-skill">S'adapter aux évolutions du secteur</div>
+        <div class="fd-skill">Valoriser votre profil sur le marché africain</div>
       </div>
-      <p style="margin-top:12px;font-size:.8rem;color:#64748b">* Compétences détaillées dans le programme complet (TDR).</p>
+      <p style="margin-top:12px;font-size:.8rem;color:#64748b">* Compétences spécifiques détaillées dans le programme complet (TDR).</p>
     </div>
 
     <!-- Formateurs -->
@@ -682,20 +554,14 @@ function fdProgTab(btn, id) {
     <div class="fd-cta-card">
       <h3>✍️ Vous êtes intéressé(e) ?</h3>
       <p>Inscrivez-vous en 2 minutes. Notre équipe vous recontacte sous 24h.</p>
-      <?php
-      $firstNiv = !empty($f['_niveaux']) ? $f['_niveaux'][0] : null;
-      $inscUrlBase = $inscUrl;
-      if ($firstNiv) {
-          $inscUrlBase = '/preinscription-generale.php?catalogue_nom=' . urlencode($nom) . '&formation_slug=' . urlencode($slug) . '&domaine=' . urlencode($cat) . '&catalogue_prix=' . (int)$firstNiv['tarif_en_ligne'] . '&niveau_id=' . (int)$firstNiv['niveau_id'];
-      }
-      ?>
-      <a class="fd-btn-primary" id="fd-insc-btn" href="<?= htmlspecialchars($inscUrlBase, ENT_QUOTES, 'UTF-8') ?>">S'inscrire maintenant</a>
+      <a class="fd-btn-primary" href="<?= htmlspecialchars($inscUrl, ENT_QUOTES, 'UTF-8') ?>">S'inscrire maintenant</a>
       <a class="fd-btn-sec" href="https://wa.me/2250778882592?text=<?= urlencode('Bonjour, je suis intéressé(e) par la formation : ' . $nom) ?>" target="_blank" rel="noopener">💬 Demander via WhatsApp</a>
     </div>
 
     <!-- Tarifs -->
     <?php
     $niveaux_fd = $f['_niveaux'] ?? [];
+    $niv_labels = ['debutant' => 'Débutant', 'intermediaire' => 'Intermédiaire', 'expert' => 'Expert'];
     if ($niveaux_fd): ?>
     <div class="fd-price-card">
       <h3>💰 Coûts &amp; Niveaux</h3>
@@ -707,12 +573,8 @@ function fdProgTab(btn, id) {
         <?php endforeach; ?>
       </div>
       <?php endif; ?>
-      <?php foreach ($niveaux_fd as $i => $nv):
-        $niv_insc_url = '/preinscription-generale.php?catalogue_nom=' . urlencode($nom) . '&formation_slug=' . urlencode($slug) . '&domaine=' . urlencode($cat) . '&catalogue_prix=' . (int)$nv['tarif_en_ligne'] . '&niveau_id=' . (int)$nv['niveau_id'];
-      ?>
-      <div class="fd-niv-panel<?= $i === 0 ? ' active' : '' ?>" data-niv-idx="<?= $i ?>"
-           data-niveau-id="<?= (int)$nv['niveau_id'] ?>"
-           data-insc-url="<?= htmlspecialchars($niv_insc_url, ENT_QUOTES, 'UTF-8') ?>">
+      <?php foreach ($niveaux_fd as $i => $nv): ?>
+      <div class="fd-niv-panel<?= $i === 0 ? ' active' : '' ?>" data-niv-idx="<?= $i ?>">
         <div class="fd-niv-dur">⏱️ <?= (int)$nv['duree_heures'] ?> heures</div>
         <table class="fd-tbl">
           <thead>
@@ -753,7 +615,7 @@ function fdProgTab(btn, id) {
     <div class="fd-tdr-card">
       <h3>📄 Programme complet (TDR)</h3>
       <p>Le document de référence (TDR) avec tous les modules, objectifs détaillés et planning vous est transmis après votre inscription.</p>
-      <a class="fd-tdr-btn" id="fd-tdr-btn" href="<?= htmlspecialchars($inscUrlBase, ENT_QUOTES, 'UTF-8') ?>">🔒 S'inscrire pour recevoir le TDR</a>
+      <a class="fd-tdr-btn" href="<?= htmlspecialchars($inscUrl, ENT_QUOTES, 'UTF-8') ?>">🔒 S'inscrire pour recevoir le TDR</a>
     </div>
 
     <!-- Contact -->
@@ -761,16 +623,16 @@ function fdProgTab(btn, id) {
       <h3>📞 Contact &amp; Informations</h3>
       <div class="fd-contact-row">📞 <a href="tel:+2250778882592">+225 07 78 88 25 92</a></div>
       <div class="fd-contact-row">📞 <a href="tel:+2250565904779">+225 05 65 90 47 79</a></div>
-      <div class="fd-contact-row">📞 <a href="tel:+2250778882592">+225 07 78 88 25 92</a></div>
+      <div class="fd-contact-row">📞 <a href="tel:+2252722276014">+225 27 22 27 60 14</a></div>
       <div class="fd-contact-row">📧 <a href="mailto:formation@ibig-eduform.com">formation@ibig-eduform.com</a></div>
-      <div class="fd-contact-row">📧 <a href="mailto:formation@ibig-eduform.com">formation@ibig-eduform.com</a></div>
+      <div class="fd-contact-row">📧 <a href="mailto:formation@intermark-business.com">formation@intermark-business.com</a></div>
       <div class="fd-contact-row">📧 <a href="mailto:formation.ibigsarl@gmail.com">formation.ibigsarl@gmail.com</a></div>
       <div class="fd-contact-row">🕐 Lun–Ven : 8h–18h | Sam : 9h–13h</div>
     </div>
 
     <!-- Partage réseaux sociaux -->
     <?php
-    $shareUrl   = 'https://ibig-eduform.com/formation/' . rawurlencode($slug);
+    $shareUrl   = 'https://ibig-eduform.com/formation-detail.php?slug=' . urlencode($slug);
     $shareText  = 'Découvrez cette formation certifiante : ' . $nom . ' — IBIG EDUFORM (espace OHADA)';
     $waUrl      = 'https://wa.me/?text=' . rawurlencode($shareText . "\n" . $shareUrl);
     $fbUrl      = 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode($shareUrl);
@@ -809,16 +671,7 @@ function fdProgTab(btn, id) {
       card.querySelectorAll('.fd-niv-panel').forEach(function(p){ p.classList.remove('active'); });
       btn.classList.add('active');
       var panel = card.querySelector('[data-niv-idx="'+idx+'"]');
-      if (panel) {
-        panel.classList.add('active');
-        var url = panel.getAttribute('data-insc-url');
-        if (url) {
-          var inscBtn = document.getElementById('fd-insc-btn');
-          if (inscBtn) inscBtn.href = url;
-          var tdrBtn = document.getElementById('fd-tdr-btn');
-          if (tdrBtn) tdrBtn.href = url;
-        }
-      }
+      if (panel) panel.classList.add('active');
     }
     function fdCopyLink(btn, url){
       try {
@@ -873,7 +726,7 @@ $similaires = fd_similaires($cat, $slug);
         $sSlug = htmlspecialchars((string)($s['slug']  ?? ''), ENT_QUOTES, 'UTF-8');
         $sPrix = (int)($s['price'] ?? 0);
         if ($sPrix > 0 && $sPrix < 200000) $sPrix = 200000;
-        $sUrl  = '/formation/' . $sSlug;
+        $sUrl  = '/formation-detail.php?slug=' . $sSlug;
       ?>
       <a href="<?= $sUrl ?>" class="fd-sim-card">
         <div class="fd-sim-cat"><?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?></div>
