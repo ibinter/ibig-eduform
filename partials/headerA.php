@@ -218,9 +218,9 @@ html,body{margin:0;padding:0;font-family:Inter,"Plus Jakarta Sans",system-ui,-ap
     &nbsp;&nbsp;|&nbsp;&nbsp;
     ✉ <a href="mailto:formation@ibig-eduform.com" class="tb-lnk">formation@ibig-eduform.com</a>
     &nbsp;&nbsp;|&nbsp;&nbsp;
-    ✉ <a href="mailto:formation@intermark-business.com" class="tb-lnk">formation@intermark-business.com</a>
+    ✉ <a href="mailto:formation@ibig-eduform.com" class="tb-lnk">formation@ibig-eduform.com</a>
     &nbsp;&nbsp;|&nbsp;&nbsp;
-    📞 <a href="tel:+2252722276014" class="tb-lnk">+225 27 22 27 60 14</a>
+    📞 <a href="tel:+2250778882592" class="tb-lnk">+225 07 78 88 25 92</a>
     &nbsp;&nbsp;|&nbsp;&nbsp;
     💬 <a href="https://wa.me/2250778882592" class="tb-lnk" target="_blank">+225 07 78 88 25 92 (WhatsApp)</a>
     &nbsp;&nbsp;|&nbsp;&nbsp;

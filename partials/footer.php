@@ -158,11 +158,11 @@
       <h4>Contacts</h4>
       <p>Email :<br>
         <a href="mailto:formation@ibig-eduform.com">formation@ibig-eduform.com</a><br>
-        <a href="mailto:formation@intermark-business.com">formation@intermark-business.com</a>
+        <a href="mailto:formation@ibig-eduform.com">formation@ibig-eduform.com</a>
       </p>
       <p>
         Téléphones :<br>
-        +225 27 22 27 60 14<br>
+        +225 07 78 88 25 92<br>
         +225 07 78 88 25 92 (WhatsApp)<br>
         +225 05 65 90 47 79<br>
         +225 01 53 59 55 44

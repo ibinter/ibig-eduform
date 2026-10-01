@@ -693,7 +693,7 @@ if (function_exists('is_post') && is_post()) {
     </table>' : '') . '
     <div style="text-align:center;margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
       <a href="' . htmlspecialchars($waConfirm, ENT_QUOTES, 'UTF-8') . '" style="background:#25d366;color:#fff;text-decoration:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:13px">' . ($formatEmail === 'groupe_devis' ? '💬 Demander mon devis groupe' : '💬 Confirmer sur WhatsApp') . '</a>
-      <a href="tel:+2252722276014" style="background:#0a1733;color:#fff;text-decoration:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:13px">📞 Nous appeler</a>
+      <a href="tel:+2250778882592" style="background:#0a1733;color:#fff;text-decoration:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:13px">📞 Nous appeler</a>
     </div>
   </div>
 
@@ -701,7 +701,7 @@ if (function_exists('is_post') && is_post()) {
   <div style="padding:16px 28px;font-size:12px;color:#6b7280;text-align:center">
     <strong style="color:#0a1733">IBIG EDUFORM</strong> &nbsp;·&nbsp;
     <a href="mailto:formation@ibig-eduform.com" style="color:#1d4ed8">formation@ibig-eduform.com</a> &nbsp;·&nbsp;
-    +225 27 22 27 60 14 &nbsp;·&nbsp; +225 07 78 88 25 92 (WhatsApp)<br>
+    +225 07 78 88 25 92 &nbsp;·&nbsp; +225 07 78 88 25 92 (WhatsApp)<br>
     <a href="https://ibig-eduform.com" style="color:#1d4ed8">ibig-eduform.com</a>
   </div>
 

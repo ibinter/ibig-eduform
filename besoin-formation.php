@@ -244,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       /* =========================
          NOTIF ADMIN (EMAIL + WHATSAPP)
       ========================= */
-      $adminEmail = 'formation@intermark-business.com';
+      $adminEmail = 'formation@ibig-eduform.com';
       $adminWhats = '2250778882592';
 
       $who = trim($prenoms . ' ' . $nom);
