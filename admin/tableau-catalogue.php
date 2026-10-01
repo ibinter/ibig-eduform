@@ -25,9 +25,9 @@ if ($act === 'delete' && isset($_POST['id'])) {
     } catch (Throwable $e) { $pdo->rollBack(); echo json_encode(['ok'=>false,'err'=>$e->getMessage()]); exit; }
 }
 
-// Recalcul bulk de tous les tarifs hybrides
+// Recalcul bulk de tous les tarifs hybrides (GET + redirect)
 if ($act === 'fix_hybride_all') {
-    csrf_check();
+    csrf_verify();
     $pdo->beginTransaction();
     try {
         $rows = $pdo->query("SELECT id, tarif_en_ligne, tarif_presentiel FROM formations WHERE tarif_en_ligne > 0 AND tarif_presentiel > 0")->fetchAll(PDO::FETCH_ASSOC);
@@ -41,8 +41,9 @@ if ($act === 'fix_hybride_all') {
             $nb++;
         }
         $pdo->commit();
-        echo json_encode(['ok'=>true,'nb'=>$nb]); exit;
-    } catch (Throwable $e) { $pdo->rollBack(); echo json_encode(['ok'=>false,'err'=>$e->getMessage()]); exit; }
+    } catch (Throwable $e) { $pdo->rollBack(); $nb = 0; }
+    header('Location: tableau-catalogue.php?msg=hybride_ok&nb=' . $nb);
+    exit;
 }
 
 // Mise à jour inline (titre, duree, tarif_en_ligne, tarif_presentiel, tarif_hybride)
@@ -233,11 +234,22 @@ tr.has-alert:hover td{background:#220d0d}
         <div class="stat"><strong><?= $stats['actives'] ?></strong><span>actives</span></div>
         <div class="stat"><strong><?= $stats['domaines'] ?></strong><span>domaines</span></div>
         <div class="stat <?= $stats['alertes'] > 0 ? 'danger' : '' ?>"><strong id="alertes-stat"><?= $stats['alertes'] ?></strong><span>alertes</span></div>
-        <button onclick="fixHybrideAll()" style="background:#f59e0b;color:#000;border:none;padding:7px 14px;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">⚡ Recalculer hybrides</button>
+        <a href="tableau-catalogue.php?act=fix_hybride_all&csrf=<?= csrf_token() ?>"
+           onclick="return confirm('Recalculer le tarif hybride de TOUTES les formations ?\n(formule : arrondi au 5 000 FCFA)\n\nImpact immédiat sur le site public.')"
+           style="background:#f59e0b;color:#000;padding:7px 14px;border-radius:5px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">⚡ Recalculer hybrides</a>
     </div>
 </header>
 
 <div class="content">
+
+<?php
+$msg = $_GET['msg'] ?? '';
+$nb_fixed = (int)($_GET['nb'] ?? 0);
+if ($msg === 'hybride_ok'): ?>
+<div style="background:#052e16;border:1px solid #16a34a;border-radius:8px;padding:12px 18px;margin-bottom:20px;color:#34d399;font-weight:600">
+    ✅ <?= $nb_fixed ?> tarif(s) hybride(s) recalculés et mis à jour — impact immédiat sur les pages publiques et les TDR.
+</div>
+<?php endif; ?>
 
 <!-- ════ ALERTES ════ -->
 <?php if ($alertes):
@@ -534,21 +546,6 @@ function filterRows() {
     });
 
     document.getElementById('count-display').textContent = visible + ' formation(s) affichée(s)';
-}
-
-// ── Recalcul bulk hybride ──────────────────────────────────────────────────
-function fixHybrideAll() {
-    if (!confirm('Recalculer le tarif hybride de TOUTES les formations ?\n(formule : arrondi((en_ligne + présentiel) / 2 / 5 000) × 5 000)\n\nCette action impacte immédiatement les pages publiques.')) return;
-    fetch('tableau-catalogue.php', {
-        method:'POST',
-        headers:{'Content-Type':'application/x-www-form-urlencoded'},
-        body:'act=fix_hybride_all&csrf=' + CSRF
-    }).then(r=>r.json()).then(d => {
-        if (d.ok) {
-            toast('✅ ' + d.nb + ' hybrides recalculés — visible immédiatement sur le site.');
-            setTimeout(() => location.reload(), 2000);
-        } else toast('❌ ' + d.err, false);
-    });
 }
 
 // ── Toggle domaine ─────────────────────────────────────────────────────────
