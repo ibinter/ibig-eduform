@@ -17,6 +17,48 @@
     "hybride":    { "label": "Hybride (en ligne + présentiel)", "min": 225000, "note": "Par personne — combinaison des deux modalités selon programme" }
   },
 
+  "niveaux_formation": {
+    "description": "Chaque formation est proposée en 3 niveaux. Les tarifs par niveau sont calculés par un coefficient appliqué au tarif de base de la formation.",
+    "niveaux": [
+      {
+        "slug": "debutant",
+        "label": "Débutant",
+        "icone": "🟢",
+        "coefficient": 1.00,
+        "duree_min_heures": 20,
+        "tarif_min_en_ligne": 200000,
+        "tarif_min_presentiel": 250000,
+        "tarif_min_hybride": 225000,
+        "public": "Aucun prérequis — ouvert à tous, découverte des fondamentaux",
+        "note": "Tarif de base de la formation (coefficient ×1.00)"
+      },
+      {
+        "slug": "intermediaire",
+        "label": "Intermédiaire",
+        "icone": "🔵",
+        "coefficient": 1.15,
+        "duree_min_heures": 25,
+        "tarif_min_en_ligne": 250000,
+        "tarif_min_presentiel": 300000,
+        "tarif_min_hybride": 275000,
+        "public": "Notions de base acquises — approfondissement et mise en pratique",
+        "note": "Tarif de base ×1.15 — au moins une formation ou expérience préalable recommandée"
+      },
+      {
+        "slug": "expert",
+        "label": "Expert",
+        "icone": "🔴",
+        "coefficient": 1.35,
+        "duree_min_heures": 35,
+        "tarif_min_en_ligne": 300000,
+        "tarif_min_presentiel": 400000,
+        "tarif_min_hybride": 350000,
+        "public": "Niveau avancé — maîtrise, spécialisation et certification",
+        "note": "Tarif de base ×1.35 — parcours certifiant avec évaluation finale"
+      }
+    ]
+  },
+
   "inter_entreprises": {
     "description": "Sessions publiques ouvertes à tous — inscriptions individuelles sur calendrier IBIG EDUFORM",
     "tranches": [

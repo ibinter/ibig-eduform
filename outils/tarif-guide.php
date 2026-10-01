@@ -143,6 +143,7 @@ tr:hover td{background:#f8fafc;}
 <aside class="sidebar">
   <div class="sidebar-lbl">Navigation</div>
   <a href="#grille">📊 Grille horaire</a>
+  <a href="#niveaux">🎯 Niveaux Dbt/Int/Exp</a>
   <a href="#individuel">👤 Individuel</a>
   <a href="#inter">🏛️ Inter-entreprises</a>
   <a href="#groupe">👥 Groupe</a>
@@ -201,6 +202,40 @@ tr:hover td{background:#f8fafc;}
     </tbody>
   </table>
 </div>
+
+<!-- ① bis NIVEAUX DÉBUTANT / INTERMÉDIAIRE / EXPERT -->
+<?php $nf = $cfg['niveaux_formation'] ?? []; if (!empty($nf)): ?>
+<div class="section" id="niveaux">
+  <div class="section-hd">
+    <div class="ico" style="background:#ede9fe">🎯</div>
+    <h2>Formules par niveau — Débutant · Intermédiaire · Expert</h2>
+    <span class="badge-ref">NOUVEAU SYSTÈME</span>
+  </div>
+  <p style="font-size:12.5px;color:var(--muted);margin-bottom:16px"><?= htmlspecialchars($nf['description'] ?? '') ?></p>
+  <div class="grid3">
+    <?php foreach ($nf['niveaux'] ?? [] as $nv):
+      $clrs = ['debutant'=>['#d1fae5','#065f46'],'intermediaire'=>['#dbeafe','#1e40af'],'expert'=>['#fee2e2','#991b1b']];
+      [$bg,$col] = $clrs[$nv['slug']] ?? ['#f1f5f9','#374151'];
+    ?>
+    <div class="pack-card" style="border-color:<?= $bg ?>">
+      <div style="font-size:28px;margin-bottom:6px"><?= $nv['icone'] ?></div>
+      <div class="pack-h" style="font-size:17px"><?= htmlspecialchars($nv['label']) ?></div>
+      <div style="display:inline-block;background:<?= $bg ?>;color:<?= $col ?>;font-size:11px;font-weight:800;padding:2px 10px;border-radius:20px;margin:6px 0">×<?= number_format($nv['coefficient'],2) ?> du tarif de base</div>
+      <div style="margin:10px 0;font-size:13px">
+        <div style="margin-bottom:4px"><strong>💻 En ligne</strong> à partir de <strong style="color:var(--amber)"><?= fmtF($nv['tarif_min_en_ligne']) ?></strong></div>
+        <div style="margin-bottom:4px"><strong>🏛️ Présentiel</strong> à partir de <strong style="color:var(--navy)"><?= fmtF($nv['tarif_min_presentiel']) ?></strong></div>
+        <div><strong>🔀 Hybride</strong> à partir de <strong style="color:var(--muted)"><?= fmtF($nv['tarif_min_hybride']) ?></strong></div>
+      </div>
+      <div style="background:#f8fafc;border-radius:6px;padding:8px;font-size:11.5px;color:var(--muted);margin-top:8px;text-align:left">
+        <div style="margin-bottom:4px">⏱️ Durée min. : <strong><?= $nv['duree_min_heures'] ?>h</strong></div>
+        <div><?= htmlspecialchars($nv['public']) ?></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;font-style:italic"><?= htmlspecialchars($nv['note']) ?></div>
+    </div>
+    <?php endforeach; ?>
+  </div>
+</div>
+<?php endif; ?>
 
 <!-- ② INDIVIDUEL -->
 <div class="section" id="individuel">
