@@ -501,7 +501,7 @@ foreach ($formations as $i => $f) {
                 ?, ?, ?, ?,
                 ?, ?, ?, ?,
                 ?, ?,
-                NULL, NULL, NULL, 0, NULL,
+                '0000-00-00', '0000-00-00', NULL, 0, NULL,
                 'active', NOW(), NOW()
             )
         ")->execute([
