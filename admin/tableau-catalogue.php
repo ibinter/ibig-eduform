@@ -116,30 +116,29 @@ foreach ($all as $r) {
     // Doublons titre exact
     if (count($titre_count[strtolower(trim($r['titre']))]) > 1)
         $bugs[] = ['type'=>'doublon_titre','msg'=>'Titre en doublon dans le catalogue'];
-    // Durée : uniquement si champ vide/nul (pas si format différent de H)
-    if (trim((string)$r['duree']) === '' || trim((string)$r['duree']) === '0')
-        $bugs[] = ['type'=>'duree','msg'=>'Durée non renseignée'];
-    elseif ($h !== null && $h < 8)
-        $bugs[] = ['type'=>'duree','msg'=>"Durée très courte : {$h}H"];
-    // Tarifs : signaler seulement les DEUX à 0 en même temps (formation non tarifée)
+    // Tarifs : signaler seulement les DEUX à 0 en même temps
     if ($el <= 0 && $pr <= 0)
-        $bugs[] = ['type'=>'tarif','msg'=>'Aucun tarif renseigné (en ligne et présentiel à 0)'];
-    // Incohérence présentiel < en ligne (vrai bug de saisie)
+        $bugs[] = ['type'=>'tarif','msg'=>'Aucun tarif renseigné'];
+    // Incohérence présentiel < en ligne
     if ($el > 0 && $pr > 0 && $pr < $el)
         $bugs[] = ['type'=>'tarif','msg'=>"Présentiel (" . number_format($pr,0,',',' ') . ") < En ligne (" . number_format($el,0,',',' ') . ") — incohérent"];
-    // Hybride très incohérent (tolérance 20 000 FCFA — couvre arrondi + variations légitimes)
+    // Hybride très incohérent (tolérance 20 000 FCFA)
     if ($hy > 0 && $hyb_attendu > 0 && abs($hy - $hyb_attendu) > 20000)
         $bugs[] = ['type'=>'tarif','msg'=>"Hybride " . number_format($hy,0,',',' ') . " ≠ attendu " . number_format($hyb_attendu,0,',',' ') . " FCFA"];
 
     if ($bugs) $alertes[$id] = $bugs;
 }
 
+// Stat durées non renseignées (info seulement, pas une alerte individuelle)
+$nb_sans_duree = count(array_filter($all, fn($r) => trim((string)$r['duree']) === '' || trim((string)$r['duree']) === '0'));
+
 // Stats
 $stats = [
-    'total'    => count($all),
-    'actives'  => count(array_filter($all, fn($r) => $r['statut'] === 'active')),
-    'domaines' => count(array_unique(array_column($all, 'domaine'))),
-    'alertes'  => count($alertes),
+    'total'       => count($all),
+    'actives'     => count(array_filter($all, fn($r) => $r['statut'] === 'active')),
+    'domaines'    => count(array_unique(array_column($all, 'domaine'))),
+    'alertes'     => count($alertes),
+    'sans_duree'  => $nb_sans_duree,
 ];
 
 // Grouper par domaine
@@ -234,6 +233,9 @@ tr.has-alert:hover td{background:#220d0d}
         <div class="stat"><strong><?= $stats['actives'] ?></strong><span>actives</span></div>
         <div class="stat"><strong><?= $stats['domaines'] ?></strong><span>domaines</span></div>
         <div class="stat <?= $stats['alertes'] > 0 ? 'danger' : '' ?>"><strong id="alertes-stat"><?= $stats['alertes'] ?></strong><span>alertes</span></div>
+        <?php if ($stats['sans_duree'] > 0): ?>
+        <div class="stat" title="Formations avec durée vide ou à 0"><strong style="color:#fbbf24"><?= $stats['sans_duree'] ?></strong><span>sans durée</span></div>
+        <?php endif; ?>
         <a href="tableau-catalogue.php?act=fix_hybride_all&csrf=<?= csrf_token() ?>"
            onclick="return confirm('Recalculer le tarif hybride de TOUTES les formations ?\n(formule : arrondi au 5 000 FCFA)\n\nImpact immédiat sur le site public.')"
            style="background:#f59e0b;color:#000;padding:7px 14px;border-radius:5px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">⚡ Recalculer hybrides</a>
