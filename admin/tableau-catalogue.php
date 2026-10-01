@@ -87,31 +87,30 @@ foreach ($all as $r) {
     $hyb_attendu = $el > 0 && $pr > 0 ? r5((int)(($el + $pr) / 2)) : 0;
 
     $bugs = [];
-    // Doublons slug
-    if (count($slug_count[$r['slug']]) > 1)
+    // Doublons slug (uniquement vrais doublons, pas les slugs vides)
+    if (!empty($r['slug']) && count($slug_count[$r['slug']]) > 1)
         $bugs[] = ['type'=>'doublon_slug','msg'=>'Slug dupliqué : ' . $r['slug']];
-    // Doublons titre
+    // Doublons titre exact
     if (count($titre_count[strtolower(trim($r['titre']))]) > 1)
-        $bugs[] = ['type'=>'doublon_titre','msg'=>'Titre dupliqué'];
-    // Durée hors plage
+        $bugs[] = ['type'=>'doublon_titre','msg'=>'Titre en doublon dans le catalogue'];
+    // Durée hors plage (seuil bas abaissé à 8H pour formations courtes légitimes)
     if ($h === null)
         $bugs[] = ['type'=>'duree','msg'=>'Durée illisible : "' . $r['duree'] . '"'];
-    elseif ($h < 15)
-        $bugs[] = ['type'=>'duree','msg'=>"Durée trop courte : {$h}H (min 15H)"];
-    elseif ($h > 200)
-        $bugs[] = ['type'=>'duree','msg'=>"Durée très longue : {$h}H"];
-    // Tarifs
+    elseif ($h < 8)
+        $bugs[] = ['type'=>'duree','msg'=>"Durée très courte : {$h}H — à vérifier"];
+    elseif ($h > 300)
+        $bugs[] = ['type'=>'duree','msg'=>"Durée hors norme : {$h}H — à vérifier"];
+    // Tarifs manquants (0 = non renseigné)
     if ($el <= 0)
-        $bugs[] = ['type'=>'tarif','msg'=>'Tarif en ligne manquant'];
+        $bugs[] = ['type'=>'tarif','msg'=>'Tarif en ligne à 0 — non renseigné'];
     if ($pr <= 0)
-        $bugs[] = ['type'=>'tarif','msg'=>'Tarif présentiel manquant'];
+        $bugs[] = ['type'=>'tarif','msg'=>'Tarif présentiel à 0 — non renseigné'];
+    // Incohérence présentiel < en ligne
     if ($el > 0 && $pr > 0 && $pr < $el)
-        $bugs[] = ['type'=>'tarif','msg'=>"Présentiel ($pr) < En ligne ($el) — incohérent"];
-    if ($hy > 0 && $hyb_attendu > 0 && abs($hy - $hyb_attendu) > 5000)
-        $bugs[] = ['type'=>'tarif','msg'=>"Hybride $hy ≠ attendu $hyb_attendu FCFA"];
-    // Niveaux manquants
-    if ((int)$r['nb_niveaux'] === 0)
-        $bugs[] = ['type'=>'niveaux','msg'=>'Aucun niveau enregistré dans formation_niveaux'];
+        $bugs[] = ['type'=>'tarif','msg'=>"Présentiel (" . number_format($pr,0,',',' ') . ") < En ligne (" . number_format($el,0,',',' ') . ") — incohérent"];
+    // Hybride incohérent (tolérance 10 000 FCFA, ignoré si hybride = 0)
+    if ($hy > 0 && $hyb_attendu > 0 && abs($hy - $hyb_attendu) > 10000)
+        $bugs[] = ['type'=>'tarif','msg'=>"Hybride " . number_format($hy,0,',',' ') . " ≠ attendu " . number_format($hyb_attendu,0,',',' ') . " FCFA"];
 
     if ($bugs) $alertes[$id] = $bugs;
 }
@@ -222,21 +221,43 @@ tr.has-alert:hover td{background:#220d0d}
 <div class="content">
 
 <!-- ════ ALERTES ════ -->
-<?php if ($alertes): ?>
+<?php if ($alertes):
+// Compteurs par type
+$nb_by_type = ['doublon_slug'=>0,'doublon_titre'=>0,'duree'=>0,'tarif'=>0,'niveaux'=>0];
+foreach ($alertes as $bugs) foreach ($bugs as $b) if (isset($nb_by_type[$b['type']])) $nb_by_type[$b['type']]++;
+$idx = [];
+foreach ($all as $r) $idx[$r['id']] = $r;
+?>
 <div style="margin-bottom:28px">
-    <div class="alertes-header">
+    <div class="alertes-header" style="flex-wrap:wrap;gap:8px">
         <h2>⚠️ <?= count($alertes) ?> formation(s) avec anomalies</h2>
-        <span style="color:#94a3b8;font-size:11px">Cliquez sur un champ pour l'éditer directement</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <?php if ($nb_by_type['doublon_slug'] || $nb_by_type['doublon_titre']): ?>
+            <button class="bug doublon_slug" onclick="filterAlerts('doublon')" style="cursor:pointer;border:none">
+                🔁 Doublons (<?= $nb_by_type['doublon_slug'] + $nb_by_type['doublon_titre'] ?>)
+            </button>
+            <?php endif; ?>
+            <?php if ($nb_by_type['duree']): ?>
+            <button class="bug duree" onclick="filterAlerts('duree')" style="cursor:pointer;border:none">
+                ⏱ Durées (<?= $nb_by_type['duree'] ?>)
+            </button>
+            <?php endif; ?>
+            <?php if ($nb_by_type['tarif']): ?>
+            <button class="bug tarif" onclick="filterAlerts('tarif')" style="cursor:pointer;border:none">
+                💰 Tarifs (<?= $nb_by_type['tarif'] ?>)
+            </button>
+            <?php endif; ?>
+            <button onclick="filterAlerts('')" style="cursor:pointer;border:none;background:#1e3a6e;color:#93c5fd;padding:2px 8px;border-radius:4px;font-size:11px">Tout afficher</button>
+        </div>
+        <span style="color:#94a3b8;font-size:11px;margin-left:auto">Cliquez sur un champ pour l'éditer directement</span>
     </div>
-    <?php
-    // Index rapide
-    $idx = [];
-    foreach ($all as $r) $idx[$r['id']] = $r;
-    foreach ($alertes as $fid => $bugs):
+    <div id="alertes-list">
+    <?php $shown = 0; foreach ($alertes as $fid => $bugs):
         $r = $idx[$fid] ?? null;
         if (!$r) continue;
+        $types = implode(' ', array_unique(array_column($bugs, 'type')));
     ?>
-    <div class="alerte-row" id="alert-<?= $fid ?>">
+    <div class="alerte-row" id="alert-<?= $fid ?>" data-types="<?= htmlspecialchars($types) ?>">
         <div class="alerte-id">#<?= $fid ?></div>
         <div style="flex:1;min-width:0">
             <div class="alerte-titre"><?= htmlspecialchars($r['titre']) ?></div>
@@ -252,7 +273,11 @@ tr.has-alert:hover td{background:#220d0d}
             <button class="btn btn-del" onclick="deleteFormation(<?= $fid ?>, <?= json_encode($r['titre']) ?>)">🗑 Supprimer</button>
         </div>
     </div>
-    <?php endforeach; ?>
+    <?php $shown++; endforeach; ?>
+    </div>
+    <div id="alertes-count" style="color:#64748b;font-size:12px;margin-top:8px;text-align:center">
+        <?= count($alertes) ?> anomalies affichées
+    </div>
 </div>
 <?php else: ?>
 <div style="background:#052e16;border:1px solid #14532d;border-radius:8px;padding:14px 18px;margin-bottom:24px;color:#34d399">
@@ -497,6 +522,22 @@ function toggleDom(header) {
     const open = body.style.display !== 'none';
     body.style.display = open ? 'none' : '';
     tog.textContent = open ? '▶' : '▼';
+}
+
+// ── Filtre alertes par type ───────────────────────────────────────────────
+function filterAlerts(type) {
+    const rows = document.querySelectorAll('#alertes-list .alerte-row');
+    let visible = 0;
+    rows.forEach(row => {
+        const types = row.dataset.types || '';
+        const show = !type
+            || (type === 'doublon' && (types.includes('doublon_slug') || types.includes('doublon_titre')))
+            || types.includes(type);
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+    const counter = document.getElementById('alertes-count');
+    if (counter) counter.textContent = visible + ' anomalie(s) affichée(s)' + (type ? ' — filtre: ' + type : '');
 }
 
 // Init count
