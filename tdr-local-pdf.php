@@ -3,7 +3,7 @@ declare(strict_types=1);
 /**
  * IBIG EDUFORM — /tdr-local-pdf.php
  * Génère le TDR officiel d'une formation stockée dans la DB locale (non issue de l'API ibigpartners).
- * Accessible publiquement (identique au TDR public de formation-detail.php).
+ * Accessible publiquement depuis /formation/{slug} (modal TDR du catalogue).
  */
 
 require_once __DIR__ . '/vendor/autoload.php';

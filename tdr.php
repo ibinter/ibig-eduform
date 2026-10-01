@@ -5,7 +5,7 @@ declare(strict_types=1);
    Document professionnel généré depuis formations + formation_landings.
 
    ACCÈS CONTRÔLÉ : ce fichier n'est plus accessible directement.
-   Le TDR est réservé aux prospects inscrits (via formation-detail.php).
+   Le TDR est réservé aux prospects inscrits (via /formation/{slug}).
 */
 /*
    - Contenu dense, ton expert
