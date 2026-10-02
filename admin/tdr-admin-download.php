@@ -72,8 +72,11 @@ $domF    = trim((string)($_GET['dom'] ?? ''));
 $where   = ['statut = "active"'];
 $params  = [];
 if ($q !== '') {
-    $where[]        = '(titre LIKE :q OR slug LIKE :q OR domaine LIKE :q)';
-    $params[':q']   = '%' . $q . '%';
+    $where[]         = '(titre LIKE :q1 OR slug LIKE :q2 OR domaine LIKE :q3)';
+    $qp              = '%' . $q . '%';
+    $params[':q1']   = $qp;
+    $params[':q2']   = $qp;
+    $params[':q3']   = $qp;
 }
 if ($domF !== '') {
     $where[]          = 'domaine = :dom';
