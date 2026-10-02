@@ -31,7 +31,7 @@ function tdrAdminToken(array $f, string $mode, string $fmt, string $date = '', s
         'date'     => $date,
         'cren'     => $cren,
         'prospect' => 'IBIG EDUFORM (Admin)',
-        'nid'      => !empty($f['niveau_id']) ? (int)$f['niveau_id'] : null,
+        'nid'      => null,
         'exp'      => $exp,
         'sig'      => $sig,
     ]));
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cren = preg_replace('/[^a-z_]/', '', strtolower((string)($_POST['creneau'] ?? '')));
 
     if ($fid > 0) {
-        $row = $pdo->prepare("SELECT id, titre, slug, domaine, description, duree, tarif_en_ligne, tarif_presentiel, niveau_id FROM formations WHERE id = ? LIMIT 1");
+        $row = $pdo->prepare("SELECT id, titre, slug, domaine, description, duree, tarif_en_ligne, tarif_presentiel FROM formations WHERE id = ? LIMIT 1");
         $row->execute([$fid]);
         $f = $row->fetch(PDO::FETCH_ASSOC);
         if ($f) {
