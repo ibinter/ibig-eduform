@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../auth/guard.php';
+require_once __DIR__ . '/auth/guard.php';
 require_permission('view_preinscriptions');
 
 require_once __DIR__ . '/../_init.php';
