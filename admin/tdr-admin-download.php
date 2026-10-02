@@ -88,8 +88,21 @@ $whereSql = 'WHERE ' . implode(' AND ', $where);
 /* Domaines distincts pour le filtre */
 $doms = $pdo->query("SELECT DISTINCT domaine FROM formations WHERE statut='active' ORDER BY domaine ASC")->fetchAll(PDO::FETCH_COLUMN);
 
+/* Pagination */
+$perPage  = 50;
+$page     = max(1, (int)($_GET['page'] ?? 1));
+$offset   = ($page - 1) * $perPage;
+
+/* Total count */
+$cstmt = $pdo->prepare("SELECT COUNT(*) FROM formations $whereSql");
+$cstmt->execute($params);
+$totalFormations = (int)$cstmt->fetchColumn();
+$totalPages      = max(1, (int)ceil($totalFormations / $perPage));
+$page            = min($page, $totalPages);
+$offset          = ($page - 1) * $perPage;
+
 /* Liste formations */
-$stmt = $pdo->prepare("SELECT id, titre, slug, domaine, duree, tarif_en_ligne, tarif_presentiel FROM formations $whereSql ORDER BY titre ASC LIMIT 200");
+$stmt = $pdo->prepare("SELECT id, titre, slug, domaine, duree, tarif_en_ligne, tarif_presentiel FROM formations $whereSql ORDER BY titre ASC LIMIT $perPage OFFSET $offset");
 $stmt->execute($params);
 $formations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -198,7 +211,7 @@ ob_start();
   </div>
 </form>
 
-<div class="tga-count"><?= count($formations) ?> formation<?= count($formations) > 1 ? 's' : '' ?></div>
+<div class="tga-count"><?= $totalFormations ?> formation<?= $totalFormations > 1 ? 's' : '' ?> — page <?= $page ?>/<?= $totalPages ?></div>
 
 <?php if (empty($formations)): ?>
   <div style="text-align:center;padding:60px 20px;color:#9ca3af">
@@ -243,6 +256,29 @@ ob_start();
   </tbody>
 </table>
 </div>
+
+<?php if ($totalPages > 1):
+    $qargs = array_filter(['q' => $q, 'dom' => $domF]);
+    $qs    = $qargs ? '&' . http_build_query($qargs) : '';
+?>
+<div style="display:flex;justify-content:center;align-items:center;gap:6px;padding:18px 0;flex-wrap:wrap">
+  <?php if ($page > 1): ?>
+    <a href="?page=1<?= $qs ?>" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;color:#374151;text-decoration:none;background:#fff">«</a>
+    <a href="?page=<?= $page - 1 ?><?= $qs ?>" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;color:#374151;text-decoration:none;background:#fff">‹</a>
+  <?php endif; ?>
+  <?php
+    $range = range(max(1, $page - 3), min($totalPages, $page + 3));
+    foreach ($range as $p):
+  ?>
+    <a href="?page=<?= $p ?><?= $qs ?>" style="padding:7px 12px;border-radius:8px;font-size:13px;text-decoration:none;<?= $p === $page ? 'background:#0a1733;color:#fff;font-weight:700;border:1px solid #0a1733' : 'border:1px solid #e5e7eb;color:#374151;background:#fff' ?>"><?= $p ?></a>
+  <?php endforeach; ?>
+  <?php if ($page < $totalPages): ?>
+    <a href="?page=<?= $page + 1 ?><?= $qs ?>" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;color:#374151;text-decoration:none;background:#fff">›</a>
+    <a href="?page=<?= $totalPages ?><?= $qs ?>" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;color:#374151;text-decoration:none;background:#fff">»</a>
+  <?php endif; ?>
+</div>
+<?php endif; ?>
+
 <?php endif; ?>
 
 <!-- MODAL -->
