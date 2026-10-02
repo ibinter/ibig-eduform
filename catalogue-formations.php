@@ -652,7 +652,7 @@ function preinsc_url(string $name, string $cat, string $slug = '', int $prix = 0
           <svg class="cg-sico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
           <input type="text" id="cgSearch" value="<?= h($q_raw) ?>"
             placeholder="Rechercher une formation, un domaine…" class="cg-si" autocomplete="off"
-            oninput="cgDebounce()" onkeydown="if(event.key==='Escape')cgClearSearch()">
+            oninput="cgDebounce()" onchange="cgDebounce()" onkeydown="if(event.key==='Escape')cgClearSearch()">
           <button type="button" class="cg-sbtn" onclick="cgApply()">Rechercher</button>
           <button type="button" id="cgResetAll" class="cg-reset" onclick="cgClear()" style="<?= ($q_raw||$cat_sel||$mode_sel||$prix_sel||$duree_sel||isset($_GET['niveau']))?'':'display:none' ?>">✕ Effacer</button>
         </div>
@@ -1300,11 +1300,13 @@ function showToast(msg){
     render();
   };
   window.cgApply = function(){
+    var si   = document.getElementById('cgSearch');
     var mSel = document.getElementById('cgMode');
     var pSel = document.getElementById('cgPrix');
     var dSel = document.getElementById('cgDuree');
     var nSel = document.getElementById('cgNiveau');
     var sSel = document.getElementById('cgSort');
+    cur.q    = si    ? si.value.trim()  : '';
     cur.mode  = mSel  ? mSel.value  : '';
     cur.prix  = pSel  ? pSel.value  : '';
     cur.duree = dSel  ? dSel.value  : '';
