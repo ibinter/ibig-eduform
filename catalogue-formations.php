@@ -650,7 +650,7 @@ function preinsc_url(string $name, string $cat, string $slug = '', int $prix = 0
     <div class="cg-top-bar">
       <div class="cg-search-form" role="search">
         <div class="cg-search-box">
-          <svg class="cg-sico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
+          <svg class="cg-sico" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
           <input type="text" id="cgSearch" value="<?= h($q_raw) ?>"
             placeholder="Rechercher une formation, un domaine…" class="cg-si" autocomplete="off"
             oninput="cgDebounce()" onkeydown="if(event.key==='Escape')cgClearSearch()">
