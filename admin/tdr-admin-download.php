@@ -69,14 +69,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 /* ── Filtres formations ──────────────────────────────────── */
 $q       = trim((string)($_GET['q'] ?? ''));
 $domF    = trim((string)($_GET['dom'] ?? ''));
-$where   = ['f.statut = "active"'];
+$where   = ['statut = "active"'];
 $params  = [];
 if ($q !== '') {
-    $where[]        = '(f.titre LIKE :q OR f.slug LIKE :q OR f.domaine LIKE :q)';
+    $where[]        = '(titre LIKE :q OR slug LIKE :q OR domaine LIKE :q)';
     $params[':q']   = '%' . $q . '%';
 }
 if ($domF !== '') {
-    $where[]          = 'f.domaine = :dom';
+    $where[]          = 'domaine = :dom';
     $params[':dom']   = $domF;
 }
 $whereSql = 'WHERE ' . implode(' AND ', $where);
