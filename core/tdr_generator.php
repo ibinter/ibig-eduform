@@ -226,8 +226,8 @@ function generate_tdr_html(array $f, string $nomProspect = '', array $opts = [])
     /* Signature */
     .sig-tbl{width:100%;border-collapse:collapse;margin:16px 0}
     .sig-tbl td{border:2px solid #0a1733;padding:20px;width:50%;vertical-align:top;font-size:11px}
-    .sig-tbl td:first-child{background:#0a1733;color:#fff;font-weight:700;text-align:center;font-size:12px}
-    .sig-tbl .sig-ibig-title{font-size:13px;font-weight:900;margin-bottom:8px}
+    .sig-tbl td:first-child{background:#e8edf5;color:#0a1733;font-weight:700;text-align:center;font-size:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .sig-tbl .sig-ibig-title{font-size:13px;font-weight:900;margin-bottom:8px;color:#0a1733}
     .accord{text-align:center;font-style:italic;font-weight:700;font-size:13px;color:#0a1733;margin:18px 0 8px}
     </style>';
 
@@ -320,8 +320,7 @@ function generate_tdr_html(array $f, string $nomProspect = '', array $opts = [])
       <tr><th style="width:50px">N°</th><th>Module</th><th>Contenus clés</th><th style="width:60px;text-align:center">Durée</th></tr>
       ' . implode('', array_map(function($m, $i) use ($h) {
           return '<tr><td style="text-align:center">M' . ($i + 1) . '</td><td>' . $h($m['titre']) . '</td><td>' . $h($m['contenus']) . '</td><td style="text-align:center">' . $m['duree'] . ' h</td></tr>';
-      }, $modules, array_keys($modules))) . '
-      <tr class="tbl-total"><td colspan="3" style="color:#fff;font-size:11px;padding:8px 10px">TOTAL VOLUME HORAIRE</td><td style="color:#fff;text-align:center">' . $heures . ' h</td></tr>
+      }, $modules, array_keys($modules))) . '<tr class="tbl-total"><td colspan="3" style="color:#fff;font-size:11px;padding:8px 10px">TOTAL VOLUME HORAIRE</td><td style="color:#fff;text-align:center">' . $heures . ' h</td></tr>
     </table>
   </div>
 
