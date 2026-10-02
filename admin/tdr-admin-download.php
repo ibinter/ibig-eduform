@@ -16,7 +16,7 @@ $u   = auth_user();
 $pdo = Database::connect();
 
 /* ── Helpers ─────────────────────────────────────────────── */
-function tdrAdminToken(array $f, string $mode, string $fmt, string $date = '', string $cren = ''): string
+function tdrAdminToken(array $f, string $mode, string $fmt, string $date = '', string $cren = '', ?int $nid = null): string
 {
     $exp = time() + 72 * 3600;
     $sig = hash_hmac('sha256', $f['slug'] . '|' . $exp . '|' . $fmt . '|' . $mode, TDR_SECRET);
@@ -31,7 +31,7 @@ function tdrAdminToken(array $f, string $mode, string $fmt, string $date = '', s
         'date'     => $date,
         'cren'     => $cren,
         'prospect' => 'IBIG EDUFORM (Admin)',
-        'nid'      => null,
+        'nid'      => $nid,
         'exp'      => $exp,
         'sig'      => $sig,
     ]));
@@ -43,6 +43,7 @@ $generated = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $fid  = (int)($_POST['formation_id'] ?? 0);
+    $nid  = (int)($_POST['niveau_id'] ?? 0) ?: null;
     $mode = in_array($_POST['mode'] ?? '', ['en_ligne','presentiel','hybride'], true) ? $_POST['mode'] : 'en_ligne';
     $fmt  = in_array($_POST['format'] ?? '', ['individuel','groupe_3_5','groupe_6_10','groupe_10p','groupe_devis'], true) ? $_POST['format'] : 'individuel';
     $date = preg_replace('/[^0-9\-\/\s]/', '', (string)($_POST['date_debut'] ?? ''));
@@ -53,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $row->execute([$fid]);
         $f = $row->fetch(PDO::FETCH_ASSOC);
         if ($f) {
-            $token = tdrAdminToken($f, $mode, $fmt, $date, $cren);
+            $token = tdrAdminToken($f, $mode, $fmt, $date, $cren, $nid);
             $base  = defined('BASE_URL') ? rtrim((string)BASE_URL, '/') : 'https://ibig-eduform.com';
             $generated = [
                 'formation' => htmlspecialchars($f['titre'], ENT_QUOTES, 'UTF-8'),
@@ -91,6 +92,18 @@ $doms = $pdo->query("SELECT DISTINCT domaine FROM formations WHERE statut='activ
 $stmt = $pdo->prepare("SELECT id, titre, slug, domaine, duree, tarif_en_ligne, tarif_presentiel FROM formations $whereSql ORDER BY titre ASC LIMIT 200");
 $stmt->execute($params);
 $formations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+/* Niveaux par formation (pour la modal) */
+$formIds = array_column($formations, 'id');
+$niveauxMap = [];
+if ($formIds) {
+    $placeholders = implode(',', array_fill(0, count($formIds), '?'));
+    $sniv = $pdo->prepare("SELECT formation_id, id, niveau, tarif_en_ligne, tarif_presentiel FROM formation_niveaux WHERE formation_id IN ($placeholders) AND statut='actif' ORDER BY id ASC");
+    $sniv->execute($formIds);
+    foreach ($sniv->fetchAll(PDO::FETCH_ASSOC) as $nrow) {
+        $niveauxMap[(int)$nrow['formation_id']][] = $nrow;
+    }
+}
 
 /* ── Layout ──────────────────────────────────────────────── */
 $pageTitle  = 'Générateur TDR Admin';
@@ -222,6 +235,7 @@ ob_start();
           style="background:linear-gradient(135deg,#0a1733,#1e3a6e);color:#fff;border:0;padding:9px 18px;border-radius:9px;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap"
           data-id="<?= (int)$f['id'] ?>"
           data-titre="<?= htmlspecialchars($f['titre'], ENT_QUOTES) ?>"
+          data-niveaux="<?= htmlspecialchars(json_encode($niveauxMap[(int)$f['id']] ?? []), ENT_QUOTES) ?>"
         >📄 Générer TDR</button>
       </td>
     </tr>
@@ -240,6 +254,14 @@ ob_start();
     <form method="POST">
       <?= csrf_field() ?>
       <input type="hidden" name="formation_id" id="modalFid">
+      <input type="hidden" name="niveau_id" id="modalNid">
+
+      <div class="f" id="modalNivRow" style="display:none">
+        <label>Niveau</label>
+        <select id="modalNivSel" onchange="document.getElementById('modalNid').value=this.value">
+          <option value="">— Aucun niveau spécifique —</option>
+        </select>
+      </div>
 
       <div class="f">
         <label>Mode de formation</label>
@@ -285,9 +307,30 @@ ob_start();
 <script>
 document.querySelectorAll('.btn-gen-modal').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.getElementById('modalFid').value   = btn.dataset.id;
+    document.getElementById('modalFid').value         = btn.dataset.id;
+    document.getElementById('modalNid').value         = '';
     document.getElementById('modalTitle').textContent = btn.dataset.titre;
     document.getElementById('modalSub').textContent   = 'Choisissez les options du TDR';
+
+    /* Niveaux */
+    var niveaux = [];
+    try { niveaux = JSON.parse(btn.dataset.niveaux || '[]'); } catch(e) {}
+    var row = document.getElementById('modalNivRow');
+    var sel = document.getElementById('modalNivSel');
+    sel.innerHTML = '<option value="">— Aucun niveau spécifique —</option>';
+    if (niveaux.length > 0) {
+      niveaux.forEach(function(n) {
+        var opt = document.createElement('option');
+        opt.value = n.id;
+        var prix = n.tarif_en_ligne ? ' · ' + parseInt(n.tarif_en_ligne).toLocaleString('fr-FR') + ' F' : '';
+        opt.textContent = n.niveau + prix;
+        sel.appendChild(opt);
+      });
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+
     document.getElementById('tgaModal').classList.add('open');
   });
 });
