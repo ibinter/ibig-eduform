@@ -115,6 +115,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    /* ── BULK DELETE ── */
+    if ($action === 'bulk_delete') {
+        $ids = array_filter(array_map('intval', (array)($_POST['bulk_ids'] ?? [])));
+        if ($ids) {
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $pdo->prepare("DELETE FROM planning_inscriptions WHERE id IN ($placeholders)")->execute($ids);
+        }
+        $flash = ['ok', count($ids) . ' entrée(s) supprimée(s).'];
+    }
+
     /* ── IMPORT depuis preinscriptions ── */
     if ($action === 'import') {
         $ids = array_filter(array_map('intval', (array)($_POST['pre_ids'] ?? [])));
@@ -151,10 +161,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+/* ── Export CSV ─────────────────────────────────────────── */
+$exportCsv = isset($_GET['export']) && $_GET['export'] === 'csv';
+
 /* ── Filtres ────────────────────────────────────────────── */
 $fStatut = trim((string)($_GET['statut'] ?? ''));
 $fMode   = trim((string)($_GET['mode'] ?? ''));
 $fQ      = trim((string)($_GET['q'] ?? ''));
+$fSort   = in_array($_GET['sort'] ?? '', ['date_debut_envisagee','montant_total','statut','created_at'], true) ? $_GET['sort'] : 'created_at';
+$fDir    = ($_GET['dir'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
 $page    = max(1, (int)($_GET['page'] ?? 1));
 $perPage = 40;
 
@@ -190,12 +205,51 @@ $kpis = $pdo->query("SELECT
   FROM planning_inscriptions")->fetch(PDO::FETCH_ASSOC);
 
 /* Rows */
-$stmt = $pdo->prepare("SELECT * FROM planning_inscriptions $whereSql ORDER BY created_at DESC LIMIT $perPage OFFSET $offset");
+$stmt = $pdo->prepare("SELECT * FROM planning_inscriptions $whereSql ORDER BY $fSort $fDir LIMIT $perPage OFFSET $offset");
 $stmt->execute($params);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+/* Compteurs par statut (pour le filtre) */
+$statutCounts = [];
+foreach ($pdo->query("SELECT statut, COUNT(*) AS n FROM planning_inscriptions GROUP BY statut")->fetchAll(PDO::FETCH_ASSOC) as $sc) {
+    $statutCounts[$sc['statut']] = (int)$sc['n'];
+}
+
 /* Liste formations pour selects */
 $formations = $pdo->query("SELECT id, titre FROM formations WHERE statut='active' ORDER BY titre ASC")->fetchAll(PDO::FETCH_ASSOC);
+
+/* ── Export CSV ── */
+if ($exportCsv) {
+    $allRows = $pdo->prepare("SELECT * FROM planning_inscriptions $whereSql ORDER BY $fSort $fDir");
+    $allRows->execute($params);
+    $csvRows = $allRows->fetchAll(PDO::FETCH_ASSOC);
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="planning_formations_' . date('Ymd_His') . '.csv"');
+    echo "\xEF\xBB\xBF"; // BOM UTF-8
+    $out = fopen('php://output', 'w');
+    fputcsv($out, ['ID','Participant','Email','Téléphone','Formation','Mode','Format','Date préinscription','Début envisagé','Début réel','Montant total','Montant versé','Statut','Notes','Créé le'], ';');
+    foreach ($csvRows as $cr) {
+        fputcsv($out, [
+            $cr['id'],
+            $cr['nom_participant'],
+            $cr['email_participant'],
+            $cr['telephone_participant'],
+            $cr['titre_formation'],
+            $cr['mode_formation'],
+            $cr['format_formation'],
+            $cr['date_preinscription'],
+            $cr['date_debut_envisagee'],
+            $cr['date_debut_reelle'],
+            $cr['montant_total'],
+            $cr['montant_verse'],
+            $cr['statut'],
+            $cr['notes'],
+            $cr['created_at'],
+        ], ';');
+    }
+    fclose($out);
+    exit;
+}
 
 /* Préinscriptions non encore importées (pour la modal d'import) */
 $preNonImportees = $pdo->query("
@@ -343,11 +397,15 @@ ob_start();
 .pl-pag a:hover:not(.cur){background:#f1f5f9}
 
 /* CA summary bar */
-.ca-bar{display:flex;gap:16px;flex-wrap:wrap;background:#0a1733;border-radius:12px;padding:14px 20px;margin-bottom:18px}
-.ca-bar-item{color:#fff}
+.ca-bar{display:flex;gap:16px;flex-wrap:wrap;background:#0a1733;border-radius:12px;padding:14px 20px;margin-bottom:18px;align-items:flex-start}
+.ca-bar-item{color:#fff;min-width:120px}
 .ca-bar-item .lbl{font-size:11px;color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
 .ca-bar-item .val{font-size:18px;font-weight:900;color:#f5a623;line-height:1.2}
 .ca-bar-sep{width:1px;background:rgba(255,255,255,.15);align-self:stretch}
+
+/* Entêtes triables */
+.pl-table th a{color:rgba(255,255,255,.75);text-decoration:none}
+.pl-table th a:hover{color:#fff}
 
 @media(max-width:900px){
   .pl-kpis{grid-template-columns:repeat(3,1fr)}
@@ -371,12 +429,17 @@ ob_start();
     <h2>📅 Planning des formations</h2>
   </div>
   <div class="pl-topbar-btns">
+    <?php
+      $csvArgs = array_filter(['q'=>$fQ,'statut'=>$fStatut,'mode'=>$fMode,'sort'=>$fSort,'dir'=>strtolower($fDir),'export'=>'csv']);
+      $csvUrl = '?' . http_build_query($csvArgs);
+    ?>
+    <a href="<?= e($csvUrl) ?>" class="btn-add" style="background:linear-gradient(135deg,#155e3b,#16a34a);text-decoration:none">⬇ CSV</a>
     <?php if (count($preNonImportees) > 0): ?>
       <button type="button" class="btn-import" onclick="openImport()">
         ⬇ Importer préinscriptions <span style="background:rgba(255,255,255,.25);padding:2px 8px;border-radius:999px;font-size:12px;margin-left:2px"><?= count($preNonImportees) ?></span>
       </button>
     <?php endif; ?>
-    <button type="button" class="btn-add" onclick="openAdd()">＋ Ajouter manuellement</button>
+    <button type="button" class="btn-add" onclick="openAdd()">＋ Ajouter</button>
   </div>
 </div>
 
@@ -402,8 +465,17 @@ ob_start();
     <div class="val" style="color:#f87171"><?= $fcfa(max(0, (float)$kpis['ca_total'] - (float)$kpis['ca_verse'])) ?></div>
   </div>
   <div class="ca-bar-sep"></div>
-  <div class="ca-bar-item"><div class="lbl">Taux d'achèvement</div>
-    <div class="val"><?= $kpis['total'] > 0 ? round((int)$kpis['acheve'] / (int)$kpis['total'] * 100) : 0 ?>%</div>
+  <?php
+    $caTotal = (float)($kpis['ca_total'] ?? 0);
+    $caVerse = (float)($kpis['ca_verse'] ?? 0);
+    $tauxEnc = $caTotal > 0 ? round($caVerse / $caTotal * 100) : 0;
+  ?>
+  <div class="ca-bar-item" style="flex:1;min-width:160px">
+    <div class="lbl">Taux d'encaissement</div>
+    <div class="val"><?= $tauxEnc ?>%</div>
+    <div style="background:rgba(255,255,255,.15);border-radius:4px;height:6px;margin-top:6px;overflow:hidden">
+      <div style="width:<?= $tauxEnc ?>%;height:100%;background:<?= $tauxEnc >= 80 ? '#22c55e' : ($tauxEnc >= 50 ? '#f5a623' : '#f87171') ?>;border-radius:4px;transition:width .5s"></div>
+    </div>
   </div>
 </div>
 <?php endif; ?>
@@ -417,9 +489,11 @@ ob_start();
   <div>
     <label>Statut</label>
     <select name="statut">
-      <option value="">Tous</option>
+      <option value="">Tous (<?= array_sum($statutCounts) ?>)</option>
       <?php foreach ($statutLabels as $sv => $sl): ?>
-        <option value="<?= $sv ?>" <?= $fStatut === $sv ? 'selected' : '' ?>><?= $sl ?></option>
+        <option value="<?= $sv ?>" <?= $fStatut === $sv ? 'selected' : '' ?>>
+          <?= $sl ?> (<?= $statutCounts[$sv] ?? 0 ?>)
+        </option>
       <?php endforeach; ?>
     </select>
   </div>
@@ -452,17 +526,24 @@ ob_start();
 <?php else: ?>
 <div style="overflow-x:auto">
 <table class="pl-table">
+  <?php
+    $sortQs = array_filter(['q'=>$fQ,'statut'=>$fStatut,'mode'=>$fMode]);
+    $sortLink = fn(string $col, string $lbl): string =>
+      ($fSort === $col)
+        ? '<a href="?' . http_build_query(array_merge($sortQs, ['sort'=>$col,'dir'=>($fDir==='ASC'?'desc':'asc')])) . '" style="color:#f5a623;text-decoration:none">' . $lbl . ($fDir==='ASC' ? ' ▲' : ' ▼') . '</a>'
+        : '<a href="?' . http_build_query(array_merge($sortQs, ['sort'=>$col,'dir'=>'asc'])) . '" style="color:inherit;text-decoration:none">' . $lbl . '</a>';
+  ?>
   <thead>
     <tr>
       <th>#</th>
       <th>Participant</th>
       <th>Contact</th>
       <th>Formation</th>
-      <th>Date préinscription</th>
-      <th>Début envisagé</th>
-      <th>Montant</th>
+      <th><?= $sortLink('created_at', 'Préinscription') ?></th>
+      <th><?= $sortLink('date_debut_envisagee', 'Début envisagé') ?></th>
+      <th><?= $sortLink('montant_total', 'Montant') ?></th>
       <th>Mode</th>
-      <th>Statut</th>
+      <th><?= $sortLink('statut', 'Statut') ?></th>
       <th>Actions</th>
     </tr>
   </thead>
@@ -525,6 +606,10 @@ ob_start();
             <?php if ($mt > $mv): ?>
               <span class="ca-reste">△ <?= $fcfa($mt - $mv) ?></span>
             <?php endif; ?>
+            <?php $pct = $mt > 0 ? min(100, round($mv / $mt * 100)) : 0; ?>
+            <div style="background:#f1f5f9;border-radius:3px;height:4px;margin-top:4px;overflow:hidden">
+              <div style="width:<?= $pct ?>%;height:100%;background:<?= $pct >= 100 ? '#15803d' : ($pct >= 50 ? '#f5a623' : '#ef4444') ?>;border-radius:3px"></div>
+            </div>
           <?php endif; ?>
         <?php else: ?>
           <span style="color:#9ca3af;font-size:12.5px">—</span>
@@ -547,8 +632,11 @@ ob_start();
       <td>
         <div style="display:flex;gap:5px">
           <button type="button" class="act-btn act-edit" onclick="openEdit(<?= htmlspecialchars(json_encode($r), ENT_QUOTES) ?>)" title="Modifier">✏</button>
+          <?php if (!empty($r['notes'])): ?>
+            <span class="act-btn" title="<?= e($r['notes']) ?>" style="background:#fef9c3;color:#92400e;border-color:#fde68a;cursor:default">📝</span>
+          <?php endif; ?>
           <?php if ($waHref): ?>
-            <a class="act-btn act-wa" href="<?= e($waHref) ?>" target="_blank" rel="noopener" title="WhatsApp">💬</a>
+            <a class="act-btn act-wa" href="<?= e($waHref) ?>" target="_blank" rel="noopener" title="Contacter via WhatsApp">💬</a>
           <?php endif; ?>
           <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer cette entrée ?')">
             <?= csrf_field() ?>
@@ -811,14 +899,35 @@ function updateStatut(sel) {
     method: 'POST',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     body: new URLSearchParams({ _action: 'status', id: id, statut: st, csrf: _csrf })
-  });
+  }).then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); })
+    .catch(function(){ sel.style.outline = '2px solid #ef4444'; setTimeout(function(){ sel.style.outline = ''; }, 3000); });
 }
 
 /* ── Helpers modal ── */
-function openModal(id){ document.getElementById(id).classList.add('open'); }
-function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function openModal(id){ document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
 document.querySelectorAll('.pl-modal-bg').forEach(function(bg){
   bg.addEventListener('click', function(e){ if(e.target===this) closeModal(this.id); });
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.pl-modal-bg.open').forEach(function(m){ closeModal(m.id); });
+  }
+});
+
+/* ── Auto-dismiss flash ── */
+(function(){
+  var f = document.querySelector('.pl-flash');
+  if (f) setTimeout(function(){ f.style.transition='opacity .6s'; f.style.opacity='0'; setTimeout(function(){ f.remove(); }, 700); }, 4000);
+})();
+
+/* ── Validation formulaire ── */
+document.getElementById('plModal').querySelector('form').addEventListener('submit', function(e){
+  var nom = document.getElementById('plNom').value.trim();
+  var titre = document.getElementById('plTitre').value.trim();
+  var formSel = document.getElementById('plFormId').value;
+  if (!nom) { alert('Le nom du participant est obligatoire.'); e.preventDefault(); return; }
+  if (!titre && !formSel) { alert('Veuillez sélectionner ou saisir une formation.'); e.preventDefault(); }
 });
 </script>
 
