@@ -95,6 +95,15 @@ $initials = strtoupper(
         </a>
       <?php endif; ?>
 
+      <?php if (has_permission('view_preinscriptions')): ?>
+        <a href="/admin/calendrier/index.php" class="<?= $active === 'planning' ? 'active' : '' ?>" data-tip="Planning">
+          <span class="ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16" y1="14" x2="16.01" y2="14"/></svg>
+          </span>
+          <span>Planning formations</span>
+        </a>
+      <?php endif; ?>
+
       <?php if (has_permission('manage_formations') || has_permission('view_preinscriptions')): ?>
         <a href="/admin/demandes-formation/index.php" class="<?= $active === 'demandes_formation' ? 'active' : '' ?>" data-tip="Demandes">
           <span class="ico">
