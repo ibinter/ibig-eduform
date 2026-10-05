@@ -58,6 +58,14 @@ define('WHATSAPP_ADMIN_PHONE', getenv('WHATSAPP_ADMIN_PHONE') ?: '2250778882592'
    reçoit le net. Mettez ici le taux réel de votre prestataire. */
 define('PAYMENT_FEE_RATE', (float)(getenv('PAYMENT_FEE_RATE') ?: 0.035));
 
+/* GENIUSPAY — paiement en ligne (opérateur ivoirien)
+   Frais : 1 % du montant + 100 FCFA par transaction (à la charge du client).
+   GENIUSPAY_API_URL : optionnel, défaut https://api.geniuspay.ci/v1
+   Clés renseignées dans secrets.php : GENIUSPAY_SECRET_KEY, GENIUSPAY_WEBHOOK_SECRET */
+if (!defined('GENIUSPAY_API_URL')) {
+    define('GENIUSPAY_API_URL', getenv('GENIUSPAY_API_URL') ?: 'https://api.geniuspay.ci/v1');
+}
+
 /* TDR — clé de signature des tokens de téléchargement (72h) */
 define('TDR_SECRET', 'IBIG_TDR_2026_SECRET_KEY');
 
