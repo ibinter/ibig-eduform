@@ -243,12 +243,14 @@ if (!function_exists('formation_cta')) {
     $planCta = payment_plan($montantBase);
     $acompte = $planCta[‘acompte’];   // montant minimum dû à l’inscription
 
-    /* Libellé selon le plan */
-    $planLibelle = match($planCta[‘type’]) {
-        ‘2tranches’ => ‘dès ‘ . number_format($acompte, 0, ‘,’, ‘ ‘) . ‘ FCFA (50 %)’,
-        ‘3tranches’ => ‘dès ‘ . number_format($acompte, 0, ‘,’, ‘ ‘) . ‘ FCFA (40 %)’,
-        default     => number_format($acompte, 0, ‘,’, ‘ ‘) . ‘ FCFA’,
-    };
+    /* Libellé selon le plan (if/else pour compat PHP 7.x) */
+    if ($planCta[‘type’] === ‘2tranches’) {
+        $planLibelle = ‘dès ‘ . number_format($acompte, 0, ‘,’, ‘ ‘) . ‘ FCFA (50 %)’;
+    } elseif ($planCta[‘type’] === ‘3tranches’) {
+        $planLibelle = ‘dès ‘ . number_format($acompte, 0, ‘,’, ‘ ‘) . ‘ FCFA (40 %)’;
+    } else {
+        $planLibelle = number_format($acompte, 0, ‘,’, ‘ ‘) . ‘ FCFA’;
+    }
     ?>
     <div class="cta">
 
