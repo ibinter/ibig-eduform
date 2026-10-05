@@ -233,28 +233,39 @@ if (!function_exists('formation_cta')) {
     /* ============================
        CAS FORMATION CLASSIQUE
     ============================ */
-    $payLink = trim((string)($inscription['lien'] ?? ''));
-    $fees    = (int)($inscription['montant'] ?? 0);
-    $id      = (int)($f['id'] ?? 0);
+    $id   = (int)($f[‘id’] ?? 0);
+
+    /* Montant de base : frais_inscription s’il existe, sinon 50 000 FCFA par défaut */
+    $montantBase = (int)($f[‘frais_inscription’] ?? 0);
+    if ($montantBase <= 0) { $montantBase = 50000; }
+
+    /* Acompte minimum selon la formule d’échéances */
+    $planCta = payment_plan($montantBase);
+    $acompte = $planCta[‘acompte’];   // montant minimum dû à l’inscription
+
+    /* Libellé selon le plan */
+    $planLibelle = match($planCta[‘type’]) {
+        ‘2tranches’ => ‘dès ‘ . number_format($acompte, 0, ‘,’, ‘ ‘) . ‘ FCFA (50 %)’,
+        ‘3tranches’ => ‘dès ‘ . number_format($acompte, 0, ‘,’, ‘ ‘) . ‘ FCFA (40 %)’,
+        default     => number_format($acompte, 0, ‘,’, ‘ ‘) . ‘ FCFA’,
+    };
     ?>
     <div class="cta">
 
       <a class="pre"
        href="/preinscription.php?formation_id=<?= (int)$id; ?>"
-       onclick="trackEvent('preinscription')">
+       onclick="trackEvent(‘preinscription’)">
        <i class="fa-solid fa-pen-to-square"></i>
        Se préinscrire gratuitement
       </a>
 
-      <?php if ($fees > 0): ?>
       <a class="pay"
        href="/paiement-inscription.php?formation=<?= (int)$id; ?>"
-       onclick="trackEvent('inscription_intent')">
+       onclick="trackEvent(‘inscription_intent’)">
         <i class="fa-solid fa-credit-card"></i>
         Payer les frais d’inscription<br>
-        <small><?= number_format($fees, 0, ',', ' '); ?> FCFA</small>
+        <small><?= $planLibelle; ?></small>
       </a>
-      <?php endif; ?>
 
       <a class="pdf js-tdr" data-formation="<?= (int)$id; ?>" data-slug="<?= h((string)($f['slug'] ?? '')); ?>" data-titre="<?= h((string)($f['titre'] ?? '')); ?>" href="/tdr-local-pdf.php?slug=<?= urlencode((string)($f['slug'] ?? '')); ?>">
         <i class="fa-solid fa-file-pdf"></i>
