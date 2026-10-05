@@ -11,10 +11,25 @@ declare(strict_types=1);
    Frais : 1 % du montant + 100 FCFA par transaction
 ========================================================= */
 
+if (!function_exists('geniuspay_api_key')) {
+    function geniuspay_api_key(): string
+    {
+        return defined('GENIUSPAY_API_KEY') ? (string)GENIUSPAY_API_KEY : '';
+    }
+}
+
+if (!function_exists('geniuspay_api_secret')) {
+    function geniuspay_api_secret(): string
+    {
+        return defined('GENIUSPAY_API_SECRET') ? (string)GENIUSPAY_API_SECRET : '';
+    }
+}
+
 if (!function_exists('geniuspay_secret')) {
+    /** Rétrocompat : retourne l'API Secret (utilisé pour le webhook HMAC). */
     function geniuspay_secret(): string
     {
-        return defined('GENIUSPAY_SECRET_KEY') ? (string)GENIUSPAY_SECRET_KEY : '';
+        return geniuspay_api_secret();
     }
 }
 
@@ -50,8 +65,9 @@ if (!function_exists('geniuspay_request')) {
         $base = defined('GENIUSPAY_API_URL') ? rtrim((string)GENIUSPAY_API_URL, '/') : 'https://api.geniuspay.ci/v1';
         $url  = $base . $path;
 
+        /* Authentification : Basic Auth (API Key : API Secret) */
         $headers = [
-            'Authorization: Bearer ' . geniuspay_secret(),
+            'Authorization: Basic ' . base64_encode(geniuspay_api_key() . ':' . geniuspay_api_secret()),
             'Accept: application/json',
             'Content-Type: application/json',
         ];
@@ -97,8 +113,8 @@ if (!function_exists('geniuspay_initialize')) {
         array  $metadata = [],
         string $currency  = 'XOF'
     ): ?array {
-        if (geniuspay_secret() === '') {
-            error_log('[GENIUSPAY] clé secrète absente');
+        if (geniuspay_api_key() === '' || geniuspay_api_secret() === '') {
+            error_log('[GENIUSPAY] API Key ou API Secret absent');
             return null;
         }
 
@@ -153,7 +169,7 @@ if (!function_exists('geniuspay_verify')) {
      */
     function geniuspay_verify(string $transactionId): ?string
     {
-        if ($transactionId === '' || geniuspay_secret() === '') {
+        if ($transactionId === '' || geniuspay_api_key() === '') {
             return null;
         }
         [$code, $data] = geniuspay_request('GET', '/payments/' . rawurlencode($transactionId) . '/verify');
