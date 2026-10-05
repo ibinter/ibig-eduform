@@ -233,39 +233,39 @@ if (!function_exists('formation_cta')) {
     /* ============================
        CAS FORMATION CLASSIQUE
     ============================ */
-    $id   = (int)($f[‘id’] ?? 0);
+    $id   = (int)($f['id'] ?? 0);
 
-    /* Montant de base : frais_inscription s’il existe, sinon 50 000 FCFA par défaut */
-    $montantBase = (int)($f[‘frais_inscription’] ?? 0);
+    /* Montant de base : frais_inscription s'il existe, sinon 50 000 FCFA par défaut */
+    $montantBase = (int)($f['frais_inscription'] ?? 0);
     if ($montantBase <= 0) { $montantBase = 50000; }
 
-    /* Acompte minimum selon la formule d’échéances */
+    /* Acompte minimum selon la formule d'échéances */
     $planCta = payment_plan($montantBase);
-    $acompte = $planCta[‘acompte’];   // montant minimum dû à l’inscription
+    $acompte = $planCta['acompte'];   // montant minimum dû à l'inscription
 
     /* Libellé selon le plan (if/else pour compat PHP 7.x) */
-    if ($planCta[‘type’] === ‘2tranches’) {
-        $planLibelle = ‘dès ‘ . number_format($acompte, 0, ‘,’, ‘ ‘) . ‘ FCFA (50 %)’;
-    } elseif ($planCta[‘type’] === ‘3tranches’) {
-        $planLibelle = ‘dès ‘ . number_format($acompte, 0, ‘,’, ‘ ‘) . ‘ FCFA (40 %)’;
+    if ($planCta['type'] === '2tranches') {
+        $planLibelle = 'dès ' . number_format($acompte, 0, ',', ' ') . ' FCFA (50 %)';
+    } elseif ($planCta['type'] === '3tranches') {
+        $planLibelle = 'dès ' . number_format($acompte, 0, ',', ' ') . ' FCFA (40 %)';
     } else {
-        $planLibelle = number_format($acompte, 0, ‘,’, ‘ ‘) . ‘ FCFA’;
+        $planLibelle = number_format($acompte, 0, ',', ' ') . ' FCFA';
     }
     ?>
     <div class="cta">
 
       <a class="pre"
        href="/preinscription.php?formation_id=<?= (int)$id; ?>"
-       onclick="trackEvent(‘preinscription’)">
+       onclick="trackEvent('preinscription')">
        <i class="fa-solid fa-pen-to-square"></i>
        Se préinscrire gratuitement
       </a>
 
       <a class="pay"
        href="/paiement-inscription.php?formation=<?= (int)$id; ?>"
-       onclick="trackEvent(‘inscription_intent’)">
+       onclick="trackEvent('inscription_intent')">
         <i class="fa-solid fa-credit-card"></i>
-        Payer les frais d’inscription<br>
+        Payer les frais d'inscription<br>
         <small><?= $planLibelle; ?></small>
       </a>
 
