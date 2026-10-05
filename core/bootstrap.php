@@ -28,6 +28,8 @@ require_once __DIR__ . '/csrf.php';
 require_once __DIR__ . '/content.php';
 require_once __DIR__ . '/whatsapp.php';
 require_once __DIR__ . '/moneroo.php';
+require_once __DIR__ . '/geniuspay.php';
+require_once __DIR__ . '/payment_plan.php';
 require_once __DIR__ . '/seo.php';
 require_once __DIR__ . '/promo.php';
 
