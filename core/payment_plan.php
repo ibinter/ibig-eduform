@@ -147,11 +147,9 @@ if (!function_exists('payment_plan_label')) {
     /** Texte humain pour un type de plan. */
     function payment_plan_label(string $type): string
     {
-        return match ($type) {
-            '2tranches' => '2 tranches (50 % / 50 %)',
-            '3tranches' => '3 tranches (40 % / 30 % / 30 %)',
-            default     => 'Paiement unique',
-        };
+        if ($type === '2tranches') { return '2 tranches (50 % / 50 %)'; }
+        if ($type === '3tranches') { return '3 tranches (40 % / 30 % / 30 %)'; }
+        return 'Paiement unique';
     }
 }
 
