@@ -1,24 +1,14 @@
 <?php
 declare(strict_types=1);
-ini_set('display_errors', '1');
-error_reporting(E_ALL);
+
+ob_start();
 
 /**
- * ============================================================
- * ADMIN – MODIFIER UNE FORMATION (VERSION FINALE STABLE)
- * Fichier : /admin/formations/edit.php   (exemple)
- * ============================================================
- * - PDO strict
- * - Sécurité OK
- * - UI premium compacte
- * - Emojis UNIQUEMENT en HTML (incorruptibles)
- * - Champ paiement_lien (URL) ajouté
- * ============================================================
+ * ADMIN – MODIFIER UNE FORMATION
  */
 
 /* ================= BOOTSTRAP & SÉCURITÉ ================= */
 require_once __DIR__ . '/../_init.php';
-require_once __DIR__ . '/../auth/middleware.php';
 
 Middleware::requireAuth();
 
@@ -32,26 +22,23 @@ $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
 /* ================= HELPERS ================= */
-if (!function_exists('e')) {
-  function e($v): string {
-    return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+if (!function_exists('slugify')) {
+  function slugify(string $text): string {
+    $text = trim($text);
+    $text = mb_strtolower($text, 'UTF-8');
+    $text = preg_replace('/[^\p{L}\p{Nd}]+/u', '-', $text);
+    return trim((string)$text, '-');
   }
 }
 
-function slugify(string $text): string {
-  $text = trim($text);
-  $text = mb_strtolower($text, 'UTF-8');
-  $text = preg_replace('/[^\p{L}\p{Nd}]+/u', '-', $text);
-  return trim((string)$text, '-');
-}
-
-/** Valide une date YYYY-MM-DD (retourne null si vide) */
-function date_or_null($v): ?string {
-  $v = trim((string)$v);
-  if ($v === '') return null;
-  $dt = DateTime::createFromFormat('Y-m-d', $v);
-  if (!$dt || $dt->format('Y-m-d') !== $v) return null;
-  return $v;
+if (!function_exists('date_or_null')) {
+  function date_or_null($v): ?string {
+    $v = trim((string)$v);
+    if ($v === '') return null;
+    $dt = DateTime::createFromFormat('Y-m-d', $v);
+    if (!$dt || $dt->format('Y-m-d') !== $v) return null;
+    return $v;
+  }
 }
 
 /* ================= CHARGEMENT FORMATION ================= */
@@ -70,14 +57,13 @@ if (!$f) {
   die('Formation introuvable');
 }
 
-$error = '';
+$error   = '';
 $success = '';
 
 /* ================= TRAITEMENT POST ================= */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   csrf_check();
   try {
-    // Champs texte
     $titre          = trim($_POST['titre'] ?? '');
     $slug           = trim($_POST['slug'] ?? '');
     $domaine        = trim($_POST['domaine'] ?? '');
@@ -89,7 +75,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $session        = trim($_POST['session_label'] ?? '');
     $mois           = trim($_POST['mois'] ?? '');
 
-    // Champs select
     $mode   = $_POST['mode'] ?? 'presentiel';
     $statut = $_POST['statut'] ?? 'inactive';
 
@@ -101,7 +86,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $isSamediPro = isset($_POST['is_samedi_pro']) ? 1 : 0;
 
-    // Tarifs
     $tarifPresentiel  = (int)($_POST['tarif_presentiel'] ?? 0);
     $tarifEnLigne     = (int)($_POST['tarif_en_ligne'] ?? 0);
     $tarifHybride     = (int)($_POST['tarif_hybride'] ?? 0);
@@ -112,44 +96,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($tarifHybride < 0)     $tarifHybride = 0;
     if ($fraisInscription < 0) $fraisInscription = 0;
 
-    // Paiement lien
     $paiementLien = trim($_POST['paiement_lien'] ?? '');
     if ($paiementLien !== '' && !filter_var($paiementLien, FILTER_VALIDATE_URL)) {
       throw new RuntimeException('Lien de paiement invalide.');
     }
 
-    // Session / dates
     $dateDebut = date_or_null($_POST['date_debut'] ?? '');
     $dateFin   = date_or_null($_POST['date_fin'] ?? '');
 
-    // Année
     $annee = (int)($_POST['annee'] ?? date('Y'));
     if ($annee < 2000 || $annee > 2100) $annee = (int)date('Y');
 
-    // Validations minimales
     if ($titre === '' || $domaine === '' || $typeCertificat === '') {
       throw new RuntimeException('Titre, domaine et type de certificat obligatoires.');
     }
 
-    // Slug
     $slug = $slug !== '' ? slugify($slug) : slugify($titre);
     if ($slug === '') {
       throw new RuntimeException('Slug invalide.');
     }
 
-    // Unicité slug
     $check = $pdo->prepare("SELECT id FROM formations WHERE slug = ? AND id <> ? LIMIT 1");
     $check->execute([$slug, $id]);
     if ($check->fetch()) {
       throw new RuntimeException('Slug déjà utilisé.');
     }
 
-    // Cohérence dates (si les 2 existent)
     if ($dateDebut && $dateFin && $dateFin < $dateDebut) {
       throw new RuntimeException('La date de fin ne peut pas être antérieure à la date de début.');
     }
 
-    // UPDATE
     $update = $pdo->prepare("
       UPDATE formations SET
         titre = :titre,
@@ -179,33 +155,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ");
 
     $update->execute([
-      ':titre'   => $titre,
-      ':slug'    => $slug,
-      ':domaine' => $domaine,
+      ':titre'           => $titre,
+      ':slug'            => $slug,
+      ':domaine'         => $domaine,
       ':type_certificat' => $typeCertificat,
-      ':description' => $description,
-      ':objectif' => $objectif,
-      ':modules'  => $modules,
-      ':duree'    => $duree,
-      ':mode'     => $mode,
-      ':tp'       => $tarifPresentiel,
-      ':tel'      => $tarifEnLigne,
-      ':th'       => $tarifHybride,
-      ':fi'       => $fraisInscription,
-      ':pl'       => $paiementLien,
-      ':dd'       => $dateDebut,
-      ':df'       => $dateFin,
-      ':mois'     => $mois,
-      ':annee'    => $annee,
-      ':session'  => $session,
-      ':statut'   => $statut,
-      ':isp'      => $isSamediPro,
-      ':id'       => $id
+      ':description'     => $description,
+      ':objectif'        => $objectif,
+      ':modules'         => $modules,
+      ':duree'           => $duree,
+      ':mode'            => $mode,
+      ':tp'              => $tarifPresentiel,
+      ':tel'             => $tarifEnLigne,
+      ':th'              => $tarifHybride,
+      ':fi'              => $fraisInscription,
+      ':pl'              => $paiementLien,
+      ':dd'              => $dateDebut,
+      ':df'              => $dateFin,
+      ':mois'            => $mois,
+      ':annee'           => $annee,
+      ':session'         => $session,
+      ':statut'          => $statut,
+      ':isp'             => $isSamediPro,
+      ':id'              => $id,
     ]);
 
     $success = 'Modifications enregistrées avec succès.';
 
-    // Reload formation
     $stmt->execute([$id]);
     $f = $stmt->fetch() ?: $f;
 
@@ -214,173 +189,174 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 }
 
-/* ================= UI (CONTENT) ================= */
+/* ================= UI ================= */
 ob_start();
 ?>
-<!-- EDIT-PHP-V20261006 -->
-<div style="background:#dc2626;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;margin-bottom:12px">
-  &#9888; DEBUG — version 2026-10-06 chargée (supprimer après correction)
-</div>
-
 <style>
-  .card{background:#fff;border:1px solid #e6eaf2;border-radius:16px;padding:18px;box-shadow:0 10px 30px rgba(15,23,42,.06)}
-  .card h2{margin:0 0 12px;font-size:18px;font-weight:900;color:#0f172a}
-  .pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:10px 12px;font-weight:800;font-size:13px;margin:10px 0}
-  .pill.ok{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
-  .pill.wait{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
-  .form{display:block}
-  .form label{display:block;font-weight:800;font-size:12px;margin:10px 0 6px;color:#0f172a}
-  .form input,.form textarea,.form select{
-    width:100%;padding:11px 12px;border-radius:12px;border:1px solid #e5e7eb;
-    outline:none;background:#fff;font-size:14px;color:#0f172a
-  }
-  .form input:focus,.form textarea:focus,.form select:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
-  textarea{min-height:96px;resize:vertical}
-  .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-  .h3{margin:14px 0 8px;font-size:14px;font-weight:900;color:#0f172a}
-  .muted{color:#64748b;font-size:12px}
-  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-  .btn{display:inline-flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px;font-weight:900;border:1px solid transparent;text-decoration:none;cursor:pointer}
-  .btn-primary{background:#2563eb;color:#fff}
-  .btn-primary:hover{filter:brightness(.96)}
-  .btn-secondary{background:#fff;color:#0f172a;border-color:#e5e7eb}
-  .btn-secondary:hover{background:#f8fafc}
-  @media (max-width: 820px){.form-grid{grid-template-columns:1fr}}
+  .edit-form-card{background:#fff;border:1px solid #e6eaf2;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(15,23,42,.06)}
+  .edit-form-card h2{margin:0 0 4px;font-size:18px;font-weight:900;color:#0f172a}
+  .edit-form-card .sub{color:#64748b;font-size:12px;margin-bottom:16px}
+  .ef-pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:10px 14px;font-weight:700;font-size:13px;margin:0 0 14px}
+  .ef-pill.ok{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+  .ef-pill.err{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+  .ef-section{font-size:13px;font-weight:900;color:#0f172a;margin:20px 0 10px;padding-bottom:6px;border-bottom:2px solid #e5e7eb}
+  .ef-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px}
+  .ef-field{display:flex;flex-direction:column;gap:5px}
+  .ef-field label{font-size:12px;font-weight:700;color:#374151}
+  .ef-field input:not([type=checkbox]),
+  .ef-field textarea,
+  .ef-field select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #d1d5db;font-size:14px;color:#0f172a;background:#fff;box-sizing:border-box;font-family:inherit}
+  .ef-field input:focus,.ef-field textarea:focus,.ef-field select:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  .ef-field textarea{min-height:90px;resize:vertical}
+  .ef-field select{appearance:auto}
+  .ef-check{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:600;color:#0f172a;margin-top:6px}
+  .ef-check input[type=checkbox]{width:16px;height:16px;cursor:pointer}
+  .ef-hint{font-size:11px;color:#64748b;margin-top:4px}
+  .ef-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb}
+  .ef-btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:10px;font-weight:800;font-size:14px;border:1px solid transparent;text-decoration:none;cursor:pointer;transition:filter .15s}
+  .ef-btn-primary{background:#2563eb;color:#fff}
+  .ef-btn-primary:hover{filter:brightness(.92)}
+  .ef-btn-secondary{background:#f8fafc;color:#0f172a;border-color:#e5e7eb}
+  .ef-btn-secondary:hover{background:#f1f5f9}
+  @media(max-width:820px){.ef-grid{grid-template-columns:1fr}}
 </style>
 
-<div class="card">
-
+<div class="edit-form-card">
   <h2>&#9998; Modifier la formation</h2>
-  <div class="muted">ID : <?= (int)$id ?></div>
+  <div class="sub">ID : <?= (int)$id ?></div>
 
   <?php if ($error): ?>
-    <div class="pill wait">&#9888; <?= e($error); ?></div>
+    <div class="ef-pill err">&#9888; <?= e($error) ?></div>
   <?php elseif ($success): ?>
-    <div class="pill ok">&#10004; <?= e($success); ?></div>
+    <div class="ef-pill ok">&#10004; <?= e($success) ?></div>
   <?php endif; ?>
 
-  <form method="post" class="form" autocomplete="off">
-    <?= csrf_field(); ?>
+  <form method="post" autocomplete="off">
+    <?= csrf_field() ?>
 
-    <div class="form-grid">
-      <div>
+    <div class="ef-section">Informations générales</div>
+    <div class="ef-grid">
+      <div class="ef-field">
         <label>Titre *</label>
-        <input name="titre" value="<?= e($f['titre'] ?? ''); ?>" required>
+        <input name="titre" value="<?= e($f['titre'] ?? '') ?>" required>
       </div>
-      <div>
+      <div class="ef-field">
         <label>Slug</label>
-        <input name="slug" value="<?= e($f['slug'] ?? ''); ?>" placeholder="auto si vide">
+        <input name="slug" value="<?= e($f['slug'] ?? '') ?>" placeholder="auto si vide">
       </div>
-      <div>
+      <div class="ef-field">
         <label>Domaine *</label>
-        <input name="domaine" value="<?= e($f['domaine'] ?? ''); ?>" required>
+        <input name="domaine" value="<?= e($f['domaine'] ?? '') ?>" required>
       </div>
-      <div>
+      <div class="ef-field">
         <label>Type de certificat *</label>
-        <input name="type_certificat" value="<?= e($f['type_certificat'] ?? ''); ?>" required>
+        <input name="type_certificat" value="<?= e($f['type_certificat'] ?? '') ?>" required>
       </div>
     </div>
 
-    <label>Description</label>
-    <textarea name="description"><?= e($f['description'] ?? ''); ?></textarea>
+    <div class="ef-field" style="margin-bottom:14px">
+      <label>Description</label>
+      <textarea name="description"><?= e($f['description'] ?? '') ?></textarea>
+    </div>
+    <div class="ef-field" style="margin-bottom:14px">
+      <label>Objectif général</label>
+      <textarea name="objectif_general"><?= e($f['objectif_general'] ?? '') ?></textarea>
+    </div>
+    <div class="ef-field" style="margin-bottom:14px">
+      <label>Programme</label>
+      <textarea name="modules" style="min-height:120px"><?= e($f['modules'] ?? '') ?></textarea>
+    </div>
 
-    <label>Objectif général</label>
-    <textarea name="objectif_general"><?= e($f['objectif_general'] ?? ''); ?></textarea>
-
-    <label>Programme</label>
-    <textarea name="modules"><?= e($f['modules'] ?? ''); ?></textarea>
-
-    <div class="form-grid">
-      <div>
+    <div class="ef-section">Modalités</div>
+    <div class="ef-grid">
+      <div class="ef-field">
         <label>Durée</label>
-        <input name="duree" value="<?= e($f['duree'] ?? ''); ?>" placeholder="Ex: 45h / 1 mois">
+        <input name="duree" value="<?= e($f['duree'] ?? '') ?>" placeholder="Ex: 45h / 1 mois">
       </div>
-      <div>
+      <div class="ef-field">
         <label>Mode</label>
         <select name="mode">
-          <option value="presentiel" <?= (($f['mode'] ?? '')==='presentiel')?'selected':''; ?>>Présentiel</option>
-          <option value="en_ligne" <?= (($f['mode'] ?? '')==='en_ligne')?'selected':''; ?>>En ligne</option>
-          <option value="hybride" <?= (($f['mode'] ?? '')==='hybride')?'selected':''; ?>>Hybride</option>
+          <option value="presentiel" <?= ($f['mode'] ?? '') === 'presentiel' ? 'selected' : '' ?>>Présentiel</option>
+          <option value="en_ligne"   <?= ($f['mode'] ?? '') === 'en_ligne'   ? 'selected' : '' ?>>En ligne</option>
+          <option value="hybride"    <?= ($f['mode'] ?? '') === 'hybride'    ? 'selected' : '' ?>>Hybride</option>
         </select>
       </div>
     </div>
 
-    <div class="h3">&#128176; Tarifs</div>
-    <div class="form-grid">
-      <div>
+    <div class="ef-section">&#128176; Tarifs</div>
+    <div class="ef-grid">
+      <div class="ef-field">
         <label>Tarif présentiel (FCFA)</label>
-        <input type="number" min="0" name="tarif_presentiel" value="<?= (int)($f['tarif_presentiel'] ?? 0); ?>">
+        <input type="number" min="0" name="tarif_presentiel" value="<?= (int)($f['tarif_presentiel'] ?? 0) ?>">
       </div>
-      <div>
+      <div class="ef-field">
         <label>Tarif en ligne (FCFA)</label>
-        <input type="number" min="0" name="tarif_en_ligne" value="<?= (int)($f['tarif_en_ligne'] ?? 0); ?>">
+        <input type="number" min="0" name="tarif_en_ligne" value="<?= (int)($f['tarif_en_ligne'] ?? 0) ?>">
       </div>
-      <div>
+      <div class="ef-field">
         <label>Tarif hybride (FCFA)</label>
-        <input type="number" min="0" name="tarif_hybride" value="<?= (int)($f['tarif_hybride'] ?? 0); ?>">
+        <input type="number" min="0" name="tarif_hybride" value="<?= (int)($f['tarif_hybride'] ?? 0) ?>">
       </div>
-      <div>
-        <label>Frais d’inscription (FCFA)</label>
-        <input type="number" min="0" name="frais_inscription" value="<?= (int)($f['frais_inscription'] ?? 0); ?>">
+      <div class="ef-field">
+        <label>Frais d'inscription (FCFA)</label>
+        <input type="number" min="0" name="frais_inscription" value="<?= (int)($f['frais_inscription'] ?? 0) ?>">
       </div>
     </div>
+    <div class="ef-field" style="margin-bottom:14px">
+      <label>Lien de paiement</label>
+      <input name="paiement_lien" value="<?= e($f['paiement_lien'] ?? '') ?>" placeholder="https://...">
+    </div>
 
-    <label>Lien de paiement</label>
-    <input name="paiement_lien" value="<?= e($f['paiement_lien'] ?? ''); ?>" placeholder="https://...">
-
-    <div class="h3">&#128197; Session</div>
-    <div class="form-grid">
-      <div>
+    <div class="ef-section">&#128197; Session</div>
+    <div class="ef-grid">
+      <div class="ef-field">
         <label>Date début</label>
-        <input type="date" name="date_debut" value="<?= e($f['date_debut'] ?? ''); ?>">
+        <input type="date" name="date_debut" value="<?= e($f['date_debut'] ?? '') ?>">
       </div>
-      <div>
+      <div class="ef-field">
         <label>Date fin</label>
-        <input type="date" name="date_fin" value="<?= e($f['date_fin'] ?? ''); ?>">
+        <input type="date" name="date_fin" value="<?= e($f['date_fin'] ?? '') ?>">
       </div>
-      <div>
+      <div class="ef-field">
         <label>Mois</label>
-        <input name="mois" value="<?= e($f['mois'] ?? ''); ?>" placeholder="Ex: Février">
+        <input name="mois" value="<?= e($f['mois'] ?? '') ?>" placeholder="Ex: Octobre">
       </div>
-      <div>
+      <div class="ef-field">
         <label>Année</label>
-        <input type="number" name="annee" value="<?= (int)($f['annee'] ?? date('Y')); ?>" min="2000" max="2100">
+        <input type="number" name="annee" value="<?= (int)($f['annee'] ?? date('Y')) ?>" min="2000" max="2100">
       </div>
     </div>
+    <div class="ef-field" style="margin-bottom:14px">
+      <label>Libellé session</label>
+      <input name="session_label" value="<?= e($f['session_label'] ?? '') ?>" placeholder="Ex: Session Q4 2026">
+    </div>
 
-    <label>Libellé session</label>
-    <input name="session_label" value="<?= e($f['session_label'] ?? ''); ?>" placeholder="Ex: Session 1 - 2026">
-
-    <div class="form-grid">
-      <div>
+    <div class="ef-section">Publication</div>
+    <div class="ef-grid">
+      <div class="ef-field">
         <label>Statut</label>
         <select name="statut">
-          <option value="inactive" <?= (($f['statut'] ?? '')==='inactive')?'selected':''; ?>>Inactive</option>
-          <option value="active" <?= (($f['statut'] ?? '')==='active')?'selected':''; ?>>Active</option>
+          <option value="inactive" <?= ($f['statut'] ?? '') === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+          <option value="active"   <?= ($f['statut'] ?? '') === 'active'   ? 'selected' : '' ?>>Active</option>
         </select>
       </div>
-      <div>
+      <div class="ef-field">
         <label>Type de formation</label>
-        <label style=”display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:14px;margin:0”>
-          <input type=”checkbox” name=”is_samedi_pro” value=”1” style=”width:auto;margin:0” <?= !empty($f[‘is_samedi_pro’]) ? ‘checked’ : ‘’; ?>>
+        <label class="ef-check">
+          <input type="checkbox" name="is_samedi_pro" value="1" <?= !empty($f['is_samedi_pro']) ? 'checked' : '' ?>>
           Formation Samedi Pro
         </label>
-        <div class=”muted” style=”margin-top:4px”>Cocher = Samedi Pro (tarif total payé directement). Décocher = formation classique (frais d’inscription).</div>
+        <div class="ef-hint">Samedi Pro = tarif total payé en une fois. Décocher = formation classique avec frais d'inscription.</div>
       </div>
     </div>
 
-    <div class="actions">
-      <button class="btn btn-primary" type="submit">&#128190; Mettre &agrave; jour</button>
-      <a href="index.php" class="btn btn-secondary">&#8592; Retour</a>
+    <div class="ef-actions">
+      <button type="submit" class="ef-btn ef-btn-primary">&#128190; Enregistrer les modifications</button>
+      <a href="index.php" class="ef-btn ef-btn-secondary">&#8592; Retour à la liste</a>
     </div>
-
   </form>
 </div>
 
 <?php
 $content = ob_get_clean();
-// TEMP DEBUG
-$layoutPath = __DIR__ . '/../layout/layout.php';
-echo '<!-- DBG:content_len=' . strlen($content ?? '') . ' layout_exists=' . (file_exists($layoutPath) ? 'YES' : 'NO') . ' -->';
-require $layoutPath;
-echo '<!-- DBG:layout_done -->';
+require __DIR__ . '/../layout/layout.php';
