@@ -43,7 +43,7 @@ function slugify_import(string $text): string {
 $formations = [
     [
         'ref'             => 2,
-        'titre'           => 'Responsable QHSE',
+        'titre'           => 'Responsable QHSE/HSE',
         'domaine'         => 'Qualité, Hygiène, Sécurité & Environnement',
         'type_certificat' => 'Certificat de Formation Professionnelle',
         'duree'           => '30h',
