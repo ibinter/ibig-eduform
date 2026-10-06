@@ -78,7 +78,7 @@ $payload = json_encode([
 ]);
 
 $ch = curl_init('https://api.anthropic.com/v1/messages');
-curl_setopt_array($ch, [
+$curl_opts = [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST           => true,
     CURLOPT_POSTFIELDS     => $payload,
@@ -88,8 +88,11 @@ curl_setopt_array($ch, [
         'x-api-key: ' . $apiKey,
         'anthropic-version: 2023-06-01',
     ],
-    CURLOPT_CAINFO => '/root/.ccr/ca-bundle.crt',
-]);
+];
+if (file_exists('/root/.ccr/ca-bundle.crt')) {
+    $curl_opts[CURLOPT_CAINFO] = '/root/.ccr/ca-bundle.crt';
+}
+curl_setopt_array($ch, $curl_opts);
 $raw  = curl_exec($ch);
 $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $err  = curl_error($ch);
