@@ -32,6 +32,7 @@ require_once __DIR__ . '/geniuspay.php';
 require_once __DIR__ . '/payment_plan.php';
 require_once __DIR__ . '/seo.php';
 require_once __DIR__ . '/promo.php';
+require_once __DIR__ . '/referral.php';
 
 /* ===============================
    LANGUE (FR / EN)
