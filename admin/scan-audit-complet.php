@@ -5,6 +5,15 @@ Middleware::requireAuth();
 $pdo = Database::connect();
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+// ─── ACTION : RESET SAMEDI PRO ────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset_samedi_pro') {
+    csrf_check();
+    $nb = $pdo->exec("UPDATE formations SET is_samedi_pro = 0 WHERE is_samedi_pro = 1");
+    header('Location: scan-audit-complet.php?reset_ok=' . (int)$nb);
+    exit;
+}
+$resetOk = isset($_GET['reset_ok']) ? (int)$_GET['reset_ok'] : null;
+
 // ─── DONNÉES COMPLÈTES ────────────────────────────────────────────────────────
 $all = $pdo->query("
     SELECT f.id, f.titre, f.slug, f.domaine, f.duree, f.description, f.mode,
@@ -170,6 +179,12 @@ tr:hover td{background:#0f2540}
 </header>
 
 <div class="content">
+
+<?php if ($resetOk !== null): ?>
+<div style="background:#064e3b;border:1px solid #10b981;border-radius:8px;padding:12px 18px;margin-bottom:16px;color:#34d399;font-weight:700">
+  ✅ Flag Samedi Pro désactivé sur <?= $resetOk ?> formation(s). Elles sont maintenant des formations classiques avec bouton de paiement.
+</div>
+<?php endif; ?>
 
 <!-- RÉSUMÉ -->
 <div class="summary-grid">
@@ -429,7 +444,13 @@ tr:hover td{background:#0f2540}
 </div>
 <div class="section-body" id="body-samedi_pro">
     <div class="notice">Ces formations sont marquées <code>is_samedi_pro=1</code> — elles doivent apparaître uniquement dans le calendrier, pas dans le catalogue général.
-    <a href="scan-catalogue.php?action=purge_samedi&csrf=<?= csrf_token() ?>" onclick="return confirm('Supprimer toutes les formations Samedi Pro du catalogue ?')" style="color:#f87171;margin-left:8px">🗑 Supprimer toutes</a></div>
+    <a href="scan-catalogue.php?action=purge_samedi&csrf=<?= csrf_token() ?>" onclick="return confirm('Supprimer toutes les formations Samedi Pro du catalogue ?')" style="color:#f87171;margin-left:8px">🗑 Supprimer toutes</a>
+    <form method="post" style="display:inline" onsubmit="return confirm('Désactiver le flag Samedi Pro sur toutes ces formations ? Elles deviendront des formations classiques.')">
+      <input type="hidden" name="action" value="reset_samedi_pro">
+      <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+      <button type="submit" style="background:#d97706;color:#fff;border:none;padding:3px 12px;border-radius:4px;font-size:11px;cursor:pointer;margin-left:8px">⚡ Désactiver flag Samedi Pro sur toutes</button>
+    </form>
+    </div>
     <table><thead><tr><th>ID</th><th>Titre</th><th>Domaine</th><th>Date</th><th>Actions</th></tr></thead><tbody>
     <?php foreach ($cats['samedi_pro']['rows'] as $r): ?>
     <tr>
