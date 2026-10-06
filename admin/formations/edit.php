@@ -379,4 +379,8 @@ ob_start();
 
 <?php
 $content = ob_get_clean();
-require __DIR__ . '/../layout/layout.php';
+// TEMP DEBUG
+$layoutPath = __DIR__ . '/../layout/layout.php';
+echo '<!-- DBG:content_len=' . strlen($content ?? '') . ' layout_exists=' . (file_exists($layoutPath) ? 'YES' : 'NO') . ' -->';
+require $layoutPath;
+echo '<!-- DBG:layout_done -->';
