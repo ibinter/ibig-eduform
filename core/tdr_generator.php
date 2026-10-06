@@ -1581,14 +1581,32 @@ function tdr_modules(string $nom, string $cat, int $heures, string $desc = '', s
         $topics = array_values(array_filter(array_map('trim', $parts), fn($t) => mb_strlen(trim($t), 'UTF-8') > 4));
     }
 
-    /* Contenus rotatifs pour les modules intermédiaires */
-    $contenus_sets = [
-        'Documents et outils associés · Procédures et circuits de validation · Cas pratiques sur dossiers simulés et corrections commentées',
-        'Réglementation en vigueur, obligations et délais à respecter · Erreurs fréquentes constatées en entreprise · Exercices pratiques avec mise en situation professionnelle',
-        'Outils, logiciels et tableaux de suivi utilisés dans les entreprises · Organisation, archivage et traçabilité des dossiers · Retours d\'expérience d\'entreprises ivoiriennes et de l\'espace OHADA',
-        'Principes clés, définitions et ce que le praticien doit maîtriser en priorité · Mise en pratique guidée sur cas réels issus du terrain africain · Points de contrôle, indicateurs de qualité et critères de conformité',
-        'Procédures internes types et comment les adapter à son entreprise · Communication inter-services, reporting et présentation des résultats · Simulation complète avec correction et plan d\'amélioration individuel',
-    ];
+    /* Contenus rotatifs selon le niveau */
+    if ($niveau === 'debutant') {
+        $contenus_sets = [
+            'Définition claire du concept, à quoi ça sert et pourquoi c\'est important · Vocabulaire essentiel expliqué simplement, sans jargon · Exemples concrets du quotidien professionnel africain pour ancrer la notion',
+            'Les étapes de base à connaître absolument · Démonstration guidée pas à pas par le formateur · Exercice d\'application simple avec correction immédiate et bienveillante',
+            'Les erreurs fréquentes des débutants et comment les éviter · Modèles et trames fournis pour gagner du temps · Exercice de mise en pratique sur situation professionnelle simple',
+            'Ce qu\'on utilise concrètement dans les entreprises ivoiriennes · Découverte des outils de base : prise en main assistée · Exercice : reproduire un document ou une procédure standard',
+            'Récapitulatif des notions clés vues jusqu\'ici · Questions-réponses et clarification des points flous · Mini-exercice de synthèse : vérifier ses acquis avant d\'aller plus loin',
+        ];
+    } elseif ($niveau === 'expert') {
+        $contenus_sets = [
+            'Benchmarks internationaux et meilleures pratiques mondiales dans ce domaine · Analyse critique des modèles avancés et de leur applicabilité en contexte africain · Positionnement stratégique et valeur ajoutée pour l\'organisation',
+            'Techniques avancées et cas complexes multi-facteurs · Automatisation, optimisation et gains de performance mesurables · Arbitrages stratégiques : quand appliquer quelle approche et pourquoi',
+            'Outils experts, solutions enterprise et intégrations systèmes · Retours d\'expérience de transformations organisationnelles réelles · Indicateurs de maturité et grilles d\'évaluation de niveau',
+            'Pilotage à l\'échelle de l\'organisation : gouvernance, conformité, reporting CODIR · Management et transfert de compétences : former son équipe sur ce domaine · Construction du référentiel interne et documentation des bonnes pratiques',
+            'Gestion des crises, des exceptions et des situations à fort enjeu · Intelligence prospective : anticiper les évolutions réglementaires et technologiques · Recommandations pour une certification internationale reconnue dans ce domaine',
+        ];
+    } else {
+        $contenus_sets = [
+            'Documents et outils associés · Procédures et circuits de validation · Cas pratiques sur dossiers simulés et corrections commentées',
+            'Réglementation en vigueur, obligations et délais à respecter · Erreurs fréquentes constatées en entreprise · Exercices pratiques avec mise en situation professionnelle',
+            'Outils, logiciels et tableaux de suivi utilisés dans les entreprises · Organisation, archivage et traçabilité des dossiers · Retours d\'expérience d\'entreprises ivoiriennes et de l\'espace OHADA',
+            'Principes clés, définitions et ce que le praticien doit maîtriser en priorité · Mise en pratique guidée sur cas réels issus du terrain africain · Points de contrôle, indicateurs de qualité et critères de conformité',
+            'Procédures internes types et comment les adapter à son entreprise · Communication inter-services, reporting et présentation des résultats · Simulation complète avec correction et plan d\'amélioration individuel',
+        ];
+    }
 
     /* Répartition horaire — évaluation finale = 2h fixes, reste réparti sur les autres modules */
     $heures_contenu = max(($nb_modules - 1) * 2, $heures - 2);
@@ -1601,10 +1619,20 @@ function tdr_modules(string $nom, string $cat, int $heures, string $desc = '', s
 
     $modules = [];
 
-    /* MODULE 1 — toujours une introduction spécifique */
+    /* MODULE 1 — introduction différenciée par niveau */
+    if ($niveau === 'debutant') {
+        $m1_titre    = 'C\'est quoi ' . $nom . ' ? Découverte et premiers repères';
+        $m1_contenus = 'À quoi sert ce domaine et pourquoi l\'apprendre maintenant · Les 5 mots clés à retenir absolument pour comprendre la suite · Qui fait quoi : les acteurs, les métiers et les responsabilités · Ce qu\'on attend d\'un débutant dans une entreprise ivoirienne · Autoévaluation de départ : ce que je sais déjà, ce que je vais apprendre';
+    } elseif ($niveau === 'expert') {
+        $m1_titre    = $nom . ' : état de l\'art, tendances avancées et vision stratégique';
+        $m1_contenus = 'Positionnement mondial et benchmarks internationaux dans ce domaine · Évolutions réglementaires et technologiques récentes impactant la pratique · Enjeux stratégiques pour les organisations de l\'espace OHADA en 2024-2026 · Autodiagnostic expert : identifier ses angles morts et axes de progression à ce niveau · Objectifs de transformation personnelle et organisationnelle à l\'issue du parcours';
+    } else {
+        $m1_titre    = $nom . ' : périmètre, enjeux et positionnement professionnel';
+        $m1_contenus = 'Ce que recouvre exactement ce domaine et la responsabilité du praticien · Acteurs, textes de référence et pratiques du marché en Afrique francophone · Autodiagnostic et identification des axes prioritaires de progression';
+    }
     $modules[] = [
-        'titre'    => $nom . ' : périmètre, enjeux et positionnement professionnel',
-        'contenus' => 'Ce que recouvre exactement ce domaine et la responsabilité du praticien · Acteurs, textes de référence et pratiques du marché en Afrique francophone · Autodiagnostic et identification des axes prioritaires de progression',
+        'titre'    => $m1_titre,
+        'contenus' => $m1_contenus,
         'duree'    => $duree_base + $give_extra(),
     ];
 
@@ -1630,25 +1658,41 @@ function tdr_modules(string $nom, string $cat, int $heures, string $desc = '', s
             $filler = $fillers[$fi % count($fillers)];
             $modules[] = [
                 'titre'    => $filler['titre'],
-                'contenus' => $filler['contenus'],
+                'contenus' => $contenus_sets[$setIdx % count($contenus_sets)],
                 'duree'    => $duree_base + $give_extra(),
             ];
             $fi++;
+            $setIdx++;
             $idx++;
         }
     }
 
-    /* Avant-dernier module — ateliers pratiques */
+    /* Avant-dernier module — différencié par niveau */
+    if ($niveau === 'debutant') {
+        $pratique_titre    = 'Ma première mise en pratique : exercice complet guidé';
+        $pratique_contenus = 'Cas pratique simple sur une situation professionnelle du quotidien · Travail pas à pas avec le support du formateur · Production d\'un premier livrable concret (document, calcul, procédure) · Correction bienveillante et identification des points à renforcer · Conseils personnalisés pour continuer à progresser après la formation';
+    } elseif ($niveau === 'expert') {
+        $pratique_titre    = 'Projet de transformation : audit, plan d\'action et présentation au CODIR';
+        $pratique_contenus = 'Audit complet de la situation actuelle de l\'organisation du bénéficiaire sur ce domaine · Identification des écarts par rapport aux meilleures pratiques et des opportunités de transformation · Élaboration d\'un plan de transformation sur 12-24 mois avec KPIs et jalons · Simulation de présentation devant un comité de direction fictif · Feedback expert et recommandations pour le déploiement opérationnel';
+    } else {
+        $pratique_titre    = 'Mise en pratique : cas d\'entreprises et travaux dirigés';
+        $pratique_contenus = 'Traitement de dossiers et scénarios tirés d\'entreprises réelles (Côte d\'Ivoire, Afrique de l\'Ouest) · Travaux individuels et en binôme avec correction commentée · Projet de synthèse : production d\'un livrable professionnel complet';
+    }
     $modules[] = [
-        'titre'    => 'Mise en pratique : cas d\'entreprises et travaux dirigés',
-        'contenus' => 'Traitement de dossiers et scénarios tirés d\'entreprises réelles (Côte d\'Ivoire, Afrique de l\'Ouest) · Travaux individuels et en binôme avec correction commentée · Projet de synthèse : production d\'un livrable professionnel complet',
+        'titre'    => $pratique_titre,
+        'contenus' => $pratique_contenus,
         'duree'    => $duree_base + $give_extra(),
     ];
 
-    /* Dernier module — évaluation : toujours 2h */
+    /* Dernier module — évaluation : toujours 2h, libellé différencié */
+    $cert_label = match($niveau) {
+        'debutant'      => 'Remise du certificat IBIG EDUFORM Niveau Débutant et conseils pour la suite du parcours',
+        'expert'        => 'Remise du certificat IBIG EDUFORM Niveau Expert et recommandations pour la certification internationale',
+        default         => 'Remise du certificat IBIG EDUFORM et construction du plan de développement post-formation',
+    };
     $modules[] = [
         'titre'    => 'Évaluation finale et remise du certificat',
-        'contenus' => 'Épreuve d\'évaluation couvrant l\'ensemble du programme · Correction individualisée et feedback détaillé du formateur · Remise du certificat IBIG EDUFORM et construction du plan de développement post-formation',
+        'contenus' => 'Épreuve d\'évaluation couvrant l\'ensemble du programme · Correction individualisée et feedback détaillé du formateur · ' . $cert_label,
         'duree'    => 2,
     ];
 
