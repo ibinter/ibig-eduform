@@ -172,9 +172,9 @@ ob_start();
   <div class="stats-row">
     <?php foreach ($stats as $s): ?>
     <div class="stat-card">
-      <div class="nb" style="color:<?= ['debutant'=>'#166534','intermediaire'=>'#1e40af','expert'=>'#9d174d'][$s['niveau']] ?>"><?= (int)$s['sans_modules'] ?></div>
+      <div class="nb" style="color:<?= ['debutant'=>'#166534','intermediaire'=>'#1e40af','expert'=>'#9d174d'][$s['niveau']] ?>"><?= (int)$s['total_actifs'] ?></div>
       <div class="lbl"><?= $niv_labels[$s['niveau']] ?></div>
-      <div class="sub2">sans modules / <?= (int)$s['total_actifs'] ?> actifs</div>
+      <div class="sub2"><?= (int)$s['avec_modules'] ?> avec modules · <?= (int)$s['sans_modules'] ?> sans</div>
     </div>
     <?php endforeach; ?>
   </div>
