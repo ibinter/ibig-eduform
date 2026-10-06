@@ -14,6 +14,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
 }
 $resetOk = isset($_GET['reset_ok']) ? (int)$_GET['reset_ok'] : null;
 
+// ─── ACTION : ACTIVER FORMATIONS Q4 2026 ──────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'activer_q4_2026') {
+    csrf_check();
+    $nb = $pdo->exec("
+        UPDATE formations
+        SET statut = 'active'
+        WHERE COALESCE(is_samedi_pro, 0) = 0
+          AND statut = 'inactive'
+          AND (
+            (annee = 2026 AND mois IN ('Octobre','Novembre','Décembre'))
+            OR (date_debut IS NOT NULL AND YEAR(date_debut) = 2026 AND MONTH(date_debut) IN (10,11,12))
+          )
+    ");
+    header('Location: scan-audit-complet.php?activer_ok=' . (int)$nb);
+    exit;
+}
+$activerOk = isset($_GET['activer_ok']) ? (int)$_GET['activer_ok'] : null;
+
 // ─── DONNÉES COMPLÈTES ────────────────────────────────────────────────────────
 $all = $pdo->query("
     SELECT f.id, f.titre, f.slug, f.domaine, f.duree, f.description, f.mode,
@@ -185,6 +203,26 @@ tr:hover td{background:#0f2540}
   ✅ Flag Samedi Pro désactivé sur <?= $resetOk ?> formation(s). Elles sont maintenant des formations classiques avec bouton de paiement.
 </div>
 <?php endif; ?>
+
+<?php if ($activerOk !== null): ?>
+<div style="background:#064e3b;border:1px solid #10b981;border-radius:8px;padding:12px 18px;margin-bottom:16px;color:#34d399;font-weight:700">
+  ✅ <?= $activerOk ?> formation(s) activée(s) pour Octobre / Novembre / Décembre 2026.
+</div>
+<?php endif; ?>
+
+<!-- ACTIONS RAPIDES -->
+<div style="background:#0d1f3c;border:1px solid #1e3a6e;border-radius:10px;padding:16px 20px;margin-bottom:20px">
+  <div style="font-weight:700;color:#f59e0b;margin-bottom:12px">⚡ Actions rapides</div>
+  <div style="display:flex;flex-wrap:wrap;gap:10px">
+    <form method="post" onsubmit="return confirm('Activer toutes les formations standards d\'octobre, novembre et décembre 2026 ?')">
+      <input type="hidden" name="action" value="activer_q4_2026">
+      <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+      <button type="submit" style="background:#2563eb;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">
+        📅 Activer formations Oct · Nov · Déc 2026
+      </button>
+    </form>
+  </div>
+</div>
 
 <!-- RÉSUMÉ -->
 <div class="summary-grid">
