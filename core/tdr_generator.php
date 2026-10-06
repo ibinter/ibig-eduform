@@ -1565,25 +1565,39 @@ function tdr_modules(string $nom, string $cat, int $heures, string $desc = '', s
         };
     }
 
-    /* Nombre de modules selon la durée + ajustement par niveau */
-    $nb_modules = 5;
-    if ($heures >= 25) $nb_modules = 6;
-    if ($heures >= 30) $nb_modules = 7;
-    if ($heures >= 35) $nb_modules = 8;
-    if ($heures >= 45) $nb_modules = 9;
-    if ($heures >= 65) $nb_modules = 10;
-    // Débutant : moins de modules, plus de temps par module (approfondissement)
-    if ($niveau === 'debutant')      $nb_modules = max(4, $nb_modules - 1);
-    // Expert : plus de modules, plus de sujets spécialisés
-    if ($niveau === 'expert')        $nb_modules = min(11, $nb_modules + 1);
-
-    /* Extraction des vrais sujets depuis la description */
+    /* Extraction des sujets EN PREMIER — sert aussi à calibrer le nombre de modules */
     $topics = _extract_topics_gen($desc);
     if (count($topics) < 2) {
         $n = preg_replace('/\s*\([^)]*\)/', '', $nom);
         $parts = preg_split('/\s*[&,]\s*|\s+[eé]t\s+/ui', $n);
         $topics = array_values(array_filter(array_map('trim', $parts), fn($t) => mb_strlen(trim($t), 'UTF-8') > 4));
     }
+    $topic_count = count($topics);
+
+    /* Nombre de modules : durée + richesse du contenu + niveau */
+    $nb_modules = 5;
+    if ($heures >= 20) $nb_modules = 5;
+    if ($heures >= 25) $nb_modules = 6;
+    if ($heures >= 30) $nb_modules = 7;
+    if ($heures >= 35) $nb_modules = 8;
+    if ($heures >= 45) $nb_modules = 9;
+    if ($heures >= 65) $nb_modules = 10;
+
+    // Richesse du contenu : beaucoup de sujets → +1 module
+    $topic_bonus = ($topic_count >= 5) ? 1 : 0;
+
+    // Ajustement par niveau
+    if ($niveau === 'debutant') {
+        // Débutant : structure plus ramassée, chaque module plus approfondi
+        $nb_modules = max(5, $nb_modules - 1 + $topic_bonus);
+        $nb_modules = min(8, $nb_modules);
+    } elseif ($niveau === 'expert') {
+        // Expert : plus de modules spécialisés, sujets plus découpés
+        $nb_modules = min(11, $nb_modules + 1 + $topic_bonus);
+    } else {
+        $nb_modules = min(10, $nb_modules + $topic_bonus);
+    }
+    $nb_modules = max(5, $nb_modules); // minimum absolu : 5 modules
 
     /* Contenus rotatifs selon le niveau */
     if ($niveau === 'debutant') {
