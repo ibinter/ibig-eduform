@@ -304,9 +304,9 @@ try {
                 'ol' => (int)$nr['tarif_en_ligne'],
                 'pr' => (int)$nr['tarif_presentiel'],
                 'hy' => (int)$nr['tarif_hybride'],
-                'obj'=> mb_substr((string)($nr['objectifs'] ?? ''), 0, 350),
-                'pre'=> mb_substr((string)($nr['prerequis'] ?? ''), 0, 250),
-                'pub'=> mb_substr((string)($nr['public_cible'] ?? ''), 0, 200),
+                'obj'=> mb_substr((string)($nr['objectifs'] ?? ''), 0, 110),
+                'pre'=> '',
+                'pub'=> '',
             ];
         }
     } catch (Throwable $_e) {}
@@ -1158,12 +1158,9 @@ function showToast(msg){
       niveauxHtml += '</div>';
     }
     var nivContentHtml = '';
-    if (aN && (aN.obj || aN.pre || aN.pub)) {
-      nivContentHtml = '<div class="cg-niv-content">'
-        + (aN.obj ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Objectifs</span><span class="cg-niv-c-txt" data-niv-cell="obj">'+esc(aN.obj)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Objectifs</span><span class="cg-niv-c-txt" data-niv-cell="obj"></span></div>')
-        + (aN.pre ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Prérequis</span><span class="cg-niv-c-txt" data-niv-cell="pre">'+esc(aN.pre)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Prérequis</span><span class="cg-niv-c-txt" data-niv-cell="pre"></span></div>')
-        + (aN.pub ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Public cible</span><span class="cg-niv-c-txt" data-niv-cell="pub">'+esc(aN.pub)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Public cible</span><span class="cg-niv-c-txt" data-niv-cell="pub"></span></div>')
-        + '</div>';
+    if (aN && aN.obj) {
+      var objShort = aN.obj.length > 100 ? aN.obj.substring(0,100)+'…' : aN.obj;
+      nivContentHtml = '<p class="cg-niv-obj" data-niv-cell="obj">'+esc(objShort)+'</p>';
     }
     var prixHtml = '';
     if (tPrix > 0 || (f.niveaux && f.niveaux.length > 0)) {
@@ -1239,12 +1236,9 @@ function showToast(msg){
         + '</div>';
     }
     var nivContentHtml2 = '';
-    if (aN2 && (aN2.obj || aN2.pre || aN2.pub)) {
-      nivContentHtml2 = '<div class="cg-niv-content">'
-        + (aN2.obj ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Objectifs</span><span class="cg-niv-c-txt" data-niv-cell="obj">'+esc(aN2.obj)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Objectifs</span><span class="cg-niv-c-txt" data-niv-cell="obj"></span></div>')
-        + (aN2.pre ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Prérequis</span><span class="cg-niv-c-txt" data-niv-cell="pre">'+esc(aN2.pre)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Prérequis</span><span class="cg-niv-c-txt" data-niv-cell="pre"></span></div>')
-        + (aN2.pub ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Public cible</span><span class="cg-niv-c-txt" data-niv-cell="pub">'+esc(aN2.pub)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Public cible</span><span class="cg-niv-c-txt" data-niv-cell="pub"></span></div>')
-        + '</div>';
+    if (aN2 && aN2.obj) {
+      var objShort2 = aN2.obj.length > 100 ? aN2.obj.substring(0,100)+'…' : aN2.obj;
+      nivContentHtml2 = '<p class="cg-niv-obj" data-niv-cell="obj">'+esc(objShort2)+'</p>';
     }
     return '<div class="cg-list-item" role="listitem">'
       + '<div class="cg-list-color" style="background:'+esc(f.colD)+'"></div>'
@@ -1408,19 +1402,13 @@ function showToast(msg){
     if (h > 0) {
       card.querySelectorAll('.cg-niv-dur').forEach(function(b){ b.textContent = '⏱️ ' + h + 'H'; });
     }
-    /* Mise à jour des champs de contenu par niveau */
+    /* Mise à jour du résumé objectifs par niveau */
     var obj = pill.getAttribute('data-obj') || '';
-    var pre = pill.getAttribute('data-pre') || '';
-    var pub = pill.getAttribute('data-pub') || '';
-    var contentZone = card.querySelector('.cg-niv-content');
-    if (contentZone) {
-      contentZone.querySelectorAll('[data-niv-cell]').forEach(function(cell){
-        var t = cell.getAttribute('data-niv-cell');
-        var val = t === 'obj' ? obj : (t === 'pre' ? pre : (t === 'pub' ? pub : ''));
-        cell.textContent = val;
-        var row = cell.parentElement;
-        if (row) row.style.display = val ? '' : 'none';
-      });
+    var objEl = card.querySelector('.cg-niv-obj');
+    if (objEl) {
+      var objShort = obj.length > 100 ? obj.substring(0,100)+'…' : obj;
+      objEl.textContent = objShort;
+      objEl.style.display = objShort ? '' : 'none';
     }
   };
 
