@@ -77,14 +77,14 @@ RewriteRule ^blog/([a-zA-Z0-9\-]+)/?$ article.php?slug=$1 [L,QSA]
 RewriteRule ^offre/([a-z0-9\-]+)/?$ offre.php?slug=$1 [L,QSA]
 
 # =========================================================
-# FORMATION PAR SLUG
-# =========================================================
-RewriteRule ^formation/([a-z0-9\-]+)/?$ formation-detail.php?slug=$1 [L,QSA]
-
-# =========================================================
-# FORMATION PAR ID
+# FORMATION PAR ID (en premier pour éviter la capture par la règle slug)
 # =========================================================
 RewriteRule ^formation/([0-9]+)/?$ formation-detail.php?id=$1 [L,QSA]
+
+# =========================================================
+# FORMATION PAR SLUG (accepte caractères accentués encodés)
+# =========================================================
+RewriteRule ^formation/([^/?#\s]+)/?$ formation-detail.php?slug=$1 [L,QSA]
 
 # =========================================================
 # PREINSCRIPTION
