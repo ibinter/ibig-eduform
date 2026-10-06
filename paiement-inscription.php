@@ -76,11 +76,13 @@ $modeChoisi = in_array($_REQUEST['mode'] ?? '', ['plan', 'total', 'libre'], true
     : 'plan';
 
 /* Montant NET de la première transaction */
-$montantNet = match ($modeChoisi) {
-    'total'  => $montantBase,                                        // paiement intégral
-    'libre'  => max($plan['acompte'], (int)($_REQUEST['montant_libre'] ?? 0)), // libre ≥ min
-    default  => $plan['acompte'],                                    // minimum du plan
-};
+if ($modeChoisi === 'total') {
+    $montantNet = $montantBase;
+} elseif ($modeChoisi === 'libre') {
+    $montantNet = max($plan['acompte'], (int)($_REQUEST['montant_libre'] ?? 0));
+} else {
+    $montantNet = $plan['acompte'];
+}
 
 $montantNet = max(1, $montantNet);
 
@@ -105,11 +107,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $montantLibre  = (int)($_POST['montant_libre'] ?? 0);
 
     /* Recalcul avec valeurs POST */
-    $montantNet = match ($modePost) {
-        'total'  => $montantBase,
-        'libre'  => max($plan['acompte'], $montantLibre),
-        default  => $plan['acompte'],
-    };
+    if ($modePost === 'total') {
+        $montantNet = $montantBase;
+    } elseif ($modePost === 'libre') {
+        $montantNet = max($plan['acompte'], $montantLibre);
+    } else {
+        $montantNet = $plan['acompte'];
+    }
     $montantNet = max(1, $montantNet);
     $fee   = geniuspay_fee($montantNet);
     $total = geniuspay_gross($montantNet);
@@ -138,11 +142,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
 
         /* Libellé de l'échéance */
-        $echeanceLabel = match ($modePost) {
-            'total' => 'Paiement intégral',
-            'libre' => 'Acompte libre',
-            default => ($plan['tranches'][0]['label'] ?? 'Acompte 1'),
-        };
+        if ($modePost === 'total') {
+            $echeanceLabel = 'Paiement intégral';
+        } elseif ($modePost === 'libre') {
+            $echeanceLabel = 'Acompte libre';
+        } else {
+            $echeanceLabel = $plan['tranches'][0]['label'] ?? 'Acompte 1';
+        }
 
         /* Enregistrement en base (en_attente) */
         $pdo->prepare("

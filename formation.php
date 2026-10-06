@@ -905,7 +905,9 @@ require __DIR__ . '/partials/header.php';
           $uniform = ($tl > 0 && $tl === $tp);
         ?>
         <div class="price">
-          <?php if ($uniform): ?>
+          <?php if ($tl <= 0 && $tp <= 0): ?>
+            <i class="fa-solid fa-circle-info"></i> <em>Tarif sur demande</em>
+          <?php elseif ($uniform): ?>
             <i class="fa-solid fa-layer-group"></i> Pack complet :
             <?php if ($ref > $tl): ?><span style="text-decoration:line-through;opacity:.6"><?= number_format($ref,0,',',' '); ?></span> <?php endif; ?>
             <?php if (!empty($promoL['eligible'])): ?>
@@ -915,6 +917,7 @@ require __DIR__ . '/partials/header.php';
               <b><?= number_format($tl,0,',',' '); ?> FCFA</b>
             <?php endif; ?>
           <?php else: ?>
+            <?php if ($tl > 0): ?>
             <i class="fa-solid fa-laptop"></i> En ligne :
             <?php if (!empty($promoL['eligible'])): ?>
               <span style="text-decoration:line-through;opacity:.6"><?= number_format($tl + PROMO_REMISE_EN_LIGNE,0,',',' '); ?></span>
@@ -922,12 +925,15 @@ require __DIR__ . '/partials/header.php';
             <?php else: ?>
               <?= number_format($tl,0,',',' '); ?> FCFA<br>
             <?php endif; ?>
+            <?php endif; ?>
+            <?php if ($tp > 0): ?>
             <i class="fa-solid fa-building"></i> Présentiel :
             <?php if (!empty($promoL['eligible'])): ?>
               <span style="text-decoration:line-through;opacity:.6"><?= number_format($tp + PROMO_REMISE_PRESENTIEL,0,',',' '); ?></span>
               <b style="color:#22c55e"><?= number_format($tp,0,',',' '); ?> FCFA</b>
             <?php else: ?>
               <?= number_format($tp,0,',',' '); ?> FCFA
+            <?php endif; ?>
             <?php endif; ?>
           <?php endif; ?>
         </div>
@@ -1061,6 +1067,9 @@ require __DIR__ . '/partials/header.php';
         $on    = !empty($promo['eligible']);
       ?>
       <div class="price">
+        <?php if ($tEnL <= 0 && $tPres <= 0): ?>
+          <i class="fa-solid fa-circle-info"></i> <em>Tarif sur demande</em>
+        <?php else: ?>
         <?php if ($tEnL > 0): ?>
         <i class="fa-solid fa-laptop"></i> En ligne :
         <?php if ($on): ?>
@@ -1070,12 +1079,15 @@ require __DIR__ . '/partials/header.php';
           <?= number_format($tEnL, 0, ',', ' '); ?> FCFA<br>
         <?php endif; ?>
         <?php endif; ?>
+        <?php if ($tPres > 0): ?>
         <i class="fa-solid fa-building"></i> Présentiel :
-        <?php if ($on && $tPres > 0): ?>
+        <?php if ($on): ?>
           <span style="text-decoration:line-through;opacity:.6"><?= number_format($tPres + PROMO_REMISE_PRESENTIEL, 0, ',', ' '); ?></span>
           <b style="color:#16a34a"><?= number_format($tPres, 0, ',', ' '); ?> FCFA</b>
         <?php else: ?>
           <?= number_format($tPres, 0, ',', ' '); ?> FCFA
+        <?php endif; ?>
+        <?php endif; ?>
         <?php endif; ?>
       </div>
 
