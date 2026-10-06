@@ -44,7 +44,9 @@ if (!function_exists('e')) {
 function slugify(string $text): string {
   $text = trim($text);
   $text = mb_strtolower($text, 'UTF-8');
-  $text = preg_replace('/[^\p{L}\p{Nd}]+/u', '-', $text);
+  $ascii = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text);
+  $text  = $ascii !== false ? $ascii : $text;
+  $text = preg_replace('/[^a-z0-9]+/', '-', $text);
   return trim((string)$text, '-');
 }
 
