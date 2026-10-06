@@ -304,9 +304,9 @@ try {
                 'ol' => (int)$nr['tarif_en_ligne'],
                 'pr' => (int)$nr['tarif_presentiel'],
                 'hy' => (int)$nr['tarif_hybride'],
-                'obj'=> (($t=(string)($nr['objectifs']??''))&&mb_strlen($t)>220) ? mb_substr($t,0,220).'…' : $t,
-                'pre'=> (($t=(string)($nr['prerequis']??''))&&mb_strlen($t)>160) ? mb_substr($t,0,160).'…' : $t,
-                'pub'=> (($t=(string)($nr['public_cible']??''))&&mb_strlen($t)>160) ? mb_substr($t,0,160).'…' : $t,
+                'obj'=> (string)($nr['objectifs'] ?? ''),
+                'pre'=> (string)($nr['prerequis'] ?? ''),
+                'pub'=> (string)($nr['public_cible'] ?? ''),
             ];
         }
     } catch (Throwable $_e) {}
