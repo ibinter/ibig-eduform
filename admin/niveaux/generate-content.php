@@ -38,7 +38,7 @@ if ($only_empty) {
 }
 
 $stmt = $pdo->prepare("
-    SELECT n.id, n.niveau, n.duree_heures, n.objectifs, f.titre, f.domaine
+    SELECT n.id, n.niveau, n.duree_heures, n.objectifs, f.id AS formation_id, f.titre, f.domaine
     FROM formation_niveaux n
     JOIN formations f ON f.id = n.formation_id
     WHERE " . implode(' AND ', $where) . "
@@ -46,6 +46,17 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute($params);
 $niveaux = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+/* Grouper par formation_id pour le batch économique */
+$formations_sans_contenu = [];
+foreach ($niveaux as $n) {
+    $fid = (int)$n['formation_id'];
+    if (!isset($formations_sans_contenu[$fid])) {
+        $formations_sans_contenu[$fid] = ['titre' => $n['titre'], 'niv_ids' => []];
+    }
+    $formations_sans_contenu[$fid]['niv_ids'][] = (int)$n['id'];
+}
+$total_formations = count($formations_sans_contenu);
 
 $niv_labels  = ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'];
 $niv_classes = ['debutant'=>'niv-d','intermediaire'=>'niv-i','expert'=>'niv-e'];
@@ -127,8 +138,9 @@ ob_start();
   <?php if ($total > 0): ?>
   <div style="margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
     <button id="btnBatchAll" class="btn-gen-all" onclick="genAll()">
-      🤖 Générer tous (<?= $total ?>) — 10 en parallèle
+      🤖 Générer toutes (<?= $total_formations ?> formations = <?= $total ?> niveaux) — 1 appel/formation
     </button>
+    <span style="font-size:.72rem;color:#16a34a;font-weight:700">💰 Mode économique : 3× moins d'appels API</span>
     <span class="batch-info" id="batchInfo"></span>
   </div>
   <div class="progress-bar" id="progressBar">
@@ -161,6 +173,7 @@ ob_start();
           <div style="font-weight:700;font-size:.82rem"><?= e($n['titre']) ?></div>
           <div style="font-size:.68rem;color:#94a3b8"><?= e($n['domaine'] ?? '') ?></div>
         </td>
+        <?php /* data-formation-id pour le batch économique */ ?>
         <td><span class="niv-badge <?= $niv_classes[$n['niveau']] ?? '' ?>"><?= $niv_labels[$n['niveau']] ?? $n['niveau'] ?></span></td>
         <td style="color:#475569"><?= (int)$n['duree_heures'] ?>h</td>
         <td>
@@ -171,7 +184,8 @@ ob_start();
         <td>
           <button class="btn-gen" id="btn-<?= (int)$n['id'] ?>"
                   onclick="genOne(<?= (int)$n['id'] ?>, this)"
-                  data-id="<?= (int)$n['id'] ?>">
+                  data-id="<?= (int)$n['id'] ?>"
+                  data-fid="<?= (int)$n['formation_id'] ?>">
             🤖 Générer
           </button>
           <span class="row-status" id="status-<?= (int)$n['id'] ?>" style="display:none"></span>
@@ -220,13 +234,67 @@ async function genOne(nid, btn) {
     }
 }
 
+async function genFormation(fid, nidList) {
+    const fd = new FormData();
+    fd.append('csrf', CSRF);
+    fd.append('formation_id', fid);
+    nidList.forEach(function(nid) {
+        const s = document.getElementById('status-' + nid);
+        if (s) { s.textContent = '⏳'; s.className = 'row-status status-loading'; s.style.display = ''; }
+    });
+    try {
+        const r = await fetch('api-gen-formation.php', {method:'POST', body: fd});
+        const d = await r.json();
+        if (d.ok && d.updated && d.updated.length) {
+            d.updated.forEach(function(u) {
+                const s = document.getElementById('status-' + u.niveau_id);
+                if (s) { s.textContent = '✅'; s.className = 'row-status status-ok'; }
+                const cs = document.getElementById('content-status-' + u.niveau_id);
+                if (cs) { cs.textContent = '✓ Renseigné'; cs.className = 'has-content'; }
+                const btn = document.getElementById('btn-' + u.niveau_id);
+                if (btn) btn.disabled = true;
+            });
+            return {ok: true, n: d.updated.length};
+        } else if (d.skipped) {
+            nidList.forEach(function(nid) {
+                const s = document.getElementById('status-' + nid);
+                if (s) { s.textContent = '⏭'; s.className = 'row-status status-ok'; }
+            });
+            return {ok: true, n: 0};
+        } else {
+            nidList.forEach(function(nid) {
+                const s = document.getElementById('status-' + nid);
+                if (s) { s.textContent = '❌ ' + (d.error || 'err'); s.className = 'row-status status-err'; }
+            });
+            return {ok: false, n: 0};
+        }
+    } catch(e) {
+        nidList.forEach(function(nid) {
+            const s = document.getElementById('status-' + nid);
+            if (s) { s.textContent = '❌ réseau'; s.className = 'row-status status-err'; }
+        });
+        return {ok: false, n: 0};
+    }
+}
+
 async function genAll() {
     if (batchRunning) return;
     batchRunning = true;
+
     const allBtns = document.querySelectorAll('.btn-gen:not(:disabled)');
-    const ids = [...allBtns].map(b => parseInt(b.dataset.id)).filter(x => x > 0);
-    if (!ids.length) { alert('Aucun niveau à générer.'); batchRunning = false; return; }
-    if (!confirm('Générer le contenu de ' + ids.length + ' niveaux (10 en parallèle) ?\nCette opération peut prendre plusieurs minutes — ne fermez pas la page.')) {
+    const byFid = {};
+    allBtns.forEach(function(b) {
+        const nid = parseInt(b.dataset.id);
+        const fid = parseInt(b.dataset.fid);
+        if (nid > 0 && fid > 0) {
+            if (!byFid[fid]) byFid[fid] = [];
+            byFid[fid].push(nid);
+        }
+    });
+    const fids = Object.keys(byFid).map(Number);
+    if (!fids.length) { alert('Aucun niveau à générer.'); batchRunning = false; return; }
+
+    if (!confirm('Générer le contenu de ' + fids.length + ' formations (' + allBtns.length + ' niveaux) ?\n1 appel API par formation = 3× moins cher.\nNe fermez pas la page.')) {
         batchRunning = false; return;
     }
 
@@ -235,24 +303,20 @@ async function genAll() {
     const fill = document.getElementById('progressFill');
     const info = document.getElementById('batchInfo');
     bar.style.display = '';
-    let done = 0, ok = 0, err = 0;
-    const CONCURRENCY = 10;
+    let ok = 0, err = 0;
+    const CONCURRENCY = 5;
 
-    for (let i = 0; i < ids.length; i += CONCURRENCY) {
-        const batch = ids.slice(i, i + CONCURRENCY);
-        info.textContent = (i + 1) + '–' + Math.min(i + CONCURRENCY, ids.length) + ' / ' + ids.length + ' — en cours…';
-        fill.style.width = Math.round((i / ids.length) * 100) + '%';
-        await Promise.all(batch.map(async function(nid) {
-            const btn = document.getElementById('btn-' + nid);
-            await genOne(nid, btn);
-            done++;
-            const s = document.getElementById('status-' + nid);
-            if (s && s.classList.contains('status-ok')) ok++;
-            else err++;
+    for (let i = 0; i < fids.length; i += CONCURRENCY) {
+        const batch = fids.slice(i, i + CONCURRENCY);
+        info.textContent = 'Formations ' + (i + 1) + '–' + Math.min(i + CONCURRENCY, fids.length) + ' / ' + fids.length + '…';
+        fill.style.width = Math.round((i / fids.length) * 100) + '%';
+        await Promise.all(batch.map(async function(fid) {
+            const res = await genFormation(fid, byFid[fid]);
+            if (res.ok) ok += res.n; else err++;
         }));
     }
     fill.style.width = '100%';
-    info.textContent = '✅ Terminé : ' + ok + ' générés, ' + err + ' erreurs.';
+    info.textContent = '✅ Terminé : ' + ok + ' niveaux générés, ' + err + ' erreurs formations.';
     batchRunning = false;
 }
 </script>

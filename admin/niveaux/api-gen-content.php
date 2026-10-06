@@ -71,7 +71,7 @@ $prompt = "Génère le profil pédagogique pour cette formation professionnelle 
 
 $payload = json_encode([
     'model'       => 'claude-haiku-4-5-20251001',
-    'max_tokens'  => 800,
+    'max_tokens'  => 400,
     'system'      => "Tu es un ingénieur pédagogique senior spécialisé dans la formation professionnelle en Afrique francophone. Réponds TOUJOURS en JSON pur, adapté au niveau indiqué.",
     'messages'    => [['role' => 'user', 'content' => $prompt]],
     'temperature' => 0.4,
