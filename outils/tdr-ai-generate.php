@@ -21,6 +21,8 @@ $type   = trim(strip_tags($_POST['type']         ?? 'formation'));
 $ctx    = trim(strip_tags($_POST['contexte']     ?? ''));
 $cat    = trim(strip_tags($_POST['categorie']    ?? ''));
 $duree  = trim(strip_tags($_POST['duree']        ?? ''));
+$niveau = in_array($_POST['niveau'] ?? '', ['debutant','intermediaire','expert'], true)
+          ? (string)$_POST['niveau'] : '';
 $prix_ol= (int)($_POST['prix_en_ligne']          ?? 200000);
 $prix_pr= (int)($_POST['prix_presentiel']        ?? 250000);
 
@@ -57,21 +59,99 @@ if (preg_match('/comptab|syscohada|ifrs|bilan|fiscal|tva|paie|caissier|comptable
     $hints = "Domaine : Communication Professionnelle. Présentations à des investisseurs, négociations, management multiculturel en Afrique. Exercices de prise de parole filmés + feedback.";
 }
 
+/* ── Bloc niveau — différenciation pédagogique forte ── */
+$niveau_labels = ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'];
+$niveau_label  = $niveau ? ($niveau_labels[$niveau] ?? $niveau) : '';
+
+$niveau_bloc = '';
+if ($niveau === 'debutant') {
+    $niveau_bloc = <<<NIV
+
+---
+## NIVEAU : DÉBUTANT — IMPÉRATIFS ABSOLUS DE DIFFÉRENCIATION
+
+Ce TDR s'adresse à des NOVICES COMPLETS. Le programme DOIT être construit de zéro.
+
+**Objectif général** : Découvrir, comprendre, s'initier — verbes taxonomie Bloom niveau 1-2.
+**Public** : Personnes sans aucune expérience dans ce domaine. Reconversions, premières prises de poste, autodidactes souhaitant formaliser leurs bases.
+**Prérequis** : Aucun prérequis métier. Seule condition : motivation et accès aux outils de base.
+
+**Contenus des modules** :
+- M1 : Histoire, fondamentaux, vocabulaire de base, panorama du domaine — AUCUN outil avancé
+- M2 : Les 5-7 concepts clés incontournables — définitions, illustrations, exemples simples du quotidien
+- M3 : Premiers gestes métiers — exercices guidés pas à pas, erreurs classiques à éviter
+- M4 : Introduction aux outils de base — prise en main assistée, fonctions essentielles seulement
+- M5 : Application sur cas simple — étude de cas simplifiée, correction commentée étape par étape
+- M6 : Synthèse et mini-projet personnel guidé — évaluation des acquis fondamentaux
+
+**Approche pédagogique** : Démonstrations filmées, exercices guidés, QCM de vérification, vocabulaire expliqué, analogies du quotidien, aucune présupposition de connaissance.
+**Ton des modules** : Progressif, rassurant, explicatif. Aucun jargon sans définition.
+NIV;
+} elseif ($niveau === 'intermediaire') {
+    $niveau_bloc = <<<NIV
+
+---
+## NIVEAU : INTERMÉDIAIRE — IMPÉRATIFS ABSOLUS DE DIFFÉRENCIATION
+
+Ce TDR s'adresse à des PRATICIENS qui maîtrisent déjà les bases et veulent monter en compétence.
+
+**Objectif général** : Appliquer, analyser, résoudre — verbes taxonomie Bloom niveau 3-4.
+**Public** : Professionnels avec 1-3 ans de pratique, ayant suivi une formation débutant ou autodidactes confirmés. Ils connaissent le vocabulaire, utilisent les outils de base mais manquent de méthode.
+**Prérequis** : Bases du domaine acquises. Capacité à utiliser les outils standards de façon autonome.
+
+**Contenus des modules** :
+- M1 : Audit des pratiques actuelles — identifier les lacunes, les mauvaises habitudes, les points de blocage récurrents
+- M2 : Méthodologie professionnelle structurée — frameworks, processus, normes sectorielles
+- M3 : Outils professionnels intermédiaires — fonctions avancées des outils connus + nouveaux outils métiers
+- M4 : Cas réels d'entreprises africaines — analyse, diagnostic, résolution de problèmes concrets
+- M5 : Gestion des situations complexes — exceptions, cas atypiques, arbitrages professionnels
+- M6 : Projet professionnel complet — dossier d'application sur situation réelle du bénéficiaire, soutenance
+
+**Approche pédagogique** : Études de cas réels, ateliers pratiques en situation professionnelle, peer learning, retours d'expérience, simulations.
+**Ton des modules** : Exigeant, ancré dans la réalité professionnelle, orienté résultats mesurables.
+NIV;
+} elseif ($niveau === 'expert') {
+    $niveau_bloc = <<<NIV
+
+---
+## NIVEAU : EXPERT — IMPÉRATIFS ABSOLUS DE DIFFÉRENCIATION
+
+Ce TDR s'adresse à des PROFESSIONNELS AGUERRIS qui visent la maîtrise totale et le leadership.
+
+**Objectif général** : Évaluer, créer, piloter — verbes taxonomie Bloom niveau 5-6.
+**Public** : Cadres supérieurs, managers, consultants, responsables de département avec 5+ ans d'expérience dans le domaine. Ils maîtrisent les pratiques standard et veulent aller au niveau supérieur.
+**Prérequis** : Maîtrise confirmée du niveau intermédiaire. Expérience terrain significative. Responsabilités opérationnelles avérées.
+
+**Contenus des modules** :
+- M1 : Benchmarks internationaux et tendances avancées — positionnement par rapport aux meilleures pratiques mondiales
+- M2 : Stratégie et vision globale — piloter le domaine à l'échelle d'une organisation, aligner avec les objectifs stratégiques
+- M3 : Outils experts et automatisation avancée — solutions de niveau enterprise, IA appliquée, intégrations systèmes
+- M4 : Management et transfert de compétences — former, encadrer des équipes sur ce domaine, créer des référentiels internes
+- M5 : Gestion de crises et cas complexes — situations d'exception, arbitrages stratégiques, contentieux, optimisations avancées
+- M6 : Projet de transformation organisationnelle — audit complet + plan de transformation + présentation à la direction
+
+**Approche pédagogique** : Co-construction, conseil, coaching haute performance, études de cas complexes multi-facteurs, simulations de comité de direction.
+**Ton des modules** : Exigeant, stratégique, à la hauteur d'un C-level ou consultant senior.
+NIV;
+}
+
 /* ── System prompt — personnage ── */
+$niv_sys = $niveau ? "\n\nATTENTION : Ce TDR est pour le NIVEAU {$niveau_labels[$niveau]}. Le contenu des modules, les objectifs, les prérequis et l'approche DOIVENT être RADICALEMENT DIFFÉRENTS d'un TDR Débutant, Intermédiaire ou Expert sur la même formation. Un acheteur qui compare les 3 niveaux doit voir immédiatement que ce sont 3 parcours distincts construits pour des profils différents." : '';
 $system = "Tu es Dr. Adjoua Konan, directrice pédagogique d'IBIG EDUFORM avec 18 ans d'expérience en ingénierie de formation professionnelle en Afrique francophone. Tu as rédigé plus de 300 TDR (Termes de Référence) professionnels pour des entreprises, ONG et particuliers dans 17 pays OHADA.
 
-Tu rédiges des TDR qui ressemblent à ceux rédigés par de vrais ingénieurs pédagogiques : langage professionnel précis, contenu spécifique au domaine, indicateurs de vérification concrets, livrables tangibles, formulations humaines et variées. JAMAIS de contenu générique ou interchangeable d'une formation à l'autre.";
+Tu rédiges des TDR qui ressemblent à ceux rédigés par de vrais ingénieurs pédagogiques : langage professionnel précis, contenu spécifique au domaine, indicateurs de vérification concrets, livrables tangibles, formulations humaines et variées. JAMAIS de contenu générique ou interchangeable d'une formation à l'autre.{$niv_sys}";
 
 /* ── Prompt ── */
-$ctx_line = $ctx ? "\nDescription de la formation :\n«{$ctx}»\n" : '';
+$ctx_line  = $ctx ? "\nDescription de la formation :\n«{$ctx}»\n" : '';
+$niv_line  = $niveau_label ? "\n**Niveau** : {$niveau_label}\n" : '';
 $prompt = <<<PROMPT
 Rédige un TDR (Termes de Référence) COMPLET et PROFESSIONNEL pour :
 
 **Formation** : {$titre}
 **Catégorie** : {$cat}
-**Durée** : {$duree_v}
+**Durée** : {$duree_v}{$niv_line}
 **Tarif en ligne** : {$fmt_ol} | **Tarif présentiel** : {$fmt_pr} | **Hybride** : {$fmt_hyb}
-{$ctx_line}
+{$ctx_line}{$niveau_bloc}
 
 **Contexte métier à intégrer** : {$hints}
 
