@@ -291,7 +291,8 @@ try {
     $niveaux_map = [];
     try {
         $niv_rows = $pdo_cat->query("
-            SELECT formation_id, niveau, duree_heures, tarif_en_ligne, tarif_presentiel, tarif_hybride
+            SELECT formation_id, niveau, duree_heures, tarif_en_ligne, tarif_presentiel, tarif_hybride,
+                   COALESCE(objectifs,'') AS objectifs, COALESCE(prerequis,'') AS prerequis, COALESCE(public_cible,'') AS public_cible
             FROM formation_niveaux
             WHERE statut = 'actif'
             ORDER BY ordre_affichage ASC
@@ -303,6 +304,9 @@ try {
                 'ol' => (int)$nr['tarif_en_ligne'],
                 'pr' => (int)$nr['tarif_presentiel'],
                 'hy' => (int)$nr['tarif_hybride'],
+                'obj'=> mb_substr((string)($nr['objectifs'] ?? ''), 0, 350),
+                'pre'=> mb_substr((string)($nr['prerequis'] ?? ''), 0, 250),
+                'pub'=> mb_substr((string)($nr['public_cible'] ?? ''), 0, 200),
             ];
         }
     } catch (Throwable $_e) {}
@@ -1148,9 +1152,18 @@ function showToast(msg){
         var actCls = ni === 0 ? ' cg-niv-active' : '';
         niveauxHtml += '<span class="cg-niv cg-niv-'+nv.n+actCls+'" onclick="cgPickNiv(this)"'
           +' data-h="'+nv.h+'" data-ol="'+nv.ol+'" data-pr="'+nv.pr+'" data-hy="'+nv.hy+'"'
+          +' data-obj="'+esc(nv.obj||'')+'" data-pre="'+esc(nv.pre||'')+'" data-pub="'+esc(nv.pub||'')+'"'
           +' title="Cliquez pour voir les tarifs '+nivLabels[nv.n]+'">'+nivLabels[nv.n]+'</span>';
       }
       niveauxHtml += '</div>';
+    }
+    var nivContentHtml = '';
+    if (aN && (aN.obj || aN.pre || aN.pub)) {
+      nivContentHtml = '<div class="cg-niv-content">'
+        + (aN.obj ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Objectifs</span><span class="cg-niv-c-txt" data-niv-cell="obj">'+esc(aN.obj)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Objectifs</span><span class="cg-niv-c-txt" data-niv-cell="obj"></span></div>')
+        + (aN.pre ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Prérequis</span><span class="cg-niv-c-txt" data-niv-cell="pre">'+esc(aN.pre)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Prérequis</span><span class="cg-niv-c-txt" data-niv-cell="pre"></span></div>')
+        + (aN.pub ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Public cible</span><span class="cg-niv-c-txt" data-niv-cell="pub">'+esc(aN.pub)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Public cible</span><span class="cg-niv-c-txt" data-niv-cell="pub"></span></div>')
+        + '</div>';
     }
     var prixHtml = '';
     if (tPrix > 0 || (f.niveaux && f.niveaux.length > 0)) {
@@ -1178,6 +1191,7 @@ function showToast(msg){
       + '<h3 class="cg-card-name">'+esc(f.name)+'</h3>'
       + durHtml
       + niveauxHtml
+      + nivContentHtml
       + (f.desc ? '<p class="cg-card-pitch">'+esc(f.desc.substring(0,160))+(f.desc.length>160?'…':'')+'</p>' : '')
       + prixHtml
       + '<div class="cg-card-ctas">'
@@ -1209,6 +1223,7 @@ function showToast(msg){
         var actCls2 = ni2 === 0 ? ' cg-niv-active' : '';
         niveauxListHtml += '<span class="cg-niv cg-niv-'+nv2.n+actCls2+'" onclick="cgPickNiv(this)"'
           +' data-h="'+nv2.h+'" data-ol="'+nv2.ol+'" data-pr="'+nv2.pr+'" data-hy="'+nv2.hy+'"'
+          +' data-obj="'+esc(nv2.obj||'')+'" data-pre="'+esc(nv2.pre||'')+'" data-pub="'+esc(nv2.pub||'')+'"'
           +' title="Cliquez pour voir les tarifs '+nivLabels2[nv2.n]+'">'+nivLabels2[nv2.n]+'</span>';
       }
       niveauxListHtml += '</div>';
@@ -1223,6 +1238,14 @@ function showToast(msg){
         + '<div class="cg-lp-item"><span class="cg-lp-lbl">🏛️ Présentiel</span><strong class="cg-lp-val" style="color:'+esc(f.colD)+'" data-niv-cell="pr">'+fcfaJs(tPres2)+'</strong><span class="cg-lp-sub">individuel</span></div>'
         + '</div>';
     }
+    var nivContentHtml2 = '';
+    if (aN2 && (aN2.obj || aN2.pre || aN2.pub)) {
+      nivContentHtml2 = '<div class="cg-niv-content">'
+        + (aN2.obj ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Objectifs</span><span class="cg-niv-c-txt" data-niv-cell="obj">'+esc(aN2.obj)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Objectifs</span><span class="cg-niv-c-txt" data-niv-cell="obj"></span></div>')
+        + (aN2.pre ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Prérequis</span><span class="cg-niv-c-txt" data-niv-cell="pre">'+esc(aN2.pre)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Prérequis</span><span class="cg-niv-c-txt" data-niv-cell="pre"></span></div>')
+        + (aN2.pub ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Public cible</span><span class="cg-niv-c-txt" data-niv-cell="pub">'+esc(aN2.pub)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Public cible</span><span class="cg-niv-c-txt" data-niv-cell="pub"></span></div>')
+        + '</div>';
+    }
     return '<div class="cg-list-item" role="listitem">'
       + '<div class="cg-list-color" style="background:'+esc(f.colD)+'"></div>'
       + '<div class="cg-list-body">'
@@ -1233,6 +1256,7 @@ function showToast(msg){
       + '</div>'
       + '<h3 class="cg-list-name">'+esc(f.name)+'</h3>'
       + niveauxListHtml
+      + nivContentHtml2
       + (f.desc ? '<p class="cg-list-desc">'+esc(f.desc.substring(0,180))+(f.desc.length>180?'…':'')+'</p>' : '')
       + '</div>'
       + pricesHtml
@@ -1361,7 +1385,7 @@ function showToast(msg){
     }
   };
 
-  /* ── Sélection de niveau : mise à jour des tarifs et durée ── */
+  /* ── Sélection de niveau : mise à jour des tarifs, durée et contenu ── */
   window.cgPickNiv = function(pill){
     var card = pill.closest('.cg-card, .cg-list-item');
     if (!card) return;
@@ -1383,6 +1407,20 @@ function showToast(msg){
     }
     if (h > 0) {
       card.querySelectorAll('.cg-niv-dur').forEach(function(b){ b.textContent = '⏱️ ' + h + 'H'; });
+    }
+    /* Mise à jour des champs de contenu par niveau */
+    var obj = pill.getAttribute('data-obj') || '';
+    var pre = pill.getAttribute('data-pre') || '';
+    var pub = pill.getAttribute('data-pub') || '';
+    var contentZone = card.querySelector('.cg-niv-content');
+    if (contentZone) {
+      contentZone.querySelectorAll('[data-niv-cell]').forEach(function(cell){
+        var t = cell.getAttribute('data-niv-cell');
+        var val = t === 'obj' ? obj : (t === 'pre' ? pre : (t === 'pub' ? pub : ''));
+        cell.textContent = val;
+        var row = cell.parentElement;
+        if (row) row.style.display = val ? '' : 'none';
+      });
     }
   };
 

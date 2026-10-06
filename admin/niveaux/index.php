@@ -112,6 +112,7 @@ ob_start();
       <a href="audit-niveaux.php" style="padding:6px 14px;background:#7c3aed;color:#fff;border-radius:6px;font-size:.8rem;font-weight:700;text-decoration:none">🔍 Audit niveaux</a>
       <a href="audit-heures.php" style="padding:6px 14px;background:#d97706;color:#fff;border-radius:6px;font-size:.8rem;font-weight:700;text-decoration:none">📊 Audit heures</a>
       <a href="generate-modules.php" style="padding:6px 14px;background:#7c3aed;color:#fff;border-radius:6px;font-size:.8rem;font-weight:700;text-decoration:none">🤖 Générer modules IA</a>
+      <a href="generate-content.php" style="padding:6px 14px;background:#0891b2;color:#fff;border-radius:6px;font-size:.8rem;font-weight:700;text-decoration:none">🎯 Générer contenu niveaux</a>
     </div>
     <form method="get" class="filters">
       <input type="text" name="q" value="<?= e($q) ?>" placeholder="Rechercher une formation…" style="width:220px">
