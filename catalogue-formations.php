@@ -1188,8 +1188,7 @@ function showToast(msg){
       + '<h3 class="cg-card-name">'+esc(f.name)+'</h3>'
       + durHtml
       + niveauxHtml
-      + nivContentHtml
-      + (f.desc ? '<p class="cg-card-pitch">'+esc(f.desc.substring(0,160))+(f.desc.length>160?'…':'')+'</p>' : '')
+      + (nivContentHtml || (f.desc ? '<p class="cg-card-pitch">'+esc(f.desc.substring(0,160))+(f.desc.length>160?'…':'')+'</p>' : ''))
       + prixHtml
       + '<div class="cg-card-ctas">'
       + '<a href="'+esc(f.ins)+'" class="cg-btn-p" style="background:'+esc(f.colD)+'">✍️ S\'inscrire</a>'
@@ -1250,8 +1249,7 @@ function showToast(msg){
       + '</div>'
       + '<h3 class="cg-list-name">'+esc(f.name)+'</h3>'
       + niveauxListHtml
-      + nivContentHtml2
-      + (f.desc ? '<p class="cg-list-desc">'+esc(f.desc.substring(0,180))+(f.desc.length>180?'…':'')+'</p>' : '')
+      + (nivContentHtml2 || (f.desc ? '<p class="cg-list-desc">'+esc(f.desc.substring(0,180))+(f.desc.length>180?'…':'')+'</p>' : ''))
       + '</div>'
       + pricesHtml
       + '<div class="cg-list-ctas">'
