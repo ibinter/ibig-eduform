@@ -377,14 +377,14 @@ $useLanding = hasLanding($lp);
    NIVEAUX
 ========================= */
 $stmt = $pdo->prepare("
-  SELECT niveau, objectifs, prerequis, public_cible, duree_heures
-  FROM formation_niveaux
-  WHERE formation_id = ? AND statut = 'actif'
-  ORDER BY CASE niveau WHEN 'debutant' THEN 1 WHEN 'intermediaire' THEN 2 WHEN 'expert' THEN 3 END
+  SELECT n.niveau, n.objectifs, n.prerequis, n.public_cible, n.duree_heures,
+         n.tarif_en_ligne, n.tarif_presentiel
+  FROM formation_niveaux n
+  WHERE n.formation_id = ? AND n.statut = 'actif'
+  ORDER BY CASE n.niveau WHEN 'debutant' THEN 1 WHEN 'intermediaire' THEN 2 WHEN 'expert' THEN 3 END
 ");
 $stmt->execute([(int)$f['id']]);
 $niveaux_detail = $stmt->fetchAll(PDO::FETCH_ASSOC);
-$niveaux_detail = array_filter($niveaux_detail, fn($n) => !empty($n['objectifs']) || !empty($n['prerequis']) || !empty($n['public_cible']));
 
 /* =========================
    SESSION DE RÉFÉRENCE (SAMEDI PRO)
@@ -1061,49 +1061,77 @@ require __DIR__ . '/partials/header.php';
     <?php formation_cta($f, $inscription); ?>
   </section>
 
-  <?php if (!empty($niveaux_detail)): ?>
+  <?php if (!empty($niveaux_detail)):
+    $niv_labels = ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'];
+    $niv_colors = ['debutant'=>'#166534','intermediaire'=>'#1e40af','expert'=>'#9d174d'];
+    $niv_bg     = ['debutant'=>'#dcfce7','intermediaire'=>'#dbeafe','expert'=>'#fce7f3'];
+    $niv_border = ['debutant'=>'#86efac','intermediaire'=>'#93c5fd','expert'=>'#f9a8d4'];
+    $nd_list    = array_values($niveaux_detail);
+    $first_niv  = $nd_list[0]['niveau'] ?? '';
+  ?>
   <section style="margin:28px 0 0">
     <h2 style="font-size:17px;font-weight:800;margin:0 0 14px;display:flex;align-items:center;gap:8px">
       <i class="fa-solid fa-layer-group"></i> Contenu par niveau
     </h2>
-    <?php
-      $niv_labels = ['debutant'=>'Débutant','intermediaire'=>'Intermédiaire','expert'=>'Expert'];
-      $niv_colors = ['debutant'=>'#166534','intermediaire'=>'#1e40af','expert'=>'#9d174d'];
-      $niv_bg     = ['debutant'=>'#dcfce7','intermediaire'=>'#dbeafe','expert'=>'#fce7f3'];
-      $niv_border = ['debutant'=>'#86efac','intermediaire'=>'#93c5fd','expert'=>'#f9a8d4'];
-      $nd_list    = array_values($niveaux_detail);
-      $first_niv  = $nd_list[0]['niveau'] ?? '';
-    ?>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
       <?php foreach ($nd_list as $nd): ?>
       <button type="button"
         onclick="fnPickNiv(this,'<?= htmlspecialchars($nd['niveau'],ENT_QUOTES) ?>')"
         class="fn-pill<?= $nd['niveau']===$first_niv?' fn-pill-on':'' ?>"
         data-niv="<?= htmlspecialchars($nd['niveau'],ENT_QUOTES) ?>"
-        style="padding:6px 18px;border-radius:999px;font-size:.8rem;font-weight:700;cursor:pointer;border:1.5px solid <?= $niv_border[$nd['niveau']]??'#e2e8f0' ?>;background:<?= $nd['niveau']===$first_niv?($niv_bg[$nd['niveau']]??'#f1f5f9'):'#fff' ?>;color:<?= $nd['niveau']===$first_niv?($niv_colors[$nd['niveau']]??'#475569'):'#475569' ?>">
+        style="padding:7px 20px;border-radius:999px;font-size:.82rem;font-weight:700;cursor:pointer;border:1.5px solid <?= $niv_border[$nd['niveau']]??'#e2e8f0' ?>;background:<?= $nd['niveau']===$first_niv?($niv_bg[$nd['niveau']]??'#f1f5f9'):'#fff' ?>;color:<?= $nd['niveau']===$first_niv?($niv_colors[$nd['niveau']]??'#475569'):'#475569' ?>">
         <?= $niv_labels[$nd['niveau']] ?? ucfirst($nd['niveau']) ?>
       </button>
       <?php endforeach; ?>
     </div>
     <?php foreach ($nd_list as $nd): ?>
     <div id="fn-block-<?= htmlspecialchars($nd['niveau'],ENT_QUOTES) ?>"
-         style="display:<?= $nd['niveau']===$first_niv?'block':'none' ?>;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px">
+         style="display:<?= $nd['niveau']===$first_niv?'block':'none' ?>;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px 24px">
+
+      <?php /* Durée + tarifs du niveau */ ?>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:<?= (!empty($nd['objectifs'])||!empty($nd['prerequis'])||!empty($nd['public_cible']))?'16px':'0' ?>;padding-bottom:<?= (!empty($nd['objectifs'])||!empty($nd['prerequis'])||!empty($nd['public_cible']))?'16px':'0' ?>;border-bottom:<?= (!empty($nd['objectifs'])||!empty($nd['prerequis'])||!empty($nd['public_cible']))?'1px solid #e2e8f0':'none' ?>">
+        <?php if (!empty($nd['duree_heures'])): ?>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:700;color:#475569">
+          <i class="fa-regular fa-clock" style="color:<?= $niv_colors[$nd['niveau']]??'#475569' ?>"></i>
+          <?= (int)$nd['duree_heures'] ?>h de formation
+        </span>
+        <?php endif; ?>
+        <?php if (!empty($nd['tarif_en_ligne']) && (int)$nd['tarif_en_ligne'] > 0): ?>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:700;color:#475569">
+          <i class="fa-solid fa-laptop" style="color:<?= $niv_colors[$nd['niveau']]??'#475569' ?>"></i>
+          En ligne : <b style="color:<?= $niv_colors[$nd['niveau']]??'#1e293b' ?>"><?= number_format((int)$nd['tarif_en_ligne'],0,',',' ') ?> FCFA</b>
+        </span>
+        <?php endif; ?>
+        <?php if (!empty($nd['tarif_presentiel']) && (int)$nd['tarif_presentiel'] > 0): ?>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:700;color:#475569">
+          <i class="fa-solid fa-building" style="color:<?= $niv_colors[$nd['niveau']]??'#475569' ?>"></i>
+          Présentiel : <b style="color:<?= $niv_colors[$nd['niveau']]??'#1e293b' ?>"><?= number_format((int)$nd['tarif_presentiel'],0,',',' ') ?> FCFA</b>
+        </span>
+        <?php endif; ?>
+      </div>
+
       <?php if (!empty($nd['objectifs'])): ?>
-      <div style="margin-bottom:12px">
-        <div style="font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:<?= $niv_colors[$nd['niveau']]??'#475569' ?>;margin-bottom:4px">Objectifs</div>
-        <p style="margin:0;font-size:.9rem;line-height:1.6;color:#1e293b"><?= nl2br(htmlspecialchars((string)$nd['objectifs'],ENT_QUOTES,'UTF-8')) ?></p>
+      <div style="margin-bottom:14px">
+        <div style="font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:<?= $niv_colors[$nd['niveau']]??'#475569' ?>;margin-bottom:5px">
+          <i class="fa-solid fa-bullseye"></i> Objectifs
+        </div>
+        <p style="margin:0;font-size:.9rem;line-height:1.65;color:#1e293b"><?= nl2br(htmlspecialchars((string)$nd['objectifs'],ENT_QUOTES,'UTF-8')) ?></p>
       </div>
       <?php endif; ?>
       <?php if (!empty($nd['prerequis'])): ?>
-      <div style="margin-bottom:12px">
-        <div style="font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:<?= $niv_colors[$nd['niveau']]??'#475569' ?>;margin-bottom:4px">Prérequis</div>
-        <p style="margin:0;font-size:.9rem;line-height:1.6;color:#1e293b"><?= nl2br(htmlspecialchars((string)$nd['prerequis'],ENT_QUOTES,'UTF-8')) ?></p>
+      <div style="margin-bottom:14px">
+        <div style="font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:<?= $niv_colors[$nd['niveau']]??'#475569' ?>;margin-bottom:5px">
+          <i class="fa-solid fa-screwdriver-wrench"></i> Prérequis
+        </div>
+        <p style="margin:0;font-size:.9rem;line-height:1.65;color:#1e293b"><?= nl2br(htmlspecialchars((string)$nd['prerequis'],ENT_QUOTES,'UTF-8')) ?></p>
       </div>
       <?php endif; ?>
       <?php if (!empty($nd['public_cible'])): ?>
       <div>
-        <div style="font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:<?= $niv_colors[$nd['niveau']]??'#475569' ?>;margin-bottom:4px">Public cible</div>
-        <p style="margin:0;font-size:.9rem;line-height:1.6;color:#1e293b"><?= nl2br(htmlspecialchars((string)$nd['public_cible'],ENT_QUOTES,'UTF-8')) ?></p>
+        <div style="font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:<?= $niv_colors[$nd['niveau']]??'#475569' ?>;margin-bottom:5px">
+          <i class="fa-solid fa-users"></i> Public cible
+        </div>
+        <p style="margin:0;font-size:.9rem;line-height:1.65;color:#1e293b"><?= nl2br(htmlspecialchars((string)$nd['public_cible'],ENT_QUOTES,'UTF-8')) ?></p>
       </div>
       <?php endif; ?>
     </div>
