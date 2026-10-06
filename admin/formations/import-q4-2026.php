@@ -236,29 +236,12 @@ unset($f);
 
 /* ===============================
    VÉRIFICATION DOUBLONS
-   Si le slug existe déjà, on ajoute le suffixe -q4-2026
 ================================ */
 foreach ($formations as &$f) {
     $chk = $pdo->prepare("SELECT id FROM formations WHERE slug = ? LIMIT 1");
     $chk->execute([$f['slug']]);
     $existing = $chk->fetch();
-    if ($existing) {
-        // Essayer avec le suffixe -q4-2026
-        $slugAlt = $f['slug'] . '-q4-2026';
-        $chk2 = $pdo->prepare("SELECT id FROM formations WHERE slug = ? LIMIT 1");
-        $chk2->execute([$slugAlt]);
-        $existing2 = $chk2->fetch();
-        if ($existing2) {
-            $f['_exists'] = (int)$existing2['id']; // doublon exact de cette session aussi
-        } else {
-            $f['slug']    = $slugAlt; // on utilise le slug suffixé
-            $f['_exists'] = null;
-        }
-        $f['_slug_conflict'] = (int)$existing['id'];
-    } else {
-        $f['_exists']        = null;
-        $f['_slug_conflict'] = null;
-    }
+    $f['_exists'] = $existing ? (int)$existing['id'] : null;
 }
 unset($f);
 
@@ -387,7 +370,7 @@ function fmtF(int $n): string {
 
     <p style="font-size:13px;color:#475569;margin:0 0 14px">
       <strong><?= count($toInsert) ?></strong> formation(s) à créer &bull;
-      <strong><?= count($skipped) ?></strong> ignorée(s) (doublon Q4 2026 déjà en base) &bull;
+      <strong><?= count($skipped) ?></strong> ignorée(s) (slug déjà présent) &bull;
       Statut : <strong>active</strong> &bull; Format par défaut : <strong>Hybride</strong>
     </p>
 
@@ -424,9 +407,7 @@ function fmtF(int $n): string {
               </td>
               <td>
                 <?php if ($f['_exists']): ?>
-                  <span class="badge badge-skip">Doublon (ID <?= $f['_exists'] ?>)</span>
-                <?php elseif (!empty($f['_slug_conflict'])): ?>
-                  <span class="badge badge-ok" title="Slug suffixé -q4-2026 (conflit ID <?= $f['_slug_conflict'] ?>)">À créer *</span>
+                  <span class="badge badge-skip">Ignorer (ID <?= $f['_exists'] ?>)</span>
                 <?php else: ?>
                   <span class="badge badge-ok">À créer</span>
                 <?php endif; ?>
