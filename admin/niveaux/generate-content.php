@@ -43,7 +43,6 @@ $stmt = $pdo->prepare("
     JOIN formations f ON f.id = n.formation_id
     WHERE " . implode(' AND ', $where) . "
     ORDER BY f.titre ASC, n.niveau ASC
-    LIMIT 500
 ");
 $stmt->execute($params);
 $niveaux = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -128,7 +127,7 @@ ob_start();
   <?php if ($total > 0): ?>
   <div style="margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
     <button id="btnBatchAll" class="btn-gen-all" onclick="genAll()">
-      🤖 Générer tous (<?= $total ?>) — séquentiel
+      🤖 Générer tous (<?= $total ?>) — 10 en parallèle
     </button>
     <span class="batch-info" id="batchInfo"></span>
   </div>
@@ -227,7 +226,7 @@ async function genAll() {
     const allBtns = document.querySelectorAll('.btn-gen:not(:disabled)');
     const ids = [...allBtns].map(b => parseInt(b.dataset.id)).filter(x => x > 0);
     if (!ids.length) { alert('Aucun niveau à générer.'); batchRunning = false; return; }
-    if (!confirm('Générer le contenu de ' + ids.length + ' niveaux séquentiellement ?\nCette opération peut prendre plusieurs minutes.')) {
+    if (!confirm('Générer le contenu de ' + ids.length + ' niveaux (10 en parallèle) ?\nCette opération peut prendre plusieurs minutes — ne fermez pas la page.')) {
         batchRunning = false; return;
     }
 
@@ -237,17 +236,20 @@ async function genAll() {
     const info = document.getElementById('batchInfo');
     bar.style.display = '';
     let done = 0, ok = 0, err = 0;
+    const CONCURRENCY = 10;
 
-    for (const nid of ids) {
-        info.textContent = (done + 1) + ' / ' + ids.length + ' — en cours…';
-        fill.style.width = Math.round((done / ids.length) * 100) + '%';
-        const btn = document.getElementById('btn-' + nid);
-        await genOne(nid, btn);
-        done++;
-        const s = document.getElementById('status-' + nid);
-        if (s && s.classList.contains('status-ok')) ok++;
-        else err++;
-        await new Promise(r => setTimeout(r, 600));
+    for (let i = 0; i < ids.length; i += CONCURRENCY) {
+        const batch = ids.slice(i, i + CONCURRENCY);
+        info.textContent = (i + 1) + '–' + Math.min(i + CONCURRENCY, ids.length) + ' / ' + ids.length + ' — en cours…';
+        fill.style.width = Math.round((i / ids.length) * 100) + '%';
+        await Promise.all(batch.map(async function(nid) {
+            const btn = document.getElementById('btn-' + nid);
+            await genOne(nid, btn);
+            done++;
+            const s = document.getElementById('status-' + nid);
+            if (s && s.classList.contains('status-ok')) ok++;
+            else err++;
+        }));
     }
     fill.style.width = '100%';
     info.textContent = '✅ Terminé : ' + ok + ' générés, ' + err + ' erreurs.';
