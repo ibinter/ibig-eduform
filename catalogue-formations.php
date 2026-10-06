@@ -304,9 +304,9 @@ try {
                 'ol' => (int)$nr['tarif_en_ligne'],
                 'pr' => (int)$nr['tarif_presentiel'],
                 'hy' => (int)$nr['tarif_hybride'],
-                'obj'=> mb_substr((string)($nr['objectifs'] ?? ''), 0, 90),
-                'pre'=> mb_substr((string)($nr['prerequis'] ?? ''), 0, 70),
-                'pub'=> mb_substr((string)($nr['public_cible'] ?? ''), 0, 70),
+                'obj'=> mb_substr((string)($nr['objectifs'] ?? ''), 0, 220),
+                'pre'=> mb_substr((string)($nr['prerequis'] ?? ''), 0, 160),
+                'pub'=> mb_substr((string)($nr['public_cible'] ?? ''), 0, 160),
             ];
         }
     } catch (Throwable $_e) {}
@@ -1159,10 +1159,10 @@ function showToast(msg){
     }
     var nivContentHtml = '';
     if (aN && (aN.obj || aN.pre || aN.pub)) {
-      nivContentHtml = '<div class="cg-niv-compact">'
-        + (aN.obj ? '<div class="cg-niv-row"><b>🎯</b><span data-niv-cell="obj">'+esc(aN.obj.length>88?aN.obj.substring(0,88)+'…':aN.obj)+'</span></div>' : '<div class="cg-niv-row" style="display:none"><b>🎯</b><span data-niv-cell="obj"></span></div>')
-        + (aN.pre ? '<div class="cg-niv-row"><b>📋</b><span data-niv-cell="pre">'+esc(aN.pre.length>68?aN.pre.substring(0,68)+'…':aN.pre)+'</span></div>' : '<div class="cg-niv-row" style="display:none"><b>📋</b><span data-niv-cell="pre"></span></div>')
-        + (aN.pub ? '<div class="cg-niv-row"><b>👤</b><span data-niv-cell="pub">'+esc(aN.pub.length>68?aN.pub.substring(0,68)+'…':aN.pub)+'</span></div>' : '<div class="cg-niv-row" style="display:none"><b>👤</b><span data-niv-cell="pub"></span></div>')
+      nivContentHtml = '<div class="cg-niv-content">'
+        + (aN.obj ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Objectif</span><span class="cg-niv-c-txt" data-niv-cell="obj">'+esc(aN.obj)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Objectif</span><span class="cg-niv-c-txt" data-niv-cell="obj"></span></div>')
+        + (aN.pre ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Prérequis</span><span class="cg-niv-c-txt" data-niv-cell="pre">'+esc(aN.pre)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Prérequis</span><span class="cg-niv-c-txt" data-niv-cell="pre"></span></div>')
+        + (aN.pub ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Public cible</span><span class="cg-niv-c-txt" data-niv-cell="pub">'+esc(aN.pub)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Public cible</span><span class="cg-niv-c-txt" data-niv-cell="pub"></span></div>')
         + '</div>';
     }
     var prixHtml = '';
@@ -1239,10 +1239,10 @@ function showToast(msg){
     }
     var nivContentHtml2 = '';
     if (aN2 && (aN2.obj || aN2.pre || aN2.pub)) {
-      nivContentHtml2 = '<div class="cg-niv-compact">'
-        + (aN2.obj ? '<div class="cg-niv-row"><b>🎯</b><span data-niv-cell="obj">'+esc(aN2.obj.length>88?aN2.obj.substring(0,88)+'…':aN2.obj)+'</span></div>' : '<div class="cg-niv-row" style="display:none"><b>🎯</b><span data-niv-cell="obj"></span></div>')
-        + (aN2.pre ? '<div class="cg-niv-row"><b>📋</b><span data-niv-cell="pre">'+esc(aN2.pre.length>68?aN2.pre.substring(0,68)+'…':aN2.pre)+'</span></div>' : '<div class="cg-niv-row" style="display:none"><b>📋</b><span data-niv-cell="pre"></span></div>')
-        + (aN2.pub ? '<div class="cg-niv-row"><b>👤</b><span data-niv-cell="pub">'+esc(aN2.pub.length>68?aN2.pub.substring(0,68)+'…':aN2.pub)+'</span></div>' : '<div class="cg-niv-row" style="display:none"><b>👤</b><span data-niv-cell="pub"></span></div>')
+      nivContentHtml2 = '<div class="cg-niv-content">'
+        + (aN2.obj ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Objectif</span><span class="cg-niv-c-txt" data-niv-cell="obj">'+esc(aN2.obj)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Objectif</span><span class="cg-niv-c-txt" data-niv-cell="obj"></span></div>')
+        + (aN2.pre ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Prérequis</span><span class="cg-niv-c-txt" data-niv-cell="pre">'+esc(aN2.pre)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Prérequis</span><span class="cg-niv-c-txt" data-niv-cell="pre"></span></div>')
+        + (aN2.pub ? '<div class="cg-niv-c-item"><span class="cg-niv-c-lbl">Public cible</span><span class="cg-niv-c-txt" data-niv-cell="pub">'+esc(aN2.pub)+'</span></div>' : '<div class="cg-niv-c-item" style="display:none"><span class="cg-niv-c-lbl">Public cible</span><span class="cg-niv-c-txt" data-niv-cell="pub"></span></div>')
         + '</div>';
     }
     return '<div class="cg-list-item" role="listitem">'
@@ -1410,14 +1410,14 @@ function showToast(msg){
     var obj = pill.getAttribute('data-obj') || '';
     var pre = pill.getAttribute('data-pre') || '';
     var pub = pill.getAttribute('data-pub') || '';
-    var zone = card.querySelector('.cg-niv-compact');
+    var zone = card.querySelector('.cg-niv-content');
     if (zone) {
-      var vals = {obj: obj.length>88?obj.substring(0,88)+'…':obj, pre: pre.length>68?pre.substring(0,68)+'…':pre, pub: pub.length>68?pub.substring(0,68)+'…':pub};
       zone.querySelectorAll('[data-niv-cell]').forEach(function(el){
         var t = el.getAttribute('data-niv-cell');
-        el.textContent = vals[t] || '';
+        var val = t==='obj'?obj:(t==='pre'?pre:(t==='pub'?pub:''));
+        el.textContent = val;
         var row = el.parentElement;
-        if (row) row.style.display = vals[t] ? '' : 'none';
+        if (row) row.style.display = val ? '' : 'none';
       });
     }
   };
