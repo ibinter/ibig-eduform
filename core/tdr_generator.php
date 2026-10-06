@@ -1565,13 +1565,17 @@ function tdr_modules(string $nom, string $cat, int $heures, string $desc = '', s
         };
     }
 
-    /* Nombre de modules selon la durée */
+    /* Nombre de modules selon la durée + ajustement par niveau */
     $nb_modules = 5;
     if ($heures >= 25) $nb_modules = 6;
     if ($heures >= 30) $nb_modules = 7;
     if ($heures >= 35) $nb_modules = 8;
     if ($heures >= 45) $nb_modules = 9;
     if ($heures >= 65) $nb_modules = 10;
+    // Débutant : moins de modules, plus de temps par module (approfondissement)
+    if ($niveau === 'debutant')      $nb_modules = max(4, $nb_modules - 1);
+    // Expert : plus de modules, plus de sujets spécialisés
+    if ($niveau === 'expert')        $nb_modules = min(11, $nb_modules + 1);
 
     /* Extraction des vrais sujets depuis la description */
     $topics = _extract_topics_gen($desc);
