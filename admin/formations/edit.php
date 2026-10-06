@@ -217,6 +217,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 /* ================= UI (CONTENT) ================= */
 ob_start();
 ?>
+<!-- EDIT-PHP-V20261006 -->
+<div style="background:#dc2626;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;margin-bottom:12px">
+  &#9888; DEBUG — version 2026-10-06 chargée (supprimer après correction)
+</div>
 
 <style>
   .card{background:#fff;border:1px solid #e6eaf2;border-radius:16px;padding:18px;box-shadow:0 10px 30px rgba(15,23,42,.06)}
