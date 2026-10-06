@@ -99,6 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $allowedStatuts = ['inactive','active'];
     if (!in_array($statut, $allowedStatuts, true)) $statut = 'inactive';
 
+    $isSamediPro = isset($_POST['is_samedi_pro']) ? 1 : 0;
+
     // Tarifs
     $tarifPresentiel  = (int)($_POST['tarif_presentiel'] ?? 0);
     $tarifEnLigne     = (int)($_POST['tarif_en_ligne'] ?? 0);
@@ -170,6 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         annee = :annee,
         session_label = :session,
         statut = :statut,
+        is_samedi_pro = :isp,
         updated_at = NOW()
       WHERE id = :id
       LIMIT 1
@@ -196,6 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       ':annee'    => $annee,
       ':session'  => $session,
       ':statut'   => $statut,
+      ':isp'      => $isSamediPro,
       ':id'       => $id
     ]);
 
@@ -352,8 +356,12 @@ ob_start();
         </select>
       </div>
       <div>
-        <label>&nbsp;</label>
-        <div class="muted">Astuce : laisse “Slug” vide pour qu’il soit généré automatiquement à partir du titre.</div>
+        <label>Type de formation</label>
+        <label style=”display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:14px;margin:0”>
+          <input type=”checkbox” name=”is_samedi_pro” value=”1” style=”width:auto;margin:0” <?= !empty($f[‘is_samedi_pro’]) ? ‘checked’ : ‘’; ?>>
+          Formation Samedi Pro
+        </label>
+        <div class=”muted” style=”margin-top:4px”>Cocher = Samedi Pro (tarif total payé directement). Décocher = formation classique (frais d’inscription).</div>
       </div>
     </div>
 
