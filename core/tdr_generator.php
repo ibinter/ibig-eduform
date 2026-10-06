@@ -1588,16 +1588,15 @@ function tdr_modules(string $nom, string $cat, int $heures, string $desc = '', s
 
     // Ajustement par niveau
     if ($niveau === 'debutant') {
-        // Débutant : structure plus ramassée, chaque module plus approfondi
         $nb_modules = max(5, $nb_modules - 1 + $topic_bonus);
         $nb_modules = min(8, $nb_modules);
     } elseif ($niveau === 'expert') {
-        // Expert : plus de modules spécialisés, sujets plus découpés
         $nb_modules = min(11, $nb_modules + 1 + $topic_bonus);
     } else {
         $nb_modules = min(10, $nb_modules + $topic_bonus);
     }
     $nb_modules = max(5, $nb_modules); // minimum absolu : 5 modules
+
 
     /* Contenus rotatifs selon le niveau */
     if ($niveau === 'debutant') {
