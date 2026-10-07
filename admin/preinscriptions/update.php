@@ -63,4 +63,8 @@ $stmt->execute([$statut, $id]);
 /* =========================
    REDIRECT
 ========================= */
+$back = (string)($_POST['back'] ?? '');
+if ($back !== '' && strpos($back, 'index.php') === 0) {
+  redirect($back);
+}
 redirect('view.php?id=' . $id);
