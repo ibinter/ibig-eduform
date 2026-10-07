@@ -112,7 +112,7 @@ ob_start();
   <div class="breadcrumb"><a href="index.php">← Niveaux</a> / Génération contenu IA</div>
 
   <h2>🎯 Génération objectifs / prérequis / public cible</h2>
-  <div class="gc-sub">Génère automatiquement les contenus différenciés par niveau (objectifs pédagogiques, prérequis, public cible) via Claude AI.</div>
+  <div class="gc-sub">Génère automatiquement les contenus différenciés par niveau (objectifs pédagogiques, prérequis, public cible) via Claude AI. <strong>Sans crédits API</strong> → utilisez <a href="seed-content.php" style="color:#7c3aed;font-weight:700">⚡ Seeder local (gratuit)</a>.</div>
 
   <div class="stats-row">
     <?php foreach ($stats_row as $s): ?>
