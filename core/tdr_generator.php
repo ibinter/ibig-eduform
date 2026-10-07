@@ -2264,3 +2264,381 @@ function tdr_templates(): array
 }
 
 } // end if !function_exists
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * tdr_objectifs_locaux() — Génère objectifs / prérequis / public_cible
+ * sans aucun appel API externe. Différencié par niveau ET par domaine.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+if (!function_exists('tdr_objectifs_locaux')) {
+
+function tdr_objectifs_locaux(string $nom, string $domaine, int $duree, string $desc = '', string $niveau = 'debutant'): array
+{
+    $haystack = mb_strtolower($nom . ' ' . $domaine, 'UTF-8');
+
+    $is_rh        = (bool)preg_match('/\b(rh|grh|ressources humaines|paie|recrutement|talent|rémunération|gpec|sirh|hr\b)/ui', $haystack);
+    $is_compta    = (bool)preg_match('/\b(compta|comptabilité|bilan|fiscal|tva|ohada|sage compta|comptable)/ui', $haystack);
+    $is_finance   = (bool)preg_match('/\b(finance|trésorerie|investissement|budget|analyse financière|contrôle de gestion|microfinance|banque|crédit)/ui', $haystack);
+    $is_marketing = (bool)preg_match('/\b(marketing|publicité|comm(unication)?|brand|marque|réseaux sociaux|social media|digital|content|seo|ads)/ui', $haystack);
+    $is_it        = (bool)preg_match('/\b(informatique|développement|python|java|php|sql|base de données|réseau|cyber|web|programmation|logiciel|erp|crm|data|power bi|excel)/ui', $haystack);
+    $is_mgmt      = (bool)preg_match('/\b(management|leadership|manager|direction|gouvernance|stratégie|prise de décision|chef de projet|pmo)/ui', $haystack);
+    $is_vente     = (bool)preg_match('/\b(vente|commercial|négociation|prospection|closing|business dev|entrepreneuriat|entrepreneur|startup)/ui', $haystack);
+    $is_logistique= (bool)preg_match('/\b(logistique|supply chain|achats|approvisionnement|stock|inventaire|transport|douane|import.?export)/ui', $haystack);
+    $is_audit     = (bool)preg_match('/\b(audit|contrôle interne|conformité|risk|risque|fraude|iso|qualité|normes)/ui', $haystack);
+    $is_juridique = (bool)preg_match('/\b(juridique|droit|contrat|légal|ohada|réglementation|compliance|tribunal)/ui', $haystack);
+    $is_sante     = (bool)preg_match('/\b(santé|médical|infirmier|soins|clinique|hôpital|pharmacie|patient|urgences|kiné|sage-femme)/ui', $haystack);
+    $is_formation = (bool)preg_match('/\b(formation|pédagogie|enseignement|formateur|e.?learning|ingénierie pédagogique|andragogie)/ui', $haystack);
+    $is_btp       = (bool)preg_match('/\b(btp|construction|architecture|génie civil|bâtiment|travaux|topographie|urbanisme)/ui', $haystack);
+    $is_agri      = (bool)preg_match('/\b(agriculture|agro|élevage|pêche|culture|sol|fertilisation|maraîchage|agroforesterie)/ui', $haystack);
+    $is_env       = (bool)preg_match('/\b(environnement|développement durable|rse|green|écologie|énergie renouvelable|changement climatique|biodiversité)/ui', $haystack);
+    $is_bureau    = (bool)preg_match('/\b(bureautique|secrétariat|assistanat|office|word|tableur|traitement de texte)/ui', $haystack);
+    $is_langues   = (bool)preg_match('/\b(anglais|français|langue|traduction|interprétation|communication écrite|rédaction)/ui', $haystack);
+
+    /* ── RH ── */
+    if ($is_rh) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Découvrir les fondamentaux de la gestion des ressources humaines et son rôle stratégique dans l'entreprise. Comprendre les principaux processus RH (recrutement, paie, administration du personnel) et savoir les appliquer dans un contexte professionnel africain.",
+            'prerequis'    => "Aucun prérequis spécifique. Convient à toute personne souhaitant s'initier aux métiers RH.",
+            'public_cible' => "Tout professionnel débutant ou en reconversion souhaitant intégrer une fonction RH. Idéal pour les assistants administratifs, les étudiants en gestion et toute personne souhaitant évoluer vers les métiers des ressources humaines.",
+        ],
+        'expert' => [
+            'objectifs'    => "Piloter la stratégie RH d'une organisation et aligner les politiques de gestion des talents sur les objectifs business. Maîtriser les outils avancés de People Analytics, de GPEC et de conduite du changement en contexte africain et international.",
+            'prerequis'    => "Expérience confirmée en gestion des RH (minimum 3 à 5 ans). Maîtrise des fondamentaux RH indispensable. Idéalement titulaire d'une formation supérieure en GRH ou management.",
+            'public_cible' => "Directeurs et responsables RH expérimentés, DRH en poste ou en prise de fonction. Consultants RH souhaitant développer leur expertise stratégique et se positionner comme senior dans leur domaine.",
+        ],
+        default => [
+            'objectifs'    => "Maîtriser les processus clés de la gestion des ressources humaines (recrutement, administration du personnel, paie, développement des compétences) et les appliquer de manière autonome. Développer une posture professionnelle RH adaptée aux réalités des entreprises africaines.",
+            'prerequis'    => "Notions de base en gestion ou administration. Une première expérience en entreprise est souhaitable, même hors spécialité RH.",
+            'public_cible' => "Professionnels exerçant ou souhaitant exercer dans une fonction RH, des services du personnel ou de l'administration. Responsables administratifs et managers souhaitant structurer leur pratique RH.",
+        ],
+    };
+
+    /* ── Comptabilité ── */
+    if ($is_compta) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Comprendre les principes fondamentaux de la comptabilité et maîtriser les écritures de base (saisie, journaux, plan des comptes). Être capable de produire des documents comptables simples et de naviguer dans un logiciel de comptabilité courant.",
+            'prerequis'    => "Aucun prérequis comptable. Maîtrise basique d'Excel recommandée.",
+            'public_cible' => "Toute personne souhaitant s'initier à la comptabilité : assistants comptables débutants, créateurs d'entreprise, responsables administratifs sans formation comptable.",
+        ],
+        'expert' => [
+            'objectifs'    => "Maîtriser les mécanismes avancés de la comptabilité OHADA, du droit fiscal et de la production des états financiers consolidés. Assurer la supervision comptable complète d'une entité et conseiller sur l'optimisation fiscale dans le respect des normes en vigueur.",
+            'prerequis'    => "Solide expérience en comptabilité (minimum 3 ans). Maîtrise des normes OHADA et du droit fiscal. Idéalement Expert-comptable stagiaire ou titulaire d'un diplôme comptable supérieur.",
+            'public_cible' => "Experts-comptables, chefs comptables expérimentés, responsables financiers souhaitant renforcer leur expertise technique et réglementaire.",
+        ],
+        default => [
+            'objectifs'    => "Maîtriser les techniques comptables intermédiaires : enregistrement des opérations complexes, déclarations fiscales courantes, clôture des comptes et production des états financiers. Utiliser avec autonomie les principaux logiciels comptables du marché africain.",
+            'prerequis'    => "Bases de la comptabilité (niveau débutant ou BAC orientation comptable). Pratique courante d'Excel.",
+            'public_cible' => "Comptables en poste souhaitant progresser, gestionnaires voulant maîtriser la comptabilité de leur structure, collaborateurs des services financiers cherchant à gagner en autonomie.",
+        ],
+    };
+
+    /* ── Finance ── */
+    if ($is_finance) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Comprendre les fondamentaux de la gestion financière : lecture des états financiers, notions de trésorerie, de budget et d'analyse de rentabilité. Savoir utiliser les outils financiers de base pour gérer une activité professionnelle.",
+            'prerequis'    => "Aucun prérequis financier. Maîtrise basique d'Excel recommandée.",
+            'public_cible' => "Entrepreneurs, managers non financiers, chefs de projet et toute personne souhaitant comprendre les enjeux financiers pour mieux piloter son activité.",
+        ],
+        'expert' => [
+            'objectifs'    => "Concevoir et piloter des stratégies financières complexes : modélisation avancée, gestion de portefeuille, levée de fonds et structuration d'opérations. Assurer un pilotage financier stratégique en lien avec la gouvernance de l'organisation.",
+            'prerequis'    => "Expérience confirmée en finance d'entreprise ou contrôle de gestion (minimum 3-5 ans). Maîtrise des outils d'analyse financière et des normes comptables.",
+            'public_cible' => "Directeurs financiers, contrôleurs de gestion senior, analystes financiers expérimentés et consultants finance souhaitant atteindre un niveau stratégique.",
+        ],
+        default => [
+            'objectifs'    => "Analyser les états financiers d'une entreprise, construire un budget prévisionnel et piloter la trésorerie avec autonomie. Maîtriser les outils d'analyse financière et de contrôle de gestion pour contribuer aux décisions stratégiques.",
+            'prerequis'    => "Notions de comptabilité ou de gestion. Pratique d'Excel. Une première expérience en environnement financier est appréciée.",
+            'public_cible' => "Contrôleurs de gestion, responsables financiers en prise de fonction, comptables souhaitant évoluer vers l'analyse financière, managers souhaitant piloter les finances de leur entité.",
+        ],
+    };
+
+    /* ── Marketing / Digital ── */
+    if ($is_marketing) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Comprendre les bases du marketing et de la communication professionnelle. Savoir construire un message, choisir les bons canaux et créer des contenus adaptés à une audience cible sur les réseaux sociaux et le digital.",
+            'prerequis'    => "Aucun prérequis. Accès à internet et à un smartphone ou ordinateur recommandé.",
+            'public_cible' => "Entrepreneurs, commerçants, chargés de communication débutants, étudiants et toute personne souhaitant promouvoir une activité ou développer des compétences en marketing digital.",
+        ],
+        'expert' => [
+            'objectifs'    => "Concevoir et piloter des stratégies marketing et communication multicanales à fort impact. Maîtriser les leviers avancés (SEA, automation marketing, data marketing, brand strategy) et mesurer précisément le ROI de chaque action.",
+            'prerequis'    => "Expérience confirmée en marketing ou communication (minimum 3 ans). Maîtrise des outils digitaux et des plateformes publicitaires. Sens aigu de l'analyse de données.",
+            'public_cible' => "Directeurs marketing, responsables communication expérimentés, consultants marketing digital souhaitant piloter des stratégies avancées et des programmes de mesure de performance.",
+        ],
+        default => [
+            'objectifs'    => "Concevoir et mettre en œuvre un plan marketing et de communication adapté à son organisation. Maîtriser les outils digitaux incontournables (réseaux sociaux, email marketing, SEO) et produire des campagnes efficaces avec un budget maîtrisé.",
+            'prerequis'    => "Notions de base en communication ou marketing. Utilisation courante des réseaux sociaux appréciée.",
+            'public_cible' => "Chargés de marketing ou communication en poste, community managers, responsables de PME souhaitant structurer leur communication, entrepreneurs voulant développer leur présence digitale.",
+        ],
+    };
+
+    /* ── Informatique / IT / Data ── */
+    if ($is_it) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Acquérir les bases pratiques de l'informatique et des outils numériques essentiels au monde professionnel. Comprendre les fondamentaux du domaine et être capable d'utiliser les outils courants de manière productive et autonome.",
+            'prerequis'    => "Aucun prérequis technique. Savoir utiliser un ordinateur est suffisant.",
+            'public_cible' => "Toute personne souhaitant développer ses compétences numériques : collaborateurs peu à l'aise avec les outils informatiques, nouveaux entrants sur le marché du travail, professionnels en reconversion vers le numérique.",
+        ],
+        'expert' => [
+            'objectifs'    => "Maîtriser les techniques avancées du domaine et concevoir des solutions numériques complexes, sécurisées et scalables. Adopter une posture d'architecte ou de lead technique pour accompagner la transformation numérique des organisations.",
+            'prerequis'    => "Expérience solide en informatique (minimum 3-5 ans). Maîtrise confirmée des fondamentaux techniques. Capacité à travailler en environnement complexe et à superviser des équipes techniques.",
+            'public_cible' => "Développeurs senior, architectes techniques, chefs de projet IT, DSI et professionnels expérimentés du numérique visant une expertise de haut niveau.",
+        ],
+        default => [
+            'objectifs'    => "Maîtriser les outils et techniques intermédiaires pour travailler en autonomie sur des projets professionnels réels. Développer une expertise opérationnelle et être capable de résoudre les problèmes courants avec efficacité et méthode.",
+            'prerequis'    => "Maîtrise des bases du domaine (niveau débutant ou formation équivalente). Utilisation régulière d'un ordinateur.",
+            'public_cible' => "Professionnels du numérique souhaitant approfondir leurs compétences, techniciens IT en progression, développeurs juniors visant l'autonomie professionnelle.",
+        ],
+    };
+
+    /* ── Management / Leadership ── */
+    if ($is_mgmt) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Comprendre les fondamentaux du management et du leadership pour animer une équipe avec efficacité. Acquérir les outils de base de la gestion de projet, de la communication managériale et de la prise de décision.",
+            'prerequis'    => "Aucun prérequis managérial. Convient à toute personne prenant ou souhaitant prendre des responsabilités d'encadrement.",
+            'public_cible' => "Collaborateurs en première prise de poste managérial, futurs managers, chefs d'équipe souhaitant structurer leur pratique de leadership.",
+        ],
+        'expert' => [
+            'objectifs'    => "Développer un leadership stratégique et piloter la transformation de son organisation avec vision et impact. Maîtriser les outils avancés de gouvernance, de conduite du changement et d'alignement stratégique pour influencer à haut niveau.",
+            'prerequis'    => "Expérience managériale confirmée (minimum 5 ans d'encadrement). Maîtrise des fondamentaux du management et de la stratégie d'entreprise.",
+            'public_cible' => "Directeurs et cadres dirigeants, managers expérimentés visant des responsabilités de direction générale, consultants en management souhaitant se positionner comme référence sectorielle.",
+        ],
+        default => [
+            'objectifs'    => "Animer et développer son équipe avec efficacité, gérer les situations difficiles et piloter des projets dans un contexte professionnel exigeant. Adopter une posture de manager-coach et développer son leadership opérationnel.",
+            'prerequis'    => "Une première expérience d'encadrement ou de coordination d'équipe est souhaitée. Bases en communication professionnelle.",
+            'public_cible' => "Managers en poste souhaitant structurer leur pratique, responsables d'équipe en progression, chefs de projet aspirant à des responsabilités d'encadrement élargies.",
+        ],
+    };
+
+    /* ── Vente / Commerce / Entrepreneuriat ── */
+    if ($is_vente) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Maîtriser les techniques de base de la vente et de la prospection commerciale. Comprendre le cycle de vente, savoir argumenter une offre et traiter les objections pour conclure des ventes avec confiance.",
+            'prerequis'    => "Aucun prérequis. Convient à toute personne souhaitant développer ses compétences commerciales.",
+            'public_cible' => "Débutants en commerce, entrepreneurs cherchant à vendre leur offre, collaborateurs souhaitant développer une dimension commerciale dans leur poste.",
+        ],
+        'expert' => [
+            'objectifs'    => "Concevoir et piloter une stratégie commerciale avancée, gérer des comptes clés complexes et développer un portefeuille à fort potentiel. Maîtriser la négociation à haut niveau et les outils CRM pour maximiser la performance commerciale.",
+            'prerequis'    => "Expérience commerciale confirmée (minimum 3-5 ans). Maîtrise du cycle de vente complet. Idéalement responsable commercial ou key account manager.",
+            'public_cible' => "Directeurs commerciaux, key account managers, responsables des ventes expérimentés et entrepreneurs voulant structurer une force de vente haute performance.",
+        ],
+        default => [
+            'objectifs'    => "Développer ses compétences commerciales pour prospecter efficacement, convaincre et fidéliser sa clientèle. Maîtriser les techniques de négociation, les outils CRM et les indicateurs de performance commerciale.",
+            'prerequis'    => "Bases en communication commerciale. Une première expérience en contact client ou en vente est appréciée.",
+            'public_cible' => "Commerciaux en poste souhaitant progresser, chargés de clientèle, account managers, entrepreneurs souhaitant structurer leur démarche commerciale.",
+        ],
+    };
+
+    /* ── Logistique / Supply Chain ── */
+    if ($is_logistique) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Comprendre les fondamentaux de la chaîne logistique : approvisionnement, gestion des stocks, transport et distribution. Acquérir le vocabulaire et les outils de base pour travailler efficacement dans un environnement logistique.",
+            'prerequis'    => "Aucun prérequis. Convient aux débutants dans les métiers de la logistique et des achats.",
+            'public_cible' => "Débutants en logistique ou supply chain, magasiniers en progression, assistants achats et toute personne souhaitant s'orienter vers les métiers de la chaîne d'approvisionnement.",
+        ],
+        'expert' => [
+            'objectifs'    => "Concevoir et optimiser des supply chains complexes en intégrant les contraintes du contexte africain (infrastructure, douanes, risques). Piloter la performance globale de la chaîne avec des indicateurs avancés et des outils de planification stratégique.",
+            'prerequis'    => "Expérience confirmée en logistique ou supply chain (minimum 5 ans). Maîtrise des outils logistiques et des procédures d'import-export. Capacité à piloter des équipes et des projets complexes.",
+            'public_cible' => "Directeurs supply chain, responsables logistiques expérimentés, consultants en optimisation de la chaîne d'approvisionnement et directeurs achats.",
+        ],
+        default => [
+            'objectifs'    => "Piloter avec autonomie les opérations logistiques et les achats : planification des approvisionnements, gestion des fournisseurs, optimisation des stocks et suivi de la performance. Maîtriser les indicateurs clés du supply chain management.",
+            'prerequis'    => "Notions de base en logistique ou en gestion. Une première expérience en entrepôt, achats ou transport est appréciée.",
+            'public_cible' => "Responsables logistiques en progression, acheteurs, gestionnaires de stock et planificateurs souhaitant développer leur maîtrise opérationnelle de la supply chain.",
+        ],
+    };
+
+    /* ── Audit / Contrôle / Qualité ── */
+    if ($is_audit) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Découvrir les principes fondamentaux de l'audit et du contrôle interne. Comprendre les enjeux de la maîtrise des risques et savoir contribuer à une mission d'audit sous supervision d'un auditeur expérimenté.",
+            'prerequis'    => "Bases en comptabilité ou en gestion. Sens de la rigueur et de l'analyse requis.",
+            'public_cible' => "Étudiants en comptabilité ou finance, collaborateurs souhaitant s'orienter vers l'audit interne ou externe, assistants comptables désirant élargir leurs compétences.",
+        ],
+        'expert' => [
+            'objectifs'    => "Concevoir et superviser des missions d'audit complexes, évaluer le dispositif de contrôle interne d'une organisation et formuler des recommandations stratégiques. Maîtriser les normes internationales d'audit et le management des risques d'entreprise.",
+            'prerequis'    => "Expérience confirmée en audit interne ou externe (minimum 5 ans). Connaissance des normes IIA/IFAC. Idéalement certifié CIA, CISA ou CGAP.",
+            'public_cible' => "Directeurs audit interne, associés de cabinets d'audit, risk managers expérimentés et responsables conformité visant une maîtrise stratégique de leur domaine.",
+        ],
+        default => [
+            'objectifs'    => "Conduire des missions d'audit interne de A à Z : planification, collecte des preuves, rédaction du rapport et suivi des recommandations. Évaluer l'efficacité des contrôles internes et contribuer à l'amélioration de la gouvernance organisationnelle.",
+            'prerequis'    => "Bases en comptabilité et en gestion. Première expérience en audit ou contrôle. Connaissance des référentiels COSO ou ISO est un atout.",
+            'public_cible' => "Auditeurs internes et externes en poste, contrôleurs de gestion, responsables conformité et risk managers souhaitant structurer et professionnaliser leur pratique.",
+        ],
+    };
+
+    /* ── Droit / Juridique ── */
+    if ($is_juridique) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Acquérir les bases du droit applicable en entreprise : contrats, droit du travail, réglementation OHADA. Comprendre les risques juridiques courants et développer les réflexes essentiels pour sécuriser son activité.",
+            'prerequis'    => "Aucun prérequis juridique. Convient à tout professionnel souhaitant comprendre les fondamentaux légaux.",
+            'public_cible' => "Dirigeants de TPE/PME, managers, assistants juridiques débutants et tout professionnel souhaitant mieux comprendre le cadre légal de son activité.",
+        ],
+        'expert' => [
+            'objectifs'    => "Maîtriser les aspects juridiques complexes de la vie des affaires : structuration juridique, contentieux, conformité réglementaire avancée et conseil stratégique. Piloter le département juridique d'une organisation ou conduire des missions de conseil à haut niveau.",
+            'prerequis'    => "Formation juridique supérieure (MASTER droit ou équivalent). Expérience pratique en droit des affaires ou en contentieux. Maîtrise des normes OHADA.",
+            'public_cible' => "Juristes d'entreprise expérimentés, avocats, responsables conformité et directeurs juridiques cherchant à renforcer leur expertise ou à se spécialiser.",
+        ],
+        default => [
+            'objectifs'    => "Maîtriser les mécanismes juridiques essentiels à la gestion d'une entreprise : rédaction et négociation de contrats, gestion des litiges courants, respect des obligations légales et fiscales. Adopter une posture de référent juridique dans son organisation.",
+            'prerequis'    => "Notions de droit des affaires ou droit du travail. Une première expérience en entreprise est souhaitée.",
+            'public_cible' => "Juristes en prise de poste, responsables RH et administratifs, managers souhaitant développer des réflexes juridiques solides pour sécuriser la gestion de leur entité.",
+        ],
+    };
+
+    /* ── Santé / Médical ── */
+    if ($is_sante) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Acquérir les connaissances et gestes essentiels pour intervenir de manière sécurisée dans un contexte de soins. Comprendre les protocoles de base, les règles d'hygiène et les fondamentaux de la relation soignant-patient.",
+            'prerequis'    => "Aucun prérequis médical spécifique. Motivation et sens des responsabilités sont les qualités essentielles.",
+            'public_cible' => "Personnes souhaitant s'initier aux métiers du soin, aides-soignants débutants, personnels de santé communautaire et volontaires souhaitant apporter des soins de base.",
+        ],
+        'expert' => [
+            'objectifs'    => "Maîtriser les protocoles avancés de soins, gérer des situations cliniques complexes et développer une expertise reconnue dans sa spécialité. Assurer un encadrement clinique de qualité et contribuer à l'amélioration des pratiques de soins.",
+            'prerequis'    => "Diplôme professionnel dans le domaine médical ou paramédical. Expérience clinique significative (minimum 3-5 ans). Maîtrise des protocoles standards.",
+            'public_cible' => "Professionnels de santé expérimentés (infirmiers, médecins, sages-femmes) souhaitant se spécialiser ou prendre des responsabilités d'encadrement clinique.",
+        ],
+        default => [
+            'objectifs'    => "Approfondir les compétences cliniques et relationnelles pour assurer des soins de qualité en toute autonomie. Maîtriser les protocoles professionnels, gérer les situations d'urgence courantes et travailler efficacement en équipe pluridisciplinaire.",
+            'prerequis'    => "Diplôme ou formation initiale dans le domaine de la santé. Une première expérience pratique en contexte de soins est indispensable.",
+            'public_cible' => "Professionnels de santé en exercice souhaitant actualiser et renforcer leurs compétences cliniques, paramédicaux désirant évoluer vers plus d'autonomie et de responsabilité.",
+        ],
+    };
+
+    /* ── Formation / Pédagogie ── */
+    if ($is_formation) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Comprendre les principes de l'ingénierie pédagogique et de l'animation de formation. Acquérir les bases pour concevoir une séquence d'apprentissage simple, animer un groupe et évaluer les acquis des participants.",
+            'prerequis'    => "Aucun prérequis pédagogique. Intérêt pour la transmission des savoirs et la relation d'apprentissage.",
+            'public_cible' => "Formateurs occasionnels, experts souhaitant transmettre leur savoir, enseignants en reconversion, responsables souhaitant développer des compétences en animation.",
+        ],
+        'expert' => [
+            'objectifs'    => "Concevoir des dispositifs de formation complexes et innovants intégrant le digital, l'évaluation des compétences et le transfert en situation de travail. Piloter une ingénierie de formation complète et mesurer son impact sur la performance organisationnelle.",
+            'prerequis'    => "Expérience confirmée en ingénierie pédagogique ou formation professionnelle (minimum 5 ans). Maîtrise des référentiels de compétences et des outils e-learning.",
+            'public_cible' => "Responsables formation, ingénieurs pédagogiques expérimentés, directeurs RH supervisant la politique formation et consultants en développement des compétences.",
+        ],
+        default => [
+            'objectifs'    => "Concevoir et animer des sessions de formation professionnelle efficaces, adaptées aux adultes en contexte professionnel africain. Maîtriser les techniques d'animation interactive, d'évaluation des apprentissages et de conception de supports pédagogiques.",
+            'prerequis'    => "Expérience en animation de groupe ou en formation est appréciée. Bases en communication. Aisance à l'oral.",
+            'public_cible' => "Formateurs en activité souhaitant professionnaliser leur pratique, responsables de formation, managers-formateurs et tout professionnel ayant une mission de transmission des savoirs.",
+        ],
+    };
+
+    /* ── BTP / Construction ── */
+    if ($is_btp) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Découvrir les bases du secteur de la construction : matériaux, techniques courantes, lecture de plans simples et normes de sécurité sur chantier. Comprendre l'organisation d'un projet de construction et ses acteurs principaux.",
+            'prerequis'    => "Aucun prérequis technique. Sensibilité à l'espace bâti et aptitude à la lecture de documents techniques recommandées.",
+            'public_cible' => "Conducteurs de travaux débutants, ouvriers qualifiés souhaitant évoluer, étudiants en BTP et toute personne souhaitant s'initier aux métiers de la construction.",
+        ],
+        'expert' => [
+            'objectifs'    => "Piloter des projets de construction complexes dans le respect strict des délais, des coûts et des normes de qualité et de sécurité. Maîtriser les techniques avancées d'ingénierie, de management de projet BTP et d'optimisation des processus constructifs.",
+            'prerequis'    => "Expérience confirmée dans le secteur BTP (minimum 5 ans). Maîtrise de la lecture de plans et des logiciels de conduite de projet. Ingénieur ou technicien supérieur BTP.",
+            'public_cible' => "Ingénieurs BTP expérimentés, chefs de chantier senior, directeurs travaux et responsables de projets d'infrastructure souhaitant atteindre l'excellence opérationnelle.",
+        ],
+        default => [
+            'objectifs'    => "Gérer avec autonomie les aspects techniques et organisationnels d'un chantier : planification, approvisionnement, management des équipes, respect des normes de qualité et sécurité. Maîtriser les outils et logiciels de suivi de projets BTP.",
+            'prerequis'    => "Formation technique en BTP ou expérience pratique équivalente. Maîtrise des bases de la lecture de plans. Connaissance des normes de sécurité chantier.",
+            'public_cible' => "Conducteurs de travaux, chefs de chantier, techniciens BTP souhaitant développer leur maîtrise technique et managériale pour prendre davantage de responsabilités.",
+        ],
+    };
+
+    /* ── Agriculture / Agroalimentaire ── */
+    if ($is_agri) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Comprendre les fondamentaux des techniques agricoles modernes adaptées au contexte africain. Acquérir les bases de la production végétale ou animale, de la gestion du sol et des bonnes pratiques agro-économiques.",
+            'prerequis'    => "Aucun prérequis technique. Intérêt pour l'agriculture et le développement rural.",
+            'public_cible' => "Agriculteurs souhaitant moderniser leurs pratiques, jeunes ruraux portant un projet agricole, agents de développement rural et tout acteur de l'agro-alimentaire souhaitant renforcer ses bases techniques.",
+        ],
+        'expert' => [
+            'objectifs'    => "Concevoir et piloter des projets agro-industriels à fort impact économique et environnemental. Maîtriser les technologies agricoles avancées, les chaînes de valeur agro-alimentaires et les mécanismes de financement de l'agriculture africaine.",
+            'prerequis'    => "Expérience confirmée en agriculture ou agro-industrie (minimum 5 ans). Maîtrise des techniques agricoles de base et des outils de gestion de projet.",
+            'public_cible' => "Ingénieurs agronomes, responsables d'exploitations agro-industrielles, porteurs de projets agricoles à grande échelle et acteurs du développement rural souhaitant maximiser leur impact.",
+        ],
+        default => [
+            'objectifs'    => "Optimiser les productions agricoles en appliquant des techniques modernes et durables adaptées aux sols et aux marchés africains. Maîtriser la gestion agro-économique et les outils de valorisation des produits agricoles.",
+            'prerequis'    => "Pratique de base en agriculture ou expérience rurale. Sensibilité aux enjeux économiques et environnementaux.",
+            'public_cible' => "Agriculteurs en activité souhaitant moderniser leur exploitation, techniciens agricoles, agents de vulgarisation et responsables de coopératives agricoles.",
+        ],
+    };
+
+    /* ── Environnement / RSE / Développement durable ── */
+    if ($is_env) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Comprendre les enjeux du développement durable et de la RSE dans le contexte professionnel africain. Acquérir les bases pour adopter des pratiques responsables et contribuer aux objectifs environnementaux de son organisation.",
+            'prerequis'    => "Aucun prérequis. Sensibilité aux questions environnementales et sociales.",
+            'public_cible' => "Tout professionnel souhaitant intégrer une dimension environnementale dans son travail, étudiants en développement durable, porteurs de projets verts.",
+        ],
+        'expert' => [
+            'objectifs'    => "Concevoir et piloter des stratégies RSE et développement durable ambitieuses et mesurables. Accompagner les organisations dans leur transformation écologique et maîtriser les référentiels internationaux (ISO 14001, GRI, ODD).",
+            'prerequis'    => "Expérience confirmée en RSE, environnement ou développement durable (minimum 3-5 ans). Connaissance des référentiels internationaux.",
+            'public_cible' => "Directeurs RSE, responsables environnement, consultants en développement durable et experts souhaitant piloter des transformations écologiques à fort impact.",
+        ],
+        default => [
+            'objectifs'    => "Concevoir et mettre en œuvre une démarche RSE ou développement durable dans son organisation. Maîtriser les outils de diagnostic environnemental, les normes applicables et les indicateurs de performance durable.",
+            'prerequis'    => "Notions en développement durable ou RSE. Expérience en gestion de projet est appréciée.",
+            'public_cible' => "Responsables RSE en prise de poste, chargés de mission développement durable, managers souhaitant intégrer les enjeux environnementaux dans leurs décisions.",
+        ],
+    };
+
+    /* ── Bureautique / Secrétariat ── */
+    if ($is_bureau) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Maîtriser les outils bureautiques de base (traitement de texte, tableur, présentation) pour travailler efficacement au quotidien. Acquérir les bonnes pratiques de productivité numérique en contexte professionnel.",
+            'prerequis'    => "Aucun prérequis bureautique. Savoir utiliser un ordinateur est suffisant.",
+            'public_cible' => "Toute personne souhaitant acquérir ou rafraîchir ses compétences bureautiques : secrétaires débutants, collaborateurs peu à l'aise avec les outils informatiques, nouveaux entrants sur le marché du travail.",
+        ],
+        'expert' => [
+            'objectifs'    => "Maîtriser les fonctionnalités avancées des outils bureautiques pour automatiser les tâches, produire des analyses complexes et créer des livrables professionnels de haute qualité. Devenir la référence bureautique et numérique de son organisation.",
+            'prerequis'    => "Bonne maîtrise des outils bureautiques courants (Word, Excel, PowerPoint). Expérience pratique régulière en contexte professionnel.",
+            'public_cible' => "Secrétaires et assistants de direction expérimentés, gestionnaires souhaitant automatiser leurs tâches, experts voulant maîtriser les fonctionnalités avancées d'Excel ou de PowerPoint.",
+        ],
+        default => [
+            'objectifs'    => "Utiliser les outils bureautiques avec aisance et efficacité dans un environnement professionnel : mise en page avancée, formules et tableaux croisés dynamiques Excel, présentations percutantes. Gagner en productivité et en qualité dans ses livrables quotidiens.",
+            'prerequis'    => "Bases en bureautique (ouverture de fichiers, saisie de texte, navigation dans un tableur). Pratique régulière d'un ordinateur.",
+            'public_cible' => "Secrétaires, assistants administratifs, comptables et tout professionnel utilisant quotidiennement des outils bureautiques et souhaitant en maîtriser les fonctionnalités avancées.",
+        ],
+    };
+
+    /* ── Langues / Communication écrite ── */
+    if ($is_langues) return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Acquérir les bases de la communication écrite et orale pour s'exprimer avec clarté dans un contexte professionnel. Comprendre les règles fondamentales et développer sa confiance pour communiquer efficacement.",
+            'prerequis'    => "Aucun prérequis. Motivation et régularité dans la pratique sont les clés du succès.",
+            'public_cible' => "Toute personne souhaitant améliorer sa communication professionnelle, débutants en langue étrangère, collaborateurs souhaitant prendre la parole avec plus d'assurance.",
+        ],
+        'expert' => [
+            'objectifs'    => "Atteindre une maîtrise professionnelle avancée de la langue pour communiquer avec précision dans des contextes complexes : négociations, rédaction de documents stratégiques, présentations à haute valeur ajoutée.",
+            'prerequis'    => "Niveau intermédiaire confirmé dans la langue. Pratique régulière en contexte professionnel.",
+            'public_cible' => "Professionnels bilingues souhaitant atteindre un niveau d'excellence, cadres travaillant en contexte international, traducteurs et interprètes en perfectionnement.",
+        ],
+        default => [
+            'objectifs'    => "Communiquer avec aisance à l'écrit et à l'oral dans un contexte professionnel : rédaction de courriers, emails et rapports, animation de réunions. Enrichir son vocabulaire professionnel et affiner sa maîtrise des codes de communication.",
+            'prerequis'    => "Niveau scolaire ou bases acquises dans la langue. Pratique minimale de la communication écrite.",
+            'public_cible' => "Professionnels souhaitant améliorer leurs compétences rédactionnelles, collaborateurs amenés à communiquer à l'international, secrétaires et assistants voulant professionnaliser leur expression.",
+        ],
+    };
+
+    /* ── Fallback générique — couvre toutes les autres formations ── */
+    $short = trim(preg_replace('/\s*\([^)]*\)/', '', $nom));
+    if (mb_strlen($short, 'UTF-8') > 60) {
+        $short = mb_substr($short, 0, 57, 'UTF-8') . '…';
+    }
+
+    return match($niveau) {
+        'debutant' => [
+            'objectifs'    => "Découvrir les fondamentaux de « {$short} » et acquérir les bases pratiques pour intervenir de manière efficace dans ce domaine. Comprendre le vocabulaire essentiel, les outils de base et les réflexes professionnels nécessaires à une première prise en main réussie.",
+            'prerequis'    => "Aucun prérequis spécifique. Cette formation est accessible à toute personne motivée, sans expérience préalable dans le domaine.",
+            'public_cible' => "Tout professionnel débutant ou en reconversion souhaitant s'initier à « {$short} ». Idéal pour les étudiants, les collaborateurs en début de carrière et toute personne découvrant ce domaine pour la première fois.",
+        ],
+        'expert' => [
+            'objectifs'    => "Maîtriser les dimensions stratégiques et avancées de « {$short} » pour exercer un leadership reconnu dans ce domaine. Développer une expertise de haut niveau permettant de concevoir des solutions innovantes, de piloter des projets complexes et d'accompagner la transformation des organisations.",
+            'prerequis'    => "Expérience professionnelle confirmée dans le domaine ou un domaine connexe (minimum 3 à 5 ans). Maîtrise solide des fondamentaux et des pratiques intermédiaires. Capacité à travailler en autonomie sur des problématiques complexes.",
+            'public_cible' => "Professionnels expérimentés, cadres et managers souhaitant atteindre un niveau d'excellence stratégique en « {$short} ». Consultants et formateurs voulant se positionner comme référence dans leur spécialité.",
+        ],
+        default => [
+            'objectifs'    => "Maîtriser les compétences opérationnelles clés de « {$short} » pour exercer en autonomie dans ce domaine. Développer une pratique professionnelle solide, ancrée dans les réalités du terrain africain, et être capable de résoudre des problèmes concrets avec efficacité.",
+            'prerequis'    => "Notions de base dans ce domaine ou expérience professionnelle connexe appréciée. Une première exposition au sujet, même informelle, facilite la progression.",
+            'public_cible' => "Professionnels en activité souhaitant développer ou consolider leurs compétences en « {$short} ». Idéal pour les praticiens souhaitant structurer leur expérience et adopter une approche plus méthodique et professionnelle.",
+        ],
+    };
+}
+
+} // end if !function_exists('tdr_objectifs_locaux')
