@@ -423,6 +423,20 @@ if (function_exists('is_post') && is_post()) {
             $dispoDb   = ($dispo !== '') ? $dispo : null;
             $messageDb = (trim($message) !== '') ? trim($message) : null;
 
+            // Formation issue du catalogue : on la rattache par slug, sinon on conserve son nom
+            $catNomPost  = trim((string)post('catalogue_nom', (string)post('catalogue_nom_display', $catalogue_nom)));
+            $catSlugPost = preg_replace('/[^\w\-]/', '', (string)post('formation_slug', $catalogue_slug));
+            if (!$formationId && $catSlugPost !== '') {
+                try {
+                    $stSlug = $pdo->prepare("SELECT id FROM formations WHERE slug = ? LIMIT 1");
+                    $stSlug->execute([$catSlugPost]);
+                    $formationId = (int)($stSlug->fetchColumn() ?: 0) ?: null;
+                } catch (Throwable $ignore) {}
+            }
+            if (!$formationId && $catNomPost !== '') {
+                $domaine = $catNomPost;
+            }
+
             // Domaine : si vide, et formation choisie => on peut mettre le titre formation (optionnel)
             // Sinon on laisse NULL
             if ($domaine === '' && $formationId) {
