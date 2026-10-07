@@ -53,6 +53,8 @@
   font-size:.85rem;max-width:1200px;margin:auto;
 }
 .footer-legal-left{ opacity:.85; }
+.footer-visits{ display:inline-block; margin-left:14px; padding:3px 10px; border-radius:999px; background:rgba(255,255,255,.08); font-size:.85em; white-space:nowrap; }
+.footer-visits strong{ color:#fbbf24; }
 .footer-legal-right{ display:flex; gap:18px; flex-wrap:wrap; }
 .footer-legal-right a{ color:#e5e7eb; text-decoration:none; opacity:.85; }
 .footer-legal-right a:hover{ color:#f5a623; opacity:1; }
@@ -206,6 +208,17 @@
   <div class="footer-legal">
     <div class="footer-legal-left">
       © <?= date('Y'); ?> IBIG EDUFORM — Tous droits réservés
+      <?php
+      $__visites = null;
+      try {
+        if (class_exists('Database')) {
+          require_once __DIR__ . '/../core/visit_counter.php';
+          $__visites = visit_counter_total(Database::connect());
+        }
+      } catch (Throwable $e) { $__visites = null; }
+      if ($__visites !== null): ?>
+        <span class="footer-visits">👁 <strong><?= number_format($__visites, 0, ',', ' '); ?></strong> visites depuis le lancement</span>
+      <?php endif; ?>
     </div>
     <div class="footer-legal-right">
       <a href="/mentions-legales.php">Mentions légales</a>
