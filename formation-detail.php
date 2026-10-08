@@ -212,6 +212,9 @@ $fdPrerequis  = trim(strip_tags((string)($f['_prerequis'] ?? '')));
 $pageTitle = $nom . ' — IBIG EDUFORM';
 $ogTitle   = $nom . ' — Formation certifiante IBIG EDUFORM';
 $inscUrl   = '/preinscription-generale.php?catalogue_nom=' . urlencode($nom) . '&formation_slug=' . urlencode($slug) . '&domaine=' . urlencode($cat) . ($prix > 0 ? '&catalogue_prix=' . $prix : '');
+if ($_isLocal && preg_match('/^[a-z0-9][a-z0-9\-]*$/i', $slug)) {
+    $inscUrl = '/preinscription/' . $slug;
+}
 
 $_descRaw  = strip_tags($desc);
 $ogDesc    = $_descRaw !== ''

@@ -90,6 +90,8 @@ RewriteRule ^formation/([^/?#\s]+)/?$ formation-detail.php?slug=$1 [L,QSA]
 # PREINSCRIPTION
 # =========================================================
 RewriteRule ^preinscription/([0-9]+)/?$ preinscription.php?formation=$1 [L,QSA]
+# Lien court : /preinscription/{slug-formation} → formulaire général pré-rempli
+RewriteRule ^preinscription/([a-z0-9][a-z0-9\-]*)/?$ preinscription-generale.php?formation_slug=$1 [L,QSA,NC]
 
 # =========================================================
 # PAGES SEO VILLE / DOMAINE

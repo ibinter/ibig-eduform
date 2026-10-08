@@ -550,7 +550,7 @@ foreach ($all_formations as $f) {
         if ((int)($g['individuel_pres']   ?? 0) < 250000) $g['individuel_pres']   = 250000;
         $g['hybride'] = r5(((int)$g['individuel_online'] + (int)$g['individuel_pres']) / 2);
     }
-    $insUrl  = preinsc_url((string)($f['name'] ?? ''), $cat, (string)($f['slug'] ?? ''), $prix);
+    $insUrl  = preinsc_url((string)($f['name'] ?? ''), $cat, (string)($f['slug'] ?? ''), $prix, $isLocal);
     $tdrUrl  = '/tdr-local-pdf.php?slug=' . urlencode((string)($f['slug'] ?? ''));
     /* "Voir" : toujours vers la fiche détail */
     $lien    = '/formation/' . urlencode((string)($f['slug'] ?? ''));
@@ -657,7 +657,10 @@ function build_url(array $params): string {
     $qs = http_build_query($base);
     return '/catalogue-formations.php' . ($qs ? '?' . $qs : '');
 }
-function preinsc_url(string $name, string $cat, string $slug = '', int $prix = 0): string {
+function preinsc_url(string $name, string $cat, string $slug = '', int $prix = 0, bool $isLocal = false): string {
+    if ($isLocal && preg_match('/^[a-z0-9][a-z0-9\-]*$/i', $slug)) {
+        return 'https://ibig-eduform.com/preinscription/' . $slug;
+    }
     $params = ['catalogue_nom' => $name, 'domaine' => $cat];
     if ($slug !== '') $params['formation_slug'] = $slug;
     if ($prix > 0)    $params['catalogue_prix']  = $prix;

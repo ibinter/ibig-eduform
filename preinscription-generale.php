@@ -148,6 +148,19 @@ $catalogue_slug   = isset($_GET['formation_slug'])   ? trim(strip_tags((string)$
 $catalogue_prix   = isset($_GET['catalogue_prix'])   ? (int)$_GET['catalogue_prix']                        : 0;
 $catalogue_niveau_id = isset($_GET['niveau_id'])     ? (int)$_GET['niveau_id']                             : 0;
 
+// Lien court /preinscription/{slug} : nom, domaine et prix retrouvés en base
+if ($catalogue_slug !== '' && $catalogue_nom === '') {
+    try {
+        $slugLk = $pdo->prepare("SELECT titre, domaine, tarif_en_ligne FROM formations WHERE slug = ? LIMIT 1");
+        $slugLk->execute([$catalogue_slug]);
+        if ($slugRow = $slugLk->fetch(PDO::FETCH_ASSOC)) {
+            $catalogue_nom = trim((string)$slugRow['titre']);
+            if ($catalogue_domaine === '') $catalogue_domaine = trim((string)($slugRow['domaine'] ?? ''));
+            if ($catalogue_prix <= 0)      $catalogue_prix    = (int)($slugRow['tarif_en_ligne'] ?? 0);
+        }
+    } catch (Throwable $ignore) {}
+}
+
 // Charger les niveaux actifs de la formation si slug fourni
 $preinsc_niveaux = [];
 if ($catalogue_slug !== '') {
