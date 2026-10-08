@@ -30,6 +30,7 @@ $data = [
   'duree'            => '25h',
   'tarif_en_ligne'   => 250000,
   'tarif_presentiel' => 275000,
+  'date_debut'       => '2026-10-12',
   'description'      => "Formation en groupe (3 à 5 participants), en ligne (classe virtuelle) ou en présentiel à Abidjan : 25 heures, 12 séances à raison de 2 à 3 séances par semaine. "
                       . "En Afrique francophone, les grands donneurs d'ordre (mines, BTP, industrie, énergie, organisations internationales) exigent de plus en plus de leurs partenaires des certifications ISO et des preuves concrètes de maîtrise des risques. "
                       . "Cette formation prépare les participants à occuper la fonction de Responsable HSE / QHSE : ISO 9001, ISO 14001, ISO 45001, Document Unique, audit interne, plan de prévention et indicateurs SST.",
@@ -49,11 +50,11 @@ $data = [
 ];
 $prerequis = "Niveau Bac minimum ou expérience professionnelle équivalente. Aucune certification préalable n'est exigée. Pour la formule en ligne : un ordinateur avec webcam et micro, une connexion internet stable et une adresse électronique valide.";
 
-/* ── Formation(s) concernée(s) : QHSE démarrant le 12/10/2026 ── */
+/* ── Formation concernée : https://ibig-eduform.com/formation/responsable-qhse-hse ── */
 $cands = $pdo->query("
   SELECT id, titre, slug, statut, date_debut, date_fin, duree, tarif_en_ligne, tarif_presentiel, tarif_hybride, tdr_pdf
   FROM formations
-  WHERE date_debut = '2026-10-12' AND (titre LIKE '%QHSE%' OR titre LIKE '%HSE%')
+  WHERE slug = 'responsable-qhse-hse'
   ORDER BY id
 ")->fetchAll(PDO::FETCH_ASSOC);
 
@@ -111,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              . ($nbNiv ? " ($nbNiv niveau(x) alignés)" : '') . '.';
     $cands = $pdo->query("
       SELECT id, titre, slug, statut, date_debut, date_fin, duree, tarif_en_ligne, tarif_presentiel, tarif_hybride, tdr_pdf
-      FROM formations WHERE date_debut = '2026-10-12' AND (titre LIKE '%QHSE%' OR titre LIKE '%HSE%') ORDER BY id
+      FROM formations WHERE slug = 'responsable-qhse-hse' ORDER BY id
     ")->fetchAll(PDO::FETCH_ASSOC);
   } catch (Throwable $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
@@ -138,10 +139,10 @@ td{padding:7px 10px;border-bottom:1px solid #f1f5f9;vertical-align:top}
     <div class="<?= strpos($message, '✅') === 0 ? 'alert-ok' : 'alert-err' ?>"><?= e($message) ?></div>
   <?php endif; ?>
 
-  <p style="font-size:13px;color:#475569">Nouvelles valeurs : <span class="new">titre « Responsable HSE / QHSE » · 25h (12 séances) · en ligne 250 000 F · présentiel 275 000 F · TDR officiel TDR-IBIG-EDU-2026-09</span>, objectifs, modules M1–M6, public cible et prérequis repris du TDR.</p>
+  <p style="font-size:13px;color:#475569">Nouvelles valeurs : <span class="new">titre « Responsable HSE / QHSE » · début lundi 12/10/2026 · 25h (12 séances) · en ligne 250 000 F · présentiel 275 000 F · TDR officiel TDR-IBIG-EDU-2026-09</span>, objectifs, modules M1–M6, public cible et prérequis repris du TDR.</p>
 
   <?php if (!$cands): ?>
-    <div class="alert-err">Aucune formation QHSE/HSE ne démarre le 12/10/2026.</div>
+    <div class="alert-err">Formation « responsable-qhse-hse » introuvable.</div>
   <?php else: ?>
   <table>
     <thead><tr><th>ID</th><th>Titre actuel</th><th>Statut</th><th>Dates</th><th>Durée</th><th>Tarifs actuels (ligne / prés. / hyb.)</th><th>TDR actuel</th><th></th></tr></thead>
