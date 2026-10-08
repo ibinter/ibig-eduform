@@ -97,8 +97,7 @@ require_once __DIR__ . '/core/database.php';
 try {
     $pdo  = Database::connect();
     $stmt = $pdo->prepare("
-        SELECT id, titre, description, objectifs, modules, tarif_en_ligne, tarif_presentiel, tarif_hybride,
-               domaine, duree, slug
+        SELECT *
         FROM formations
         WHERE slug = :slug
           AND statut = 'active'
@@ -119,6 +118,10 @@ try {
             'slug'        => (string)$row['slug'],
             '_duree'      => (string)($row['duree'] ?? ''),
             '_local'      => true,
+            '_obj_general'=> (string)($row['objectif_general'] ?? ''),
+            '_objectifs'  => (string)($row['objectifs'] ?? ''),
+            '_public'     => (string)($row['public_cible'] ?? ''),
+            '_prerequis'  => (string)($row['prerequis'] ?? ''),
         ];
         // Charger les niveaux actifs de cette formation
         try {
@@ -185,6 +188,26 @@ if ($prix > 0 && !$_isSamPro && !$_isLocal) {
 }
 
 $g         = $prix > 0 ? grille_d($prix) : null;
+/* Formation locale : tarifs présentiel / hybride saisis en base prioritaires sur le calcul */
+$_fdHideHyb = false;
+if ($g && $_isLocal && (int)($f['price_pres'] ?? 0) > 0) {
+    $g['individuel_pres'] = (int)$f['price_pres'];
+    if ((int)($f['price_hyb'] ?? 0) > 0) {
+        $g['hybride'] = (int)$f['price_hyb'];
+    } else {
+        $_fdHideHyb = true;
+    }
+}
+$fdLines = static function (string $t): array {
+    $t = trim(strip_tags($t));
+    if ($t === '') return [];
+    $parts = preg_split('/\r\n|\n|\r|\s*;\s*|\s*•\s*/u', $t) ?: [];
+    return array_values(array_filter(array_map('trim', $parts), 'strlen'));
+};
+$fdObjGeneral = trim((string)($f['_obj_general'] ?? ''));
+$fdObjectifs  = $fdLines((string)($f['_objectifs'] ?? ''));
+$fdPublic     = trim(strip_tags((string)($f['_public'] ?? '')));
+$fdPrerequis  = trim(strip_tags((string)($f['_prerequis'] ?? '')));
 
 $pageTitle = $nom . ' — IBIG EDUFORM';
 $ogTitle   = $nom . ' — Formation certifiante IBIG EDUFORM';
@@ -373,17 +396,21 @@ function fdToggleFaq(btn) {
     <!-- Objectif général -->
     <div class="fd-card">
       <h2><span class="fd-ico">🎯</span> Objectif général</h2>
-      <p><?= htmlspecialchars($desc ?: 'Maîtriser les compétences essentielles liées à ce domaine et obtenir une certification reconnue dans l\'espace OHADA.', ENT_QUOTES, 'UTF-8') ?></p>
+      <p><?= htmlspecialchars($fdObjGeneral ?: $desc ?: 'Maîtriser les compétences essentielles liées à ce domaine et obtenir une certification reconnue dans l\'espace OHADA.', ENT_QUOTES, 'UTF-8') ?></p>
     </div>
 
     <!-- Objectifs spécifiques -->
     <div class="fd-card">
       <h2><span class="fd-ico">✅</span> Objectifs spécifiques</h2>
       <ul>
+        <?php if ($fdObjectifs): foreach ($fdObjectifs as $_o): ?>
+        <li><?= htmlspecialchars($_o, ENT_QUOTES, 'UTF-8') ?></li>
+        <?php endforeach; else: ?>
         <li>Comprendre les fondamentaux et les enjeux actuels du domaine</li>
         <li>Acquérir des outils et méthodes directement applicables en entreprise</li>
         <li>Développer des compétences pratiques validées par des mises en situation</li>
         <li>Obtenir une certification professionnelle reconnue partout en Afrique francophone</li>
+        <?php endif; ?>
       </ul>
       <p style="margin-top:10px;font-size:.8rem;color:#64748b">* Objectifs spécifiques détaillés disponibles dans le programme complet (TDR).</p>
     </div>
@@ -394,20 +421,28 @@ function fdToggleFaq(btn) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div>
           <div style="font-weight:700;font-size:.82rem;color:#0a1733;margin-bottom:6px">Public cible</div>
+          <?php if ($fdPublic !== ''): ?>
+          <p style="margin:0"><?= htmlspecialchars($fdPublic, ENT_QUOTES, 'UTF-8') ?></p>
+          <?php else: ?>
           <ul>
             <li>Professionnels en activité</li>
             <li>Demandeurs d'emploi qualifiés</li>
             <li>Étudiants en fin de cursus</li>
             <li>Entrepreneurs &amp; dirigeants</li>
           </ul>
+          <?php endif; ?>
         </div>
         <div>
           <div style="font-weight:700;font-size:.82rem;color:#0a1733;margin-bottom:6px">Prérequis</div>
+          <?php if ($fdPrerequis !== ''): ?>
+          <p style="margin:0"><?= htmlspecialchars($fdPrerequis, ENT_QUOTES, 'UTF-8') ?></p>
+          <?php else: ?>
           <ul>
             <li>Niveau BAC ou équivalent</li>
             <li>Motivation et disponibilité</li>
             <li>Accès à un ordinateur/smartphone</li>
           </ul>
+          <?php endif; ?>
         </div>
       </div>
       <p style="margin-top:10px;font-size:.8rem;color:#64748b">* Prérequis spécifiques précisés dans le TDR de la formation.</p>
@@ -604,7 +639,9 @@ function fdToggleFaq(btn) {
         </thead>
         <tbody>
           <tr><td>👤 Individuel en ligne</td><td><?= fd_fcfa((int)$g['individuel_online']) ?></td><td>—</td></tr>
+          <?php if (!$_fdHideHyb): ?>
           <tr><td>🔀 Hybride (En ligne et en présentiel)</td><td colspan="2" style="text-align:center"><?= fd_fcfa((int)$g['hybride']) ?></td></tr>
+          <?php endif; ?>
           <tr><td>👤 Individuel présentiel</td><td>—</td><td><?= fd_fcfa((int)$g['individuel_pres']) ?></td></tr>
           <tr class="fd-intra"><td colspan="3">👥 Formation groupe &amp; intra-entreprise — <strong>Sur devis</strong></td></tr>
         </tbody>

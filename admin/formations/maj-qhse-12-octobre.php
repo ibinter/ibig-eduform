@@ -30,6 +30,7 @@ $data = [
   'duree'            => '25h',
   'tarif_en_ligne'   => 250000,
   'tarif_presentiel' => 275000,
+  'tarif_hybride'    => 0,
   'date_debut'       => '2026-10-12',
   'description'      => "Formation en groupe (3 à 5 participants), en ligne (classe virtuelle) ou en présentiel à Abidjan : 25 heures, 12 séances à raison de 2 à 3 séances par semaine. "
                       . "En Afrique francophone, les grands donneurs d'ordre (mines, BTP, industrie, énergie, organisations internationales) exigent de plus en plus de leurs partenaires des certifications ISO et des preuves concrètes de maîtrise des risques. "
