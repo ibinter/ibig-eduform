@@ -121,6 +121,15 @@ $initials = strtoupper(
           <span>Satisfaction apprenants</span>
         </a>
       <?php endif; ?>
+
+      <?php if (has_permission('manage_formations')): ?>
+        <a href="/admin/certificats/index.php" class="<?= $active === 'certificats' ? 'active' : '' ?>" data-tip="Certificats">
+          <span class="ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+          </span>
+          <span>Certificats</span>
+        </a>
+      <?php endif; ?>
     <?php endif; ?>
 
     <!-- EMPLOI & INSERTION -->
