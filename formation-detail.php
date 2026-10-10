@@ -126,7 +126,8 @@ try {
         // Charger les niveaux actifs de cette formation
         try {
             $niv_stmt = $pdo->prepare("
-                SELECT niveau, duree_heures, tarif_en_ligne, tarif_presentiel, tarif_hybride, ordre_affichage
+                SELECT niveau, duree_heures, tarif_en_ligne, tarif_presentiel, tarif_hybride, ordre_affichage,
+                       objectifs, prerequis, public_cible
                 FROM formation_niveaux
                 WHERE formation_id = :fid AND statut = 'actif'
                 ORDER BY ordre_affichage ASC
@@ -369,7 +370,7 @@ function fdToggleFaq(btn) {
   <a class="fd-hero-badge" href="/catalogue-formations.php?cat=<?= urlencode($cat) ?>" style="text-decoration:none;cursor:pointer"><?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?></a>
   <h1><?= htmlspecialchars($nom, ENT_QUOTES, 'UTF-8') ?></h1>
   <?php if ($desc): ?>
-  <p class="fd-hero-sub"><?= htmlspecialchars(mb_substr($desc, 0, 200, 'UTF-8'), ENT_QUOTES, 'UTF-8') ?><?= mb_strlen($desc, 'UTF-8') > 200 ? '…' : '' ?></p>
+  <p class="fd-hero-sub"><?= htmlspecialchars(mb_substr($desc, 0, 320, 'UTF-8'), ENT_QUOTES, 'UTF-8') ?><?= mb_strlen($desc, 'UTF-8') > 320 ? '…' : '' ?></p>
   <?php endif; ?>
   <div class="fd-hero-tags">
     <span class="fd-tag">🔀 Hybride</span>
@@ -396,29 +397,106 @@ function fdToggleFaq(btn) {
   <!-- ── Colonne principale -->
   <div class="fd-main">
 
+    <!-- À propos de la formation -->
+    <?php $_descFull = trim(strip_tags($desc)); ?>
+    <?php if ($_descFull !== '' && mb_strlen($_descFull, 'UTF-8') > 320): ?>
+    <div class="fd-card">
+      <h2><span class="fd-ico">📋</span> À propos de cette formation</h2>
+      <p style="line-height:1.75"><?= nl2br(htmlspecialchars($_descFull, ENT_QUOTES, 'UTF-8')) ?></p>
+    </div>
+    <?php endif; ?>
+
     <!-- Objectif général -->
+    <?php $_objG = $fdObjGeneral ?: ''; ?>
+    <?php if ($_objG !== ''): ?>
     <div class="fd-card">
       <h2><span class="fd-ico">🎯</span> Objectif général</h2>
-      <p><?= htmlspecialchars($fdObjGeneral ?: $desc ?: 'Maîtriser les compétences essentielles liées à ce domaine et obtenir une certification reconnue dans l\'espace OHADA.', ENT_QUOTES, 'UTF-8') ?></p>
+      <p><?= htmlspecialchars($_objG, ENT_QUOTES, 'UTF-8') ?></p>
     </div>
+    <?php endif; ?>
 
-    <!-- Objectifs spécifiques -->
-    <div class="fd-card">
-      <h2><span class="fd-ico">✅</span> Objectifs spécifiques</h2>
-      <ul>
-        <?php if ($fdObjectifs): foreach ($fdObjectifs as $_o): ?>
-        <li><?= htmlspecialchars($_o, ENT_QUOTES, 'UTF-8') ?></li>
-        <?php endforeach; else: ?>
-        <li>Comprendre les fondamentaux et les enjeux actuels du domaine</li>
-        <li>Acquérir des outils et méthodes directement applicables en entreprise</li>
-        <li>Développer des compétences pratiques validées par des mises en situation</li>
-        <li>Obtenir une certification professionnelle reconnue partout en Afrique francophone</li>
-        <?php endif; ?>
-      </ul>
-      <p style="margin-top:10px;font-size:.8rem;color:#64748b">* Objectifs spécifiques détaillés disponibles dans le programme complet (TDR).</p>
+    <!-- Par niveau : Objectifs / Public cible / Prérequis -->
+    <?php
+    $_niveaux_fd = $f['_niveaux'] ?? [];
+    $_niv_labels_main = ['debutant' => 'Débutant', 'intermediaire' => 'Intermédiaire', 'expert' => 'Expert'];
+    $_niv_colors = [
+        'debutant'      => ['bg'=>'#dcfce7','color'=>'#166534','border'=>'#86efac'],
+        'intermediaire' => ['bg'=>'#dbeafe','color'=>'#1e40af','border'=>'#93c5fd'],
+        'expert'        => ['bg'=>'#fce7f3','color'=>'#9d174d','border'=>'#f9a8d4'],
+    ];
+    // Filtrer les niveaux qui ont au moins objectifs OU public_cible OU prerequis
+    $_niveaux_avec_contenu = array_filter($_niveaux_fd, function($nv) {
+        return !empty(trim((string)($nv['objectifs'] ?? '')))
+            || !empty(trim((string)($nv['public_cible'] ?? '')))
+            || !empty(trim((string)($nv['prerequis'] ?? '')));
+    });
+    ?>
+    <?php if (!empty($_niveaux_avec_contenu)): ?>
+    <div class="fd-card" id="fd-niv-details">
+      <h2><span class="fd-ico">🎓</span> Par niveau — Objectifs &amp; Public cible</h2>
+      <?php if (count($_niveaux_avec_contenu) > 1): ?>
+      <div class="fd-niv-tabs" style="margin-bottom:18px">
+        <?php $__i = 0; foreach ($_niveaux_avec_contenu as $_nv): $__c = $_niv_colors[$_nv['niveau']] ?? $_niv_colors['intermediaire']; ?>
+        <button type="button"
+                class="fd-niv-tab<?= $__i === 0 ? ' active' : '' ?> fd-niv-<?= $_nv['niveau'] ?>"
+                onclick="fdSelDetail(this,<?= $__i ?>)">
+          <?= $_niv_labels_main[$_nv['niveau']] ?? $_nv['niveau'] ?>
+        </button>
+        <?php $__i++; endforeach; ?>
+      </div>
+      <?php endif; ?>
+      <?php $__i = 0; foreach ($_niveaux_avec_contenu as $_nv):
+        $_obj_nv  = trim((string)($nv['objectifs']    ?? ($nv = $_nv) ? (string)($_nv['objectifs'] ?? '') : ''));
+        // Correction: use $_nv directly
+        $_obj_nv  = trim((string)($_nv['objectifs']    ?? ''));
+        $_pub_nv  = trim(strip_tags((string)($_nv['public_cible'] ?? '')));
+        $_pre_nv  = trim(strip_tags((string)($_nv['prerequis']    ?? '')));
+        $_dur_nv  = (int)($_nv['duree_heures'] ?? 0);
+        $_lbl_nv  = $_niv_labels_main[$_nv['niveau']] ?? $_nv['niveau'];
+        $_col_nv  = $_niv_colors[$_nv['niveau']] ?? $_niv_colors['intermediaire'];
+      ?>
+      <div class="fd-niv-panel<?= $__i === 0 ? ' active' : '' ?>" data-det-idx="<?= $__i ?>">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <span style="background:<?= $_col_nv['bg'] ?>;color:<?= $_col_nv['color'] ?>;border:1.5px solid <?= $_col_nv['border'] ?>;border-radius:999px;font-size:.75rem;font-weight:800;padding:4px 14px"><?= htmlspecialchars($_lbl_nv, ENT_QUOTES, 'UTF-8') ?></span>
+          <?php if ($_dur_nv > 0): ?>
+          <span style="font-size:.78rem;color:#64748b">⏱️ <?= $_dur_nv ?>h</span>
+          <?php endif; ?>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <?php if ($_obj_nv !== ''): ?>
+          <div style="grid-column:1/-1">
+            <div style="font-weight:700;font-size:.82rem;color:#0a1733;margin-bottom:7px">✅ Objectifs</div>
+            <p style="margin:0;font-size:.88rem;line-height:1.7;color:#374151"><?= nl2br(htmlspecialchars($_obj_nv, ENT_QUOTES, 'UTF-8')) ?></p>
+          </div>
+          <?php endif; ?>
+          <?php if ($_pub_nv !== ''): ?>
+          <div>
+            <div style="font-weight:700;font-size:.82rem;color:#0a1733;margin-bottom:7px">👥 Public cible</div>
+            <p style="margin:0;font-size:.88rem;line-height:1.65;color:#374151"><?= nl2br(htmlspecialchars($_pub_nv, ENT_QUOTES, 'UTF-8')) ?></p>
+          </div>
+          <?php endif; ?>
+          <?php if ($_pre_nv !== ''): ?>
+          <div>
+            <div style="font-weight:700;font-size:.82rem;color:#0a1733;margin-bottom:7px">📋 Prérequis</div>
+            <p style="margin:0;font-size:.88rem;line-height:1.65;color:#374151"><?= nl2br(htmlspecialchars($_pre_nv, ENT_QUOTES, 'UTF-8')) ?></p>
+          </div>
+          <?php endif; ?>
+        </div>
+      </div>
+      <?php $__i++; endforeach; ?>
+      <script>
+      function fdSelDetail(btn, idx) {
+        var card = btn.closest('#fd-niv-details');
+        card.querySelectorAll('.fd-niv-tab').forEach(function(t){ t.classList.remove('active'); });
+        card.querySelectorAll('.fd-niv-panel').forEach(function(p){ p.classList.remove('active'); });
+        btn.classList.add('active');
+        var panel = card.querySelector('[data-det-idx="'+idx+'"]');
+        if (panel) panel.classList.add('active');
+      }
+      </script>
     </div>
-
-    <!-- Public cible & Prérequis -->
+    <?php else: ?>
+    <!-- Fallback si pas de données par niveau -->
     <div class="fd-card">
       <h2><span class="fd-ico">👥</span> Public cible &amp; Prérequis</h2>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
@@ -427,12 +505,7 @@ function fdToggleFaq(btn) {
           <?php if ($fdPublic !== ''): ?>
           <p style="margin:0"><?= htmlspecialchars($fdPublic, ENT_QUOTES, 'UTF-8') ?></p>
           <?php else: ?>
-          <ul>
-            <li>Professionnels en activité</li>
-            <li>Demandeurs d'emploi qualifiés</li>
-            <li>Étudiants en fin de cursus</li>
-            <li>Entrepreneurs &amp; dirigeants</li>
-          </ul>
+          <ul><li>Professionnels en activité</li><li>Demandeurs d'emploi qualifiés</li><li>Étudiants en fin de cursus</li><li>Entrepreneurs &amp; dirigeants</li></ul>
           <?php endif; ?>
         </div>
         <div>
@@ -440,16 +513,22 @@ function fdToggleFaq(btn) {
           <?php if ($fdPrerequis !== ''): ?>
           <p style="margin:0"><?= htmlspecialchars($fdPrerequis, ENT_QUOTES, 'UTF-8') ?></p>
           <?php else: ?>
-          <ul>
-            <li>Niveau BAC ou équivalent</li>
-            <li>Motivation et disponibilité</li>
-            <li>Accès à un ordinateur/smartphone</li>
-          </ul>
+          <ul><li>Niveau BAC ou équivalent</li><li>Motivation et disponibilité</li><li>Accès à un ordinateur/smartphone</li></ul>
           <?php endif; ?>
         </div>
       </div>
-      <p style="margin-top:10px;font-size:.8rem;color:#64748b">* Prérequis spécifiques précisés dans le TDR de la formation.</p>
+      <?php if ($fdObjectifs): ?>
+      <div style="margin-top:16px">
+        <div style="font-weight:700;font-size:.82rem;color:#0a1733;margin-bottom:7px">✅ Objectifs spécifiques</div>
+        <ul style="margin:0">
+          <?php foreach ($fdObjectifs as $_o): ?>
+          <li><?= htmlspecialchars($_o, ENT_QUOTES, 'UTF-8') ?></li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
+      <?php endif; ?>
     </div>
+    <?php endif; ?>
 
     <!-- Programme / Modules — verrouillé -->
     <div class="fd-card">
@@ -479,82 +558,6 @@ function fdToggleFaq(btn) {
         <li><strong>Accompagnement</strong> — formateurs certifiés disponibles par WhatsApp/email</li>
         <li><strong>Évaluation continue</strong> — exercices, projets, examen final</li>
         <li><strong>Certification</strong> — délivrée par IBIG à l'issue du parcours validé</li>
-      </ul>
-    </div>
-
-    <!-- Ce que vous allez apprendre -->
-    <div class="fd-card">
-      <h2><span class="fd-ico">💡</span> Ce que vous allez apprendre</h2>
-      <div class="fd-skills-grid">
-        <div class="fd-skill">Maîtriser les concepts fondamentaux du domaine</div>
-        <div class="fd-skill">Utiliser les outils et méthodes professionnels</div>
-        <div class="fd-skill">Analyser et résoudre des problèmes réels</div>
-        <div class="fd-skill">Communiquer efficacement dans le contexte métier</div>
-        <div class="fd-skill">Piloter des projets et des équipes</div>
-        <div class="fd-skill">Produire des livrables conformes aux standards</div>
-        <div class="fd-skill">S'adapter aux évolutions du secteur</div>
-        <div class="fd-skill">Valoriser votre profil sur le marché africain</div>
-      </div>
-      <p style="margin-top:12px;font-size:.8rem;color:#64748b">* Compétences spécifiques détaillées dans le programme complet (TDR).</p>
-    </div>
-
-    <!-- Formateurs -->
-    <div class="fd-card">
-      <h2><span class="fd-ico">👨‍🏫</span> Vos formateurs</h2>
-      <p style="margin-bottom:16px">Nos formations sont animées par des praticiens en activité, sélectionnés pour leur expertise terrain et leur capacité pédagogique.</p>
-      <div class="fd-trainers">
-        <div class="fd-trainer">
-          <div class="fd-trainer-avatar">Expert<br>Senior</div>
-          <div>
-            <div class="fd-trainer-name">Expert certifié — <?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?></div>
-            <div class="fd-trainer-bio">10+ ans d'expérience terrain · Certifications internationales · Intervenant en entreprise et institutions en Afrique de l'Ouest</div>
-          </div>
-        </div>
-        <div class="fd-trainer">
-          <div class="fd-trainer-avatar">Coach<br>Pro</div>
-          <div>
-            <div class="fd-trainer-name">Coach professionnel certifié</div>
-            <div class="fd-trainer-bio">Spécialiste de l'accompagnement post-formation · Suivi personnalisé · Membre du réseau IBIG de formateurs accrédités</div>
-          </div>
-        </div>
-      </div>
-      <p style="margin-top:14px;font-size:.8rem;color:#64748b">Le formateur assigné à votre session vous est communiqué à la confirmation d'inscription.</p>
-    </div>
-
-    <!-- Témoignages -->
-    <div class="fd-card">
-      <h2><span class="fd-ico">⭐</span> Ce qu'en disent nos apprenants</h2>
-      <div class="fd-testimonials">
-        <div class="fd-testi">
-          <div class="fd-testi-stars">★★★★★</div>
-          <p class="fd-testi-text">« Une formation très complète, ancrée dans la réalité africaine. J'ai pu appliquer les outils dès la semaine suivante dans mon entreprise. »</p>
-          <div class="fd-testi-author">K. Kouassi — Abidjan, Côte d'Ivoire</div>
-        </div>
-        <div class="fd-testi">
-          <div class="fd-testi-stars">★★★★★</div>
-          <p class="fd-testi-text">« Le formateur était très professionnel et disponible. Le format hybride m'a permis de suivre la formation tout en continuant mon activité. »</p>
-          <div class="fd-testi-author">A. Diallo — Dakar, Sénégal</div>
-        </div>
-        <div class="fd-testi">
-          <div class="fd-testi-stars">★★★★☆</div>
-          <p class="fd-testi-text">« Excellente pédagogie, cas pratiques pertinents. Le certificat IBIG m'a ouvert des portes auprès de mes clients et partenaires. »</p>
-          <div class="fd-testi-author">M. Traoré — Bamako, Mali</div>
-        </div>
-      </div>
-      <div style="text-align:center;margin-top:16px">
-        <a href="/avis-clients.php" style="font-size:.82rem;color:#1d4ed8;text-decoration:none;font-weight:600">Voir tous les témoignages →</a>
-      </div>
-    </div>
-
-    <!-- Débouchés -->
-    <div class="fd-card">
-      <h2><span class="fd-ico">🚀</span> Débouchés &amp; Opportunités</h2>
-      <p>Cette formation ouvre des perspectives professionnelles dans les entreprises, institutions et organisations de l'espace OHADA ayant besoin de compétences dans le domaine <strong><?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?></strong>.</p>
-      <ul style="margin-top:10px">
-        <li>Poste salarié en entreprise locale ou internationale</li>
-        <li>Consulting / prestation indépendante</li>
-        <li>Création d'activité / entrepreneuriat</li>
-        <li>Renforcement de poste actuel</li>
       </ul>
     </div>
 
