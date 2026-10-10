@@ -218,9 +218,8 @@ if ($_isLocal && preg_match('/^[a-z0-9][a-z0-9\-]*$/i', $slug)) {
 }
 
 $_descRaw  = strip_tags($desc);
-// Nettoyer les mentions de prix et codes internes pour l'affichage public
+// Supprimer uniquement les mentions de prix et codes internes
 $_descClean = preg_replace('/\.?\s*(?:À partir de|à partir de)\s[\d\s]+(?:F\s?CFA|FCFA)[^.]*\.?/u', '', $_descRaw);
-$_descClean = preg_replace('/\.?\s*(?:Disponible en e-?learning[^.]*\.?)/ui', '', $_descClean);
 $_descClean = preg_replace('/\.?\s*Code\s*:\s*[A-Z0-9\-]+\.?/u', '', $_descClean);
 $_descClean = trim(preg_replace('/\s{2,}/', ' ', $_descClean));
 $ogDesc    = $_descRaw !== ''
