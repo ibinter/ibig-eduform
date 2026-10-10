@@ -148,6 +148,35 @@ $catalogue_slug   = isset($_GET['formation_slug'])   ? trim(strip_tags((string)$
 $catalogue_prix   = isset($_GET['catalogue_prix'])   ? (int)$_GET['catalogue_prix']                        : 0;
 $catalogue_niveau_id = isset($_GET['niveau_id'])     ? (int)$_GET['niveau_id']                             : 0;
 
+// Ancien lien long (?catalogue_nom=…&formation_slug=…) → redirection 301 vers /preinscription/{slug}
+if ($_SERVER['REQUEST_METHOD'] === 'GET'
+    && strpos((string)($_SERVER['REQUEST_URI'] ?? ''), '/preinscription-generale.php') === 0
+    && preg_match('/^[a-z0-9][a-z0-9\-]*$/i', $catalogue_slug)
+    && !isset($_GET['success'])) {
+    try {
+        $slugChk = $pdo->prepare("SELECT 1 FROM formations WHERE slug = ? LIMIT 1");
+        $slugChk->execute([$catalogue_slug]);
+        if ($slugChk->fetchColumn()) {
+            $keep = array_intersect_key($_GET, array_flip(['niveau_id', 'utm_source', 'utm_campaign', 'utm_medium']));
+            header('Location: /preinscription/' . $catalogue_slug . ($keep ? '?' . http_build_query($keep) : ''), true, 301);
+            exit;
+        }
+    } catch (Throwable $ignore) {}
+}
+
+// Lien court /preinscription/{slug} : nom, domaine et prix retrouvés en base
+if ($catalogue_slug !== '' && $catalogue_nom === '') {
+    try {
+        $slugLk = $pdo->prepare("SELECT titre, domaine, tarif_en_ligne FROM formations WHERE slug = ? LIMIT 1");
+        $slugLk->execute([$catalogue_slug]);
+        if ($slugRow = $slugLk->fetch(PDO::FETCH_ASSOC)) {
+            $catalogue_nom = trim((string)$slugRow['titre']);
+            if ($catalogue_domaine === '') $catalogue_domaine = trim((string)($slugRow['domaine'] ?? ''));
+            if ($catalogue_prix <= 0)      $catalogue_prix    = (int)($slugRow['tarif_en_ligne'] ?? 0);
+        }
+    } catch (Throwable $ignore) {}
+}
+
 // Charger les niveaux actifs de la formation si slug fourni
 $preinsc_niveaux = [];
 if ($catalogue_slug !== '') {
@@ -422,6 +451,20 @@ if (function_exists('is_post') && is_post()) {
             // disponibilite : nullable
             $dispoDb   = ($dispo !== '') ? $dispo : null;
             $messageDb = (trim($message) !== '') ? trim($message) : null;
+
+            // Formation issue du catalogue : on la rattache par slug, sinon on conserve son nom
+            $catNomPost  = trim((string)post('catalogue_nom', (string)post('catalogue_nom_display', $catalogue_nom)));
+            $catSlugPost = preg_replace('/[^\w\-]/', '', (string)post('formation_slug', $catalogue_slug));
+            if (!$formationId && $catSlugPost !== '') {
+                try {
+                    $stSlug = $pdo->prepare("SELECT id FROM formations WHERE slug = ? LIMIT 1");
+                    $stSlug->execute([$catSlugPost]);
+                    $formationId = (int)($stSlug->fetchColumn() ?: 0) ?: null;
+                } catch (Throwable $ignore) {}
+            }
+            if (!$formationId && $catNomPost !== '') {
+                $domaine = $catNomPost;
+            }
 
             // Domaine : si vide, et formation choisie => on peut mettre le titre formation (optionnel)
             // Sinon on laisse NULL

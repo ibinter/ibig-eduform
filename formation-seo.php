@@ -66,7 +66,7 @@ if ($domaine !== '') {
 /* Pour les villes présentiel (hors en-ligne) */
 if ($ville !== '' && $ville !== 'en-ligne') {
     /* On inclut toutes les formations présentiel + hybride */
-    $conditions[] = "(f.tarif_presentiel > 0 OR f.mode_defaut IN ('presentiel','hybride') OR 1=1)";
+    /* (aucun filtre supplémentaire : toutes les formations actives) */
 }
 if ($ville === 'en-ligne') {
     $conditions[] = "f.tarif_en_ligne > 0";
@@ -74,7 +74,7 @@ if ($ville === 'en-ligne') {
 
 $sql = "SELECT f.id, f.titre, f.slug, f.domaine, f.description, f.duree,
                f.date_debut, f.tarif_en_ligne, f.tarif_presentiel,
-               f.type_certificat, f.mode_defaut
+               f.type_certificat
         FROM formations f
         WHERE " . implode(' AND ', $conditions) . "
           AND f.date_debut >= CURDATE()

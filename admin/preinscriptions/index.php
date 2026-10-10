@@ -108,14 +108,14 @@ $offset = ($page - 1) * $per;
    LIGNES (page courante)
 ========================================================= */
 $sql = "
-  SELECT p.id, p.nom, p.prenoms, p.email, p.telephone, p.ville, p.niveau, p.statut, p.created_at,
+  SELECT p.id, p.nom, p.prenoms, p.email, p.telephone, p.ville, p.niveau, p.statut, p.created_at, p.domaine_interet,
          f.titre AS formation,
-         COUNT(tc.id) AS nb_tdr
+         COUNT(tc.id) AS nb_tdr, MAX(tc.formation_nom) AS tdr_formation
   FROM preinscriptions p
   LEFT JOIN formations f ON f.id = p.formation_id
   LEFT JOIN tdr_copies tc ON tc.preinscription_id = p.id
   $whereSql
-  GROUP BY p.id, p.nom, p.prenoms, p.email, p.telephone, p.ville, p.niveau, p.statut, p.created_at, f.titre
+  GROUP BY p.id, p.nom, p.prenoms, p.email, p.telephone, p.ville, p.niveau, p.statut, p.created_at, p.domaine_interet, f.titre
   ORDER BY p.created_at DESC
   LIMIT " . (int)$per . " OFFSET " . (int)$offset . "
 ";
@@ -217,6 +217,9 @@ table.pre-table tr:hover td{background:#f0f6ff}
 .pill.wait  {background:#fff7ed;color:#9a3412}
 .pill.rejete{background:#fee2e2;color:#991b1b}
 .pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+
+.statut-form{margin-top:6px}
+.statut-form select{font-size:11.5px;padding:3px 6px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;cursor:pointer}
 
 /* ── Date ── */
 .date-cell{font-size:12px;color:#475569;line-height:1.5}
@@ -374,7 +377,7 @@ table.pre-table tr:hover td{background:#f0f6ff}
     <?php foreach ($rows as $idx => $r):
         $nomComplet = trim((string)$r['nom'] . ' ' . (string)$r['prenoms']);
         $prenom     = trim((string)($r['prenoms'] ?? '')) ?: trim((string)($r['nom'] ?? '')) ?: 'cher candidat';
-        $form       = trim((string)($r['formation'] ?? ''));
+        $form       = trim((string)($r['formation'] ?? '')) ?: trim((string)($r['tdr_formation'] ?? '')) ?: trim((string)($r['domaine_interet'] ?? ''));
         $email      = trim((string)($r['email'] ?? ''));
         $tel        = trim((string)($r['telephone'] ?? ''));
         $waNum      = pre_wa_number($tel);
@@ -436,7 +439,21 @@ table.pre-table tr:hover td{background:#f0f6ff}
         <td>
           <div class="form-title" title="<?= e($form); ?>"><?= e($form !== '' ? $form : '—'); ?></div>
         </td>
-        <td><span class="pill <?= $pillClass; ?>"><?= e($statutLabel); ?></span></td>
+        <td>
+          <span class="pill <?= $pillClass; ?>"><?= e($statutLabel); ?></span>
+          <?php if (in_array($u['role'], ['admin','super_admin','commercial'], true)): ?>
+            <form method="post" action="update.php" class="statut-form">
+              <?= csrf_field(); ?>
+              <input type="hidden" name="id" value="<?= (int)$r['id']; ?>">
+              <input type="hidden" name="back" value="<?= e('index.php' . (($_SERVER['QUERY_STRING'] ?? '') !== '' ? '?' . $_SERVER['QUERY_STRING'] : '')); ?>">
+              <select name="statut" onchange="this.form.submit()" title="Changer le statut">
+                <option value="nouvelle" <?= $r['statut'] === 'nouvelle' ? 'selected' : ''; ?>>Nouvelle</option>
+                <option value="traitee"  <?= $r['statut'] === 'traitee'  ? 'selected' : ''; ?>>Traitée</option>
+                <option value="rejete"   <?= $r['statut'] === 'rejete'   ? 'selected' : ''; ?>>Rejetée</option>
+              </select>
+            </form>
+          <?php endif; ?>
+        </td>
         <td class="date-cell">
           <?php if (!empty($r['created_at'])): ?>
             <?= date('d/m/Y', strtotime((string)$r['created_at'])); ?><br>

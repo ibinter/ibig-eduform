@@ -78,8 +78,11 @@ if (!function_exists('enregistrer_preinscription')) {
       $objectif = 'monter_competence';
     }
 
-    $allowedNiveau = ['debutant','intermediaire','avance'];
+    $allowedNiveau = ['debutant','intermediaire','expert'];
     $niveau = (string)($data['niveau'] ?? '');
+    if ($niveau === 'avance') {
+      $niveau = 'expert';
+    }
     if (!in_array($niveau, $allowedNiveau, true)) {
       $niveau = 'debutant';
     }
@@ -174,7 +177,7 @@ if (!function_exists('enregistrer_preinscription')) {
 
     try {
       $stmt = $pdo->prepare($sql);
-      $stmt->execute([
+      $params = [
         ':session_key'          => $sessionKey,
         ':formation_id'         => $formationId,
         ':type_preinscription'  => $type,
@@ -197,7 +200,17 @@ if (!function_exists('enregistrer_preinscription')) {
         ':cv_path'              => $cvPath,
         ':cni_path'             => $cniPath,
         ':ip_address'           => $ip,
-      ]);
+      ];
+      try {
+        $stmt->execute($params);
+      } catch (PDOException $e) {
+        // Colonne niveau encore en ENUM('debutant','intermediaire','avance') : repli sur 'avance'
+        if ($niveau !== 'expert') {
+          throw $e;
+        }
+        $params[':niveau'] = 'avance';
+        $stmt->execute($params);
+      }
 
       return (int)$pdo->lastInsertId();
 

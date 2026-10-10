@@ -201,6 +201,11 @@ html,body{margin:0;padding:0;font-family:Inter,"Plus Jakarta Sans",system-ui,-ap
   box-shadow:0 12px 28px rgba(5,150,105,.25);
 }
 .cta-eduform a.formateur-cta:hover{box-shadow:0 16px 36px rgba(5,150,105,.38)}
+.cta-eduform a.elearning-cta{
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  box-shadow:0 12px 28px rgba(124,58,237,.25);
+}
+.cta-eduform a.elearning-cta:hover{box-shadow:0 16px 36px rgba(124,58,237,.38)}
 
 /* ===== BURGER ===== */
 .burger-eduform{display:none;flex-direction:column;gap:6px;background:none;border:0;cursor:pointer;padding:6px}
@@ -210,6 +215,7 @@ html,body{margin:0;padding:0;font-family:Inter,"Plus Jakarta Sans",system-ui,-ap
 .burger-eduform.is-open span:nth-child(3){transform:translateY(-9px) rotate(-45deg)}
 
 /* ===== RESPONSIVE (bascule mobile) ===== */
+@media(min-width:1025px) and (max-width:1400px){.cta-eduform{gap:6px}.cta-eduform a{padding:9px 12px;font-size:12px}}
 @media(max-width:1024px){
   .menu-eduform,.cta-eduform{display:none}
   .burger-eduform{display:flex}
@@ -246,6 +252,12 @@ html,body{margin:0;padding:0;font-family:Inter,"Plus Jakarta Sans",system-ui,-ap
   background:linear-gradient(135deg,#1f3fe0,#3b82f6);color:#fff;
   text-align:center;padding:16px;border-radius:14px;font-weight:800;font-size:16px;
   box-shadow:0 12px 28px rgba(31,63,224,.25);
+}
+.menu-mobile-eduform .mobile-elearning-cta{
+  margin-top:6px;
+  background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;
+  text-align:center;padding:16px;border-radius:14px;font-weight:800;font-size:16px;
+  box-shadow:0 12px 28px rgba(124,58,237,.25);
 }
 .menu-mobile-eduform .mobile-formateur-cta{
   margin-top:6px;
@@ -328,6 +340,7 @@ html,body{margin:0;padding:0;font-family:Inter,"Plus Jakarta Sans",system-ui,-ap
     </nav>
 
     <div class="cta-eduform">
+      <a href="https://ibig-elearning.com/" class="elearning-cta" target="_blank" rel="noopener">💻 E-learning</a>
       <a href="/devenir-formateur.php" class="formateur-cta">🎓 Devenir formateur</a>
       <a href="https://www.ibigpartners.com/" class="partner-cta" target="_blank" rel="noopener">Devenir partenaire</a>
       <a href="/preinscription-generale.php">Préinscription</a>
@@ -383,6 +396,7 @@ html,body{margin:0;padding:0;font-family:Inter,"Plus Jakarta Sans",system-ui,-ap
   </div>
 
   <!-- CTA -->
+  <a href="https://ibig-elearning.com/" class="mobile-elearning-cta" target="_blank" rel="noopener">💻 Plateforme E-learning</a>
   <a href="/devenir-formateur.php" class="mobile-formateur-cta">
     🎓 Devenir formateur
   </a>

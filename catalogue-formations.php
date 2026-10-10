@@ -550,7 +550,7 @@ foreach ($all_formations as $f) {
         if ((int)($g['individuel_pres']   ?? 0) < 250000) $g['individuel_pres']   = 250000;
         $g['hybride'] = r5(((int)$g['individuel_online'] + (int)$g['individuel_pres']) / 2);
     }
-    $insUrl  = preinsc_url((string)($f['name'] ?? ''), $cat, (string)($f['slug'] ?? ''), $prix);
+    $insUrl  = preinsc_url((string)($f['name'] ?? ''), $cat, (string)($f['slug'] ?? ''), $prix, $isLocal);
     $tdrUrl  = '/tdr-local-pdf.php?slug=' . urlencode((string)($f['slug'] ?? ''));
     /* "Voir" : toujours vers la fiche détail */
     $lien    = '/formation/' . urlencode((string)($f['slug'] ?? ''));
@@ -579,6 +579,47 @@ foreach ($all_formations as $f) {
         'tdr'    => $tdrUrl,
         'niveaux'=> $f['_niveaux'] ?? [],
     ];
+}
+/* Textes longs des niveaux (objectif / prérequis / public cible) sortis de la page :
+   ils sont servis dans un fichier JSON statique, mis en cache par le navigateur,
+   et chargés après l'affichage des cartes. */
+$cg_textes = [];
+foreach ($json_data as $i => $item) {
+    if (empty($item['niveaux'])) continue;
+    $t = [];
+    foreach ($item['niveaux'] as $k => $nv) {
+        $t[$k] = [(string)($nv['obj'] ?? ''), (string)($nv['pre'] ?? ''), (string)($nv['pub'] ?? '')];
+        unset($json_data[$i]['niveaux'][$k]['obj'], $json_data[$i]['niveaux'][$k]['pre'], $json_data[$i]['niveaux'][$k]['pub']);
+    }
+    $cg_textes[$item['id']] = $t;
+}
+$cg_textes_url = '';
+if ($cg_textes) {
+    $cg_textes_json = json_encode($cg_textes, JSON_UNESCAPED_UNICODE);
+    $cg_textes_name = 'cat-textes-' . substr(md5($cg_textes_json), 0, 12) . '.json';
+    $cg_textes_dir  = __DIR__ . '/uploads/cache';
+    $cg_textes_file = $cg_textes_dir . '/' . $cg_textes_name;
+    if (!is_file($cg_textes_file)) {
+        if (!is_dir($cg_textes_dir)) @mkdir($cg_textes_dir, 0755, true);
+        if (@file_put_contents($cg_textes_file . '.tmp', $cg_textes_json) !== false) {
+            @rename($cg_textes_file . '.tmp', $cg_textes_file);
+            foreach ((array)glob($cg_textes_dir . '/cat-textes-*.json') as $old) {
+                if ($old !== $cg_textes_file) @unlink($old);
+            }
+        }
+    }
+    if (is_file($cg_textes_file)) {
+        $cg_textes_url = '/uploads/cache/' . $cg_textes_name;
+    } else {
+        /* Écriture impossible : on remet les textes dans la page (comportement d'origine) */
+        foreach ($json_data as $i => $item) {
+            foreach ($cg_textes[$item['id']] ?? [] as $k => $t) {
+                $json_data[$i]['niveaux'][$k]['obj'] = $t[0];
+                $json_data[$i]['niveaux'][$k]['pre'] = $t[1];
+                $json_data[$i]['niveaux'][$k]['pub'] = $t[2];
+            }
+        }
+    }
 }
 $json_encoded = json_encode($json_data, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP);
 
@@ -616,7 +657,10 @@ function build_url(array $params): string {
     $qs = http_build_query($base);
     return '/catalogue-formations.php' . ($qs ? '?' . $qs : '');
 }
-function preinsc_url(string $name, string $cat, string $slug = '', int $prix = 0): string {
+function preinsc_url(string $name, string $cat, string $slug = '', int $prix = 0, bool $isLocal = false): string {
+    if ($isLocal && preg_match('/^[a-z0-9][a-z0-9\-]*$/i', $slug)) {
+        return 'https://ibig-eduform.com/preinscription/' . $slug;
+    }
     $params = ['catalogue_nom' => $name, 'domaine' => $cat];
     if ($slug !== '') $params['formation_slug'] = $slug;
     if ($prix > 0)    $params['catalogue_prix']  = $prix;
@@ -767,7 +811,7 @@ function preinsc_url(string $name, string $cat, string $slug = '', int $prix = 0
 <?php else: ?>
 
   <!-- Données formations (moteur JS) -->
-  <script>window._cgData=<?= $json_encoded ?>;</script>
+  <script>window._cgData=<?= $json_encoded ?>;window._cgTextesUrl=<?= json_encode($cg_textes_url) ?>;</script>
 
   <!-- Conteneur JS switchable -->
   <div class="cg-container" id="cgResults" role="list" aria-live="polite">
@@ -1039,6 +1083,22 @@ function showToast(msg){
 <script>
 (function(){
   var ALL = window._cgData || [];
+
+  /* Chargement différé des textes objectif / prérequis / public cible */
+  if (window._cgTextesUrl && window.fetch) {
+    fetch(window._cgTextesUrl).then(function(r){ return r.ok ? r.json() : null; }).then(function(map){
+      if (!map) return;
+      for (var i = 0; i < ALL.length; i++) {
+        var f = ALL[i], t = map[f.id];
+        if (!t || !f.niveaux) continue;
+        for (var k = 0; k < f.niveaux.length; k++) {
+          if (!t[k]) continue;
+          f.niveaux[k].obj = t[k][0]; f.niveaux[k].pre = t[k][1]; f.niveaux[k].pub = t[k][2];
+        }
+      }
+      render();
+    }).catch(function(){});
+  }
   var PER = 24;
   var vm = 'grid';
   var cur = { q:'', cat:'', mode:'', prix:'', duree:'', niveau:'', sort:'az', page:1 };

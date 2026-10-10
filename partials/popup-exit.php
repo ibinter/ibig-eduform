@@ -22,6 +22,7 @@ try {
 } catch (Throwable $_ep_ex) {
     error_log('[popup-exit] ' . $_ep_ex->getMessage());
 }
+?>
 <div id="exit-popup-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="exit-popup-title">
   <div id="exit-popup">
 
