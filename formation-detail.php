@@ -218,6 +218,11 @@ if ($_isLocal && preg_match('/^[a-z0-9][a-z0-9\-]*$/i', $slug)) {
 }
 
 $_descRaw  = strip_tags($desc);
+// Nettoyer les mentions de prix et codes internes pour l'affichage public
+$_descClean = preg_replace('/\.?\s*(?:À partir de|à partir de)\s[\d\s]+(?:F\s?CFA|FCFA)[^.]*\.?/u', '', $_descRaw);
+$_descClean = preg_replace('/\.?\s*(?:Disponible en e-?learning[^.]*\.?)/ui', '', $_descClean);
+$_descClean = preg_replace('/\.?\s*Code\s*:\s*[A-Z0-9\-]+\.?/u', '', $_descClean);
+$_descClean = trim(preg_replace('/\s{2,}/', ' ', $_descClean));
 $ogDesc    = $_descRaw !== ''
     ? mb_substr($_descRaw, 0, 155, 'UTF-8') . (mb_strlen($_descRaw, 'UTF-8') > 155 ? '…' : '')
     : 'Formation professionnelle certifiante IBIG — ' . $cat . '. Disponible en ligne et en présentiel dans l\'espace OHADA.';
@@ -370,7 +375,7 @@ function fdToggleFaq(btn) {
   <a class="fd-hero-badge" href="/catalogue-formations.php?cat=<?= urlencode($cat) ?>" style="text-decoration:none;cursor:pointer"><?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?></a>
   <h1><?= htmlspecialchars($nom, ENT_QUOTES, 'UTF-8') ?></h1>
   <?php if ($desc): ?>
-  <p class="fd-hero-sub"><?= htmlspecialchars(mb_substr($desc, 0, 320, 'UTF-8'), ENT_QUOTES, 'UTF-8') ?><?= mb_strlen($desc, 'UTF-8') > 320 ? '…' : '' ?></p>
+  <p class="fd-hero-sub"><?= htmlspecialchars(mb_substr($_descClean, 0, 320, 'UTF-8'), ENT_QUOTES, 'UTF-8') ?><?= mb_strlen($_descClean, 'UTF-8') > 320 ? '…' : '' ?></p>
   <?php endif; ?>
   <div class="fd-hero-tags">
     <span class="fd-tag">🔀 Hybride</span>
@@ -398,11 +403,10 @@ function fdToggleFaq(btn) {
   <div class="fd-main">
 
     <!-- À propos de la formation -->
-    <?php $_descFull = trim(strip_tags($desc)); ?>
-    <?php if ($_descFull !== '' && mb_strlen($_descFull, 'UTF-8') > 320): ?>
+    <?php if ($_descClean !== '' && mb_strlen($_descClean, 'UTF-8') > 320): ?>
     <div class="fd-card">
       <h2><span class="fd-ico">📋</span> À propos de cette formation</h2>
-      <p style="line-height:1.75"><?= nl2br(htmlspecialchars($_descFull, ENT_QUOTES, 'UTF-8')) ?></p>
+      <p style="line-height:1.75"><?= nl2br(htmlspecialchars($_descClean, ENT_QUOTES, 'UTF-8')) ?></p>
     </div>
     <?php endif; ?>
 
