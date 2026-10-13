@@ -1640,6 +1640,14 @@ function showToast(msg){
       tdrSubmitBtn.disabled = true;
       tdrSubmitBtn.textContent = 'Envoi en cours…';
 
+      /* Pré-ouvrir la fenêtre PDF dans le gestionnaire synchrone (événement utilisateur)
+         pour contourner les bloqueurs de popups qui bloquent window.open() dans les callbacks async. */
+      var pdfUrl = '/tdr-local-pdf.php?slug=' + encodeURIComponent(slug)
+        + '&mode=' + encodeURIComponent(mode.value)
+        + '&fmt='  + encodeURIComponent(fmt.value)
+        + (selNiv ? '&niveau=' + encodeURIComponent(selNiv) : '');
+      var pdfWin = window.open('about:blank', '_blank');
+
       var fd = new FormData(tdrForm);
       fd.set('formation_titre', tdrTitreEl.textContent);
 
@@ -1654,18 +1662,20 @@ function showToast(msg){
         .then(function(data) {
           if (data.ok) {
             closeTdrModal();
-            var pdfUrl = '/tdr-local-pdf.php?slug=' + encodeURIComponent(slug)
-              + '&mode=' + encodeURIComponent(mode.value)
-              + '&fmt='  + encodeURIComponent(fmt.value)
-              + (selNiv ? '&niveau=' + encodeURIComponent(selNiv) : '');
-            window.open(pdfUrl, '_blank');
+            if (pdfWin && !pdfWin.closed) {
+              pdfWin.location = pdfUrl;
+            } else {
+              window.open(pdfUrl, '_blank');
+            }
           } else {
+            if (pdfWin && !pdfWin.closed) pdfWin.close();
             tdrMsg.textContent = data.error || 'Une erreur est survenue.';
             tdrSubmitBtn.disabled = false;
             tdrSubmitBtn.textContent = '📄 Télécharger mon TDR';
           }
         })
         .catch(function() {
+          if (pdfWin && !pdfWin.closed) pdfWin.close();
           tdrMsg.textContent = 'Erreur réseau. Réessayez.';
           tdrSubmitBtn.disabled = false;
           tdrSubmitBtn.textContent = '📄 Télécharger mon TDR';
