@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Script one-shot : insère 17 formations SAP dans la table `formations`.
  * Sécurisé par IP et mot de passe simple.
  */
-require_once __DIR__ . '/../core/bootstrap.php';
+require_once __DIR__ . '/core/bootstrap.php';
 
 /* ── Auth basique ── */
 $adminPass = 'IBIG-SAP-2026';
