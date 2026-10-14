@@ -386,6 +386,7 @@ try {
         'ERP'                                          => 'Informatique & Tech',
         'Sage'                                         => 'Informatique & Tech',
         'Odoo'                                         => 'Informatique & Tech',
+        'ERP & SAP'                                    => 'Informatique & Tech',
         'Informatique & Tech'                          => 'Informatique & Tech',
         'Cybersécurité'                                => 'Informatique & Tech',
         'Réseaux & Sécurité'                           => 'Informatique & Tech',
