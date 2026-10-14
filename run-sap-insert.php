@@ -1,10 +1,6 @@
 <?php
 declare(strict_types=1);
-/**
- * IBIG EDUFORM — Insertion des formations SAP ERP 2026
- * Script one-shot : insère 17 formations SAP dans la table `formations`.
- * Sécurisé par IP et mot de passe simple.
- */
+// v2
 require_once __DIR__ . '/core/bootstrap.php';
 
 /* ── Auth basique ── */
@@ -16,324 +12,43 @@ if (($_GET['key'] ?? '') !== $adminPass) {
 
 $pdo = Database::connect();
 
-/* ── Données SAP — tarifes INDIVIDUELS ── */
 $formations = [
-
-    /* ════════════════════════════════════════════
-       MODULES
-    ════════════════════════════════════════════ */
-    [
-        'titre'           => 'SAP Initiation – Découverte de SAP',
-        'slug'            => 'sap-initiation-decouverte',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Qu'est-ce qu'un ERP. Architecture de SAP et principaux modules. Navigation dans le système, transactions et données de base. Parcours guidé d'un processus intégré de bout en bout : de la commande à la comptabilisation. Accès individuel à l'environnement SAP de pratique inclus. Disponible en e-learning, en présentiel ou en hybride.",
-        'objectifs'       => "Comprendre l'architecture et le fonctionnement d'un ERP SAP. Naviguer dans le système et maîtriser les transactions de base. Réaliser un processus intégré de bout en bout dans SAP.",
-        'duree'           => '10H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 140000,
-        'tarif_hybride'   => 155000,
-        'tarif_presentiel'=> 170000,
-        'public_cible'    => 'Tout professionnel souhaitant découvrir SAP, tous niveaux.',
-        'prerequis'       => 'Aucun prérequis SAP. Connaissance de base de l\'outil informatique.',
-    ],
-    [
-        'titre'           => 'SAP FI – Comptabilité financière',
-        'slug'            => 'sap-fi-comptabilite-financiere',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Comptabilité générale, fournisseurs et clients dans SAP. Saisie et contrôle des pièces, paiements et lettrage, opérations de banque. Immobilisations. Éditions et états de clôture. Accès individuel à l'environnement SAP inclus. Disponible en e-learning, en présentiel ou en hybride. Code : SAP-FI-UTI-IBIG",
-        'objectifs'       => "Saisir et contrôler les pièces comptables dans SAP FI. Gérer les comptes fournisseurs, clients et la trésorerie. Produire les états de clôture et de reporting financier.",
-        'duree'           => '20H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 375000,
-        'tarif_hybride'   => 405000,
-        'tarif_presentiel'=> 435000,
-        'public_cible'    => 'Comptables, assistants comptables, gestionnaires financiers. Parcours Utilisateur.',
-        'prerequis'       => 'Bases en comptabilité générale.',
-    ],
-    [
-        'titre'           => 'SAP FI – Consultant fonctionnel',
-        'slug'            => 'sap-fi-consultant-fonctionnel',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Structure organisationnelle (société, plan comptable, exercices, périodes). Paramétrage des types de pièces, des comptes de tiers, des paiements et des immobilisations. Clôture et reporting. Intégration avec CO, MM et SD. Accès individuel à l'environnement SAP inclus. Disponible en e-learning, en présentiel ou en hybride. Code : SAP-FI-CON-IBIG",
-        'objectifs'       => "Paramétrer la structure organisationnelle et le plan comptable SAP. Configurer les types de pièces, comptes de tiers et paiements. Maîtriser l'intégration SAP FI avec CO, MM et SD.",
-        'duree'           => '40H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 655000,
-        'tarif_hybride'   => 715000,
-        'tarif_presentiel'=> 775000,
-        'public_cible'    => 'Consultants SAP, freelances, chefs de projet ERP. Parcours Consultant fonctionnel.',
-        'prerequis'       => 'Bonnes bases en comptabilité et expérience professionnelle dans le domaine financier.',
-    ],
-    [
-        'titre'           => 'SAP CO – Contrôle de gestion',
-        'slug'            => 'sap-co-controle-de-gestion',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Centres de coûts, natures comptables, ordres internes. Saisie et analyse des coûts réels et planifiés. Répartitions simples. Rapports de suivi et tableaux de bord analytiques. Accès individuel à l'environnement SAP inclus. Disponible en e-learning, en présentiel ou en hybride. Code : SAP-CO-UTI-IBIG",
-        'objectifs'       => "Utiliser les centres de coûts et ordres internes dans SAP CO. Saisir et analyser les coûts réels et planifiés. Produire des rapports analytiques et tableaux de bord.",
-        'duree'           => '16H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 320000,
-        'tarif_hybride'   => 345000,
-        'tarif_presentiel'=> 365000,
-        'public_cible'    => 'Contrôleurs de gestion, assistants de gestion, RAF. Parcours Utilisateur.',
-        'prerequis'       => 'Bases en comptabilité analytique et contrôle de gestion.',
-    ],
-    [
-        'titre'           => 'SAP CO – Consultant fonctionnel',
-        'slug'            => 'sap-co-consultant-fonctionnel',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Paramétrage du périmètre analytique. Centres de coûts et de profit, cycles de répartition et d'imputation, ordres internes, analyse de rentabilité. Intégration avec FI. Accès individuel à l'environnement SAP inclus. Disponible en e-learning, en présentiel ou en hybride. Code : SAP-CO-CON-IBIG",
-        'objectifs'       => "Paramétrer le périmètre analytique SAP CO. Configurer les cycles de répartition, d'imputation et l'analyse de rentabilité. Maîtriser l'intégration SAP CO avec FI.",
-        'duree'           => '25H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 445000,
-        'tarif_hybride'   => 480000,
-        'tarif_presentiel'=> 520000,
-        'public_cible'    => 'Consultants SAP CO, freelances, profils en reconversion. Parcours Consultant fonctionnel.',
-        'prerequis'       => 'Bonnes bases en contrôle de gestion et expérience terrain.',
-    ],
-    [
-        'titre'           => 'SAP MM – Achats et gestion des stocks',
-        'slug'            => 'sap-mm-achats-gestion-stocks',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Données de base articles et fournisseurs. Demande d'achat, commande, réception, contrôle des factures. Mouvements et inventaire des stocks dans SAP MM. Accès individuel à l'environnement SAP inclus. Disponible en e-learning, en présentiel ou en hybride. Code : SAP-MM-UTI-IBIG",
-        'objectifs'       => "Gérer le processus achat de bout en bout dans SAP MM. Contrôler les factures fournisseurs et les mouvements de stocks. Réaliser et analyser des inventaires dans SAP.",
-        'duree'           => '16H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 320000,
-        'tarif_hybride'   => 345000,
-        'tarif_presentiel'=> 365000,
-        'public_cible'    => 'Acheteurs, gestionnaires de stocks, responsables logistique. Parcours Utilisateur.',
-        'prerequis'       => 'Bases en gestion des achats ou des stocks.',
-    ],
-    [
-        'titre'           => 'SAP MM – Consultant fonctionnel',
-        'slug'            => 'sap-mm-consultant-fonctionnel',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Structure organisationnelle logistique. Paramétrage des types de commandes, des stratégies d'approvisionnement et de validation, des types de mouvements. Valorisation des stocks et intégration avec FI. Accès individuel à l'environnement SAP inclus. Disponible en e-learning, en présentiel ou en hybride. Code : SAP-MM-CON-IBIG",
-        'objectifs'       => "Paramétrer la structure organisationnelle logistique SAP MM. Configurer les types de commandes et stratégies d'approvisionnement. Maîtriser la valorisation des stocks et l'intégration avec FI.",
-        'duree'           => '35H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 585000,
-        'tarif_hybride'   => 640000,
-        'tarif_presentiel'=> 690000,
-        'public_cible'    => 'Consultants SAP MM, supply chain, profils techniques. Parcours Consultant fonctionnel.',
-        'prerequis'       => 'Bonnes bases en logistique et expérience dans les achats ou les stocks.',
-    ],
-    [
-        'titre'           => 'SAP SD – Ventes et distribution',
-        'slug'            => 'sap-sd-ventes-distribution',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Données de base clients et articles. Devis, commande client, livraison et facturation. Gestion des retours et suivi des encours clients dans SAP SD. Accès individuel à l'environnement SAP inclus. Disponible en e-learning, en présentiel ou en hybride. Code : SAP-SD-UTI-IBIG",
-        'objectifs'       => "Traiter les commandes clients de A à Z dans SAP SD. Gérer la livraison, la facturation et les retours clients. Suivre les encours et produire des états commerciaux.",
-        'duree'           => '16H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 320000,
-        'tarif_hybride'   => 345000,
-        'tarif_presentiel'=> 365000,
-        'public_cible'    => 'Commerciaux, agents ADV, responsables ventes. Parcours Utilisateur.',
-        'prerequis'       => 'Bases en gestion commerciale ou administration des ventes.',
-    ],
-    [
-        'titre'           => 'SAP SD – Consultant fonctionnel',
-        'slug'            => 'sap-sd-consultant-fonctionnel',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Structure commerciale SAP. Paramétrage des types de documents de vente, de la détermination des prix, des livraisons et de la facturation. Intégration avec MM et FI. Accès individuel à l'environnement SAP inclus. Disponible en e-learning, en présentiel ou en hybride. Code : SAP-SD-CON-IBIG",
-        'objectifs'       => "Paramétrer la structure commerciale et les types de documents SAP SD. Configurer la détermination des prix, livraisons et facturation. Maîtriser l'intégration SAP SD avec MM et FI.",
-        'duree'           => '30H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 515000,
-        'tarif_hybride'   => 560000,
-        'tarif_presentiel'=> 605000,
-        'public_cible'    => 'Consultants SAP SD, profils ADV avancés. Parcours Consultant fonctionnel.',
-        'prerequis'       => 'Bonnes bases en gestion commerciale et expérience terrain.',
-    ],
-    [
-        'titre'           => 'SAP HCM – Ressources humaines et paie',
-        'slug'            => 'sap-hcm-ressources-humaines-paie',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Gestion administrative du personnel, temps et absences dans SAP HCM. Principes de la paie dans SAP et consultation des résultats de paie. Contexte OHADA et fiscalité locale ivoirienne. Accès individuel à l'environnement SAP inclus. Disponible en e-learning, en présentiel ou en hybride. Code : SAP-HCM-UTI-IBIG",
-        'objectifs'       => "Gérer les dossiers du personnel, les temps et absences dans SAP HCM. Comprendre les principes de la paie et consulter les résultats. Appliquer les règles locales OHADA dans SAP.",
-        'duree'           => '14H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 290000,
-        'tarif_hybride'   => 310000,
-        'tarif_presentiel'=> 335000,
-        'public_cible'    => 'Gestionnaires RH, assistants paie, responsables personnel. Parcours Utilisateur.',
-        'prerequis'       => 'Bases en gestion des ressources humaines ou en paie.',
-    ],
-    [
-        'titre'           => 'SAP HCM – Consultant fonctionnel',
-        'slug'            => 'sap-hcm-consultant-fonctionnel',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Structure organisationnelle et structure du personnel dans SAP HCM. Paramétrage des infotypes, de la gestion des temps et des principes de paie. Adaptation aux règles locales OHADA. Accès individuel à l'environnement SAP inclus. Disponible en e-learning, en présentiel ou en hybride. Code : SAP-HCM-CON-IBIG",
-        'objectifs'       => "Paramétrer la structure organisationnelle et les infotypes SAP HCM. Configurer la gestion des temps et les schémas de paie. Adapter SAP HCM aux règles locales OHADA.",
-        'duree'           => '30H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 515000,
-        'tarif_hybride'   => 560000,
-        'tarif_presentiel'=> 605000,
-        'public_cible'    => 'Consultants SAP HCM, DRH, responsables paie expérimentés. Parcours Consultant fonctionnel.',
-        'prerequis'       => 'Bonnes bases en RH, paie et droit du travail local.',
-    ],
-    [
-        'titre'           => 'SAP Projet pratique et évaluation finale',
-        'slug'            => 'sap-projet-pratique-evaluation',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Cas d'entreprise complet traité dans SAP sur le ou les modules suivis. Évaluation finale pratique dans l'environnement SAP. Attestation de compétence IBIG EDUFORM délivrée. Inclus dans tous les packs, ou en option à la suite d'un module. Disponible en e-learning, en présentiel ou en hybride.",
-        'objectifs'       => "Consolider les acquis sur un cas d'entreprise réel dans SAP. Valider ses compétences par une évaluation pratique. Obtenir l'attestation de compétence IBIG EDUFORM.",
-        'duree'           => '6H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 85000,
-        'tarif_hybride'   => 95000,
-        'tarif_presentiel'=> 100000,
-        'public_cible'    => 'Tout apprenant ayant suivi un module SAP IBIG EDUFORM.',
-        'prerequis'       => 'Avoir suivi au moins un module SAP IBIG EDUFORM.',
-    ],
-
-    /* ════════════════════════════════════════════
-       PACKS
-    ════════════════════════════════════════════ */
-    [
-        'titre'           => 'Pack SAP Comptabilité Pro',
-        'slug'            => 'pack-sap-comptabilite-pro',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Pack complet : SAP FI – Comptabilité financière + SAP CO – Contrôle de gestion + Projet pratique final. Parcours Utilisateur de 42h pour maîtriser la comptabilité et le contrôle de gestion dans SAP. Accès individuel à l'environnement SAP inclus. Disponible en e-learning, en présentiel ou en hybride.",
-        'objectifs'       => "Maîtriser la comptabilité financière et le contrôle de gestion dans SAP. Réaliser toutes les opérations comptables et analytiques quotidiennes. Valider les acquis par un projet pratique final.",
-        'duree'           => '42H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 625000,
-        'tarif_hybride'   => 680000,
-        'tarif_presentiel'=> 740000,
-        'public_cible'    => 'Comptables, assistants de gestion, RAF souhaitant maîtriser SAP FI + CO.',
-        'prerequis'       => 'Bases en comptabilité générale et analytique.',
-    ],
-    [
-        'titre'           => 'Pack SAP Consultant Finance',
-        'slug'            => 'pack-sap-consultant-finance',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Pack consultant : SAP FI Consultant fonctionnel + SAP CO Consultant fonctionnel + Projet pratique final. Parcours complet de 71h pour devenir consultant SAP Finance. Accès individuel à l'environnement SAP inclus. Disponible en e-learning, en présentiel ou en hybride.",
-        'objectifs'       => "Paramétrer SAP FI et CO en tant que consultant fonctionnel. Maîtriser l'intégration entre les modules finance SAP. Valider les compétences consultant par un projet pratique.",
-        'duree'           => '71H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 990000,
-        'tarif_hybride'   => 1085000,
-        'tarif_presentiel'=> 1180000,
-        'public_cible'    => 'Consultants SAP finance, freelances, profils en reconversion vers le conseil.',
-        'prerequis'       => 'Bonnes bases en comptabilité et contrôle de gestion.',
-    ],
-    [
-        'titre'           => 'Pack SAP Utilisateur Logistique',
-        'slug'            => 'pack-sap-utilisateur-logistique',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Pack utilisateur : SAP MM – Achats et gestion des stocks + SAP SD – Ventes et distribution + Projet pratique final. Parcours de 38h pour maîtriser la chaîne logistique dans SAP. Accès individuel à l'environnement SAP inclus. Disponible en e-learning, en présentiel ou en hybride.",
-        'objectifs'       => "Maîtriser les processus achats, stocks et ventes dans SAP. Gérer la chaîne logistique de bout en bout dans SAP MM + SD. Valider les acquis par un projet pratique final.",
-        'duree'           => '38H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 575000,
-        'tarif_hybride'   => 625000,
-        'tarif_presentiel'=> 675000,
-        'public_cible'    => 'Logisticiens, acheteurs, agents ADV souhaitant maîtriser SAP MM + SD.',
-        'prerequis'       => 'Bases en gestion logistique, achats ou commerce.',
-    ],
-    [
-        'titre'           => 'Pack SAP Consultant Logistique',
-        'slug'            => 'pack-sap-consultant-logistique',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Pack consultant : SAP MM Consultant fonctionnel + SAP SD Consultant fonctionnel + Projet pratique final. Parcours de 71h pour devenir consultant SAP Logistique. Accès individuel à l'environnement SAP inclus. Disponible en e-learning, en présentiel ou en hybride.",
-        'objectifs'       => "Paramétrer SAP MM et SD en tant que consultant fonctionnel. Maîtriser les structures organisationnelles logistiques et commerciales. Configurer les intégrations MM-SD-FI.",
-        'duree'           => '71H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 990000,
-        'tarif_hybride'   => 1085000,
-        'tarif_presentiel'=> 1180000,
-        'public_cible'    => 'Consultants supply chain SAP, profils techniques en logistique.',
-        'prerequis'       => 'Bonnes bases en logistique, achats ou gestion commerciale.',
-    ],
-    [
-        'titre'           => 'Pack SAP RH – Parcours complet',
-        'slug'            => 'pack-sap-rh-parcours-complet',
-        'domaine'         => 'ERP & SAP',
-        'description'     => "Pack complet SAP HCM : utilisateur + consultant fonctionnel + projet pratique final. Parcours de 50h pour maîtriser la gestion RH et paie dans SAP, du niveau utilisateur au paramétrage consultant. Accès individuel à l'environnement SAP inclus. Disponible en e-learning, en présentiel ou en hybride.",
-        'objectifs'       => "Maîtriser la gestion RH et paie dans SAP HCM (niveau utilisateur et consultant). Paramétrer les infotypes, temps et schémas de paie. Adapter SAP HCM aux règles locales OHADA.",
-        'duree'           => '50H',
-        'mode'            => 'hybride',
-        'tarif_en_ligne'  => 725000,
-        'tarif_hybride'   => 790000,
-        'tarif_presentiel'=> 860000,
-        'public_cible'    => 'Gestionnaires RH, responsables paie et futurs consultants SAP HCM.',
-        'prerequis'       => 'Bases en RH et droit du travail local.',
-    ],
+    ['titre'=>'SAP Initiation – Découverte de SAP','slug'=>'sap-initiation-decouverte','domaine'=>'ERP & SAP','description'=>"Qu'est-ce qu'un ERP. Architecture de SAP et principaux modules. Navigation dans le système, transactions et données de base. Accès individuel à l'environnement SAP de pratique inclus. Disponible en e-learning, présentiel ou hybride.",'objectifs'=>"Comprendre l'architecture SAP. Naviguer dans le système et maîtriser les transactions de base. Réaliser un processus intégré de bout en bout.",'duree'=>'10H','mode'=>'hybride','tarif_en_ligne'=>140000,'tarif_hybride'=>155000,'tarif_presentiel'=>170000],
+    ['titre'=>'SAP FI – Comptabilité financière','slug'=>'sap-fi-comptabilite-financiere','domaine'=>'ERP & SAP','description'=>"Comptabilité générale, fournisseurs et clients dans SAP. Saisie et contrôle des pièces, paiements, immobilisations. Éditions et états de clôture. Code : SAP-FI-UTI-IBIG",'objectifs'=>"Saisir et contrôler les pièces comptables dans SAP FI. Gérer les comptes fournisseurs, clients et la trésorerie. Produire les états de clôture.",'duree'=>'20H','mode'=>'hybride','tarif_en_ligne'=>375000,'tarif_hybride'=>405000,'tarif_presentiel'=>435000],
+    ['titre'=>'SAP FI – Consultant fonctionnel','slug'=>'sap-fi-consultant-fonctionnel','domaine'=>'ERP & SAP','description'=>"Structure organisationnelle (société, plan comptable). Paramétrage des types de pièces, comptes de tiers, paiements et immobilisations. Intégration avec CO, MM et SD. Code : SAP-FI-CON-IBIG",'objectifs'=>"Paramétrer la structure organisationnelle et le plan comptable SAP. Configurer les types de pièces, comptes de tiers. Maîtriser l'intégration SAP FI avec CO, MM et SD.",'duree'=>'40H','mode'=>'hybride','tarif_en_ligne'=>655000,'tarif_hybride'=>715000,'tarif_presentiel'=>775000],
+    ['titre'=>'SAP CO – Contrôle de gestion','slug'=>'sap-co-controle-de-gestion','domaine'=>'ERP & SAP','description'=>"Centres de coûts, natures comptables, ordres internes. Saisie et analyse des coûts réels et planifiés. Répartitions simples. Rapports analytiques. Code : SAP-CO-UTI-IBIG",'objectifs'=>"Utiliser les centres de coûts et ordres internes dans SAP CO. Saisir et analyser les coûts réels et planifiés. Produire des rapports analytiques.",'duree'=>'16H','mode'=>'hybride','tarif_en_ligne'=>320000,'tarif_hybride'=>345000,'tarif_presentiel'=>365000],
+    ['titre'=>'SAP CO – Consultant fonctionnel','slug'=>'sap-co-consultant-fonctionnel','domaine'=>'ERP & SAP','description'=>"Paramétrage du périmètre analytique. Centres de coûts et de profit, cycles de répartition, ordres internes, analyse de rentabilité. Intégration avec FI. Code : SAP-CO-CON-IBIG",'objectifs'=>"Paramétrer le périmètre analytique SAP CO. Configurer les cycles de répartition et l'analyse de rentabilité. Maîtriser l'intégration SAP CO avec FI.",'duree'=>'25H','mode'=>'hybride','tarif_en_ligne'=>445000,'tarif_hybride'=>480000,'tarif_presentiel'=>520000],
+    ['titre'=>'SAP MM – Achats et gestion des stocks','slug'=>'sap-mm-achats-gestion-stocks','domaine'=>'ERP & SAP','description'=>"Données de base articles et fournisseurs. Demande d'achat, commande, réception, contrôle des factures. Mouvements et inventaire des stocks. Code : SAP-MM-UTI-IBIG",'objectifs'=>"Gérer le processus achat de bout en bout dans SAP MM. Contrôler les factures fournisseurs et les mouvements de stocks. Réaliser et analyser des inventaires.",'duree'=>'16H','mode'=>'hybride','tarif_en_ligne'=>320000,'tarif_hybride'=>345000,'tarif_presentiel'=>365000],
+    ['titre'=>'SAP MM – Consultant fonctionnel','slug'=>'sap-mm-consultant-fonctionnel','domaine'=>'ERP & SAP','description'=>"Structure organisationnelle logistique. Paramétrage des types de commandes, stratégies d'approvisionnement et de validation. Valorisation des stocks et intégration avec FI. Code : SAP-MM-CON-IBIG",'objectifs'=>"Paramétrer la structure organisationnelle logistique SAP MM. Configurer les types de commandes et stratégies d'approvisionnement. Maîtriser la valorisation des stocks.",'duree'=>'35H','mode'=>'hybride','tarif_en_ligne'=>585000,'tarif_hybride'=>640000,'tarif_presentiel'=>690000],
+    ['titre'=>'SAP SD – Ventes et distribution','slug'=>'sap-sd-ventes-distribution','domaine'=>'ERP & SAP','description'=>"Données de base clients et articles. Devis, commande client, livraison et facturation. Gestion des retours et suivi des encours clients. Code : SAP-SD-UTI-IBIG",'objectifs'=>"Traiter les commandes clients de A à Z dans SAP SD. Gérer la livraison, facturation et retours clients. Suivre les encours et produire des états commerciaux.",'duree'=>'16H','mode'=>'hybride','tarif_en_ligne'=>320000,'tarif_hybride'=>345000,'tarif_presentiel'=>365000],
+    ['titre'=>'SAP SD – Consultant fonctionnel','slug'=>'sap-sd-consultant-fonctionnel','domaine'=>'ERP & SAP','description'=>"Structure commerciale SAP. Paramétrage des types de documents de vente, détermination des prix, livraisons et facturation. Intégration avec MM et FI. Code : SAP-SD-CON-IBIG",'objectifs'=>"Paramétrer la structure commerciale et les types de documents SAP SD. Configurer la détermination des prix, livraisons et facturation. Maîtriser l'intégration SAP SD avec MM et FI.",'duree'=>'30H','mode'=>'hybride','tarif_en_ligne'=>515000,'tarif_hybride'=>560000,'tarif_presentiel'=>605000],
+    ['titre'=>'SAP HCM – Ressources humaines et paie','slug'=>'sap-hcm-ressources-humaines-paie','domaine'=>'ERP & SAP','description'=>"Gestion administrative du personnel, temps et absences dans SAP HCM. Principes de la paie et consultation des résultats. Contexte OHADA et fiscalité locale ivoirienne. Code : SAP-HCM-UTI-IBIG",'objectifs'=>"Gérer les dossiers du personnel, les temps et absences dans SAP HCM. Comprendre les principes de la paie et consulter les résultats. Appliquer les règles locales OHADA.",'duree'=>'14H','mode'=>'hybride','tarif_en_ligne'=>290000,'tarif_hybride'=>310000,'tarif_presentiel'=>335000],
+    ['titre'=>'SAP HCM – Consultant fonctionnel','slug'=>'sap-hcm-consultant-fonctionnel','domaine'=>'ERP & SAP','description'=>"Structure organisationnelle et structure du personnel dans SAP HCM. Paramétrage des infotypes, gestion des temps et principes de paie. Adaptation aux règles locales OHADA. Code : SAP-HCM-CON-IBIG",'objectifs'=>"Paramétrer la structure organisationnelle et les infotypes SAP HCM. Configurer la gestion des temps et les schémas de paie. Adapter SAP HCM aux règles locales OHADA.",'duree'=>'30H','mode'=>'hybride','tarif_en_ligne'=>515000,'tarif_hybride'=>560000,'tarif_presentiel'=>605000],
+    ['titre'=>'SAP Projet pratique et évaluation finale','slug'=>'sap-projet-pratique-evaluation','domaine'=>'ERP & SAP','description'=>"Cas d'entreprise complet traité dans SAP. Évaluation finale pratique dans l'environnement SAP. Attestation de compétence IBIG EDUFORM délivrée.",'objectifs'=>"Consolider les acquis sur un cas d'entreprise réel. Valider ses compétences par une évaluation pratique. Obtenir l'attestation IBIG EDUFORM.",'duree'=>'6H','mode'=>'hybride','tarif_en_ligne'=>85000,'tarif_hybride'=>95000,'tarif_presentiel'=>100000],
+    ['titre'=>'Pack SAP Comptabilité Pro','slug'=>'pack-sap-comptabilite-pro','domaine'=>'ERP & SAP','description'=>"SAP FI + SAP CO + Projet pratique. Parcours Utilisateur 42h pour maîtriser la comptabilité et le contrôle de gestion dans SAP.",'objectifs'=>"Maîtriser la comptabilité financière et le contrôle de gestion dans SAP. Réaliser toutes les opérations comptables et analytiques. Valider par un projet pratique.",'duree'=>'42H','mode'=>'hybride','tarif_en_ligne'=>625000,'tarif_hybride'=>680000,'tarif_presentiel'=>740000],
+    ['titre'=>'Pack SAP Consultant Finance','slug'=>'pack-sap-consultant-finance','domaine'=>'ERP & SAP','description'=>"SAP FI Consultant + SAP CO Consultant + Projet pratique. Parcours complet 71h pour devenir consultant SAP Finance.",'objectifs'=>"Paramétrer SAP FI et CO en tant que consultant fonctionnel. Maîtriser l'intégration entre les modules finance SAP. Valider les compétences par un projet pratique.",'duree'=>'71H','mode'=>'hybride','tarif_en_ligne'=>990000,'tarif_hybride'=>1085000,'tarif_presentiel'=>1180000],
+    ['titre'=>'Pack SAP Utilisateur Logistique','slug'=>'pack-sap-utilisateur-logistique','domaine'=>'ERP & SAP','description'=>"SAP MM + SAP SD + Projet pratique. Parcours 38h pour maîtriser la chaîne logistique dans SAP.",'objectifs'=>"Maîtriser les processus achats, stocks et ventes dans SAP. Gérer la chaîne logistique de bout en bout. Valider par un projet pratique.",'duree'=>'38H','mode'=>'hybride','tarif_en_ligne'=>575000,'tarif_hybride'=>625000,'tarif_presentiel'=>675000],
+    ['titre'=>'Pack SAP Consultant Logistique','slug'=>'pack-sap-consultant-logistique','domaine'=>'ERP & SAP','description'=>"SAP MM Consultant + SAP SD Consultant + Projet pratique. Parcours 71h pour devenir consultant SAP Logistique.",'objectifs'=>"Paramétrer SAP MM et SD en tant que consultant fonctionnel. Maîtriser les structures organisationnelles logistiques et commerciales. Configurer les intégrations MM-SD-FI.",'duree'=>'71H','mode'=>'hybride','tarif_en_ligne'=>990000,'tarif_hybride'=>1085000,'tarif_presentiel'=>1180000],
+    ['titre'=>'Pack SAP RH – Parcours complet','slug'=>'pack-sap-rh-parcours-complet','domaine'=>'ERP & SAP','description'=>"SAP HCM Utilisateur + SAP HCM Consultant + Projet pratique. Parcours 50h du niveau utilisateur au paramétrage consultant.",'objectifs'=>"Maîtriser la gestion RH et paie dans SAP HCM. Paramétrer les infotypes, temps et schémas de paie. Adapter SAP HCM aux règles locales OHADA.",'duree'=>'50H','mode'=>'hybride','tarif_en_ligne'=>725000,'tarif_hybride'=>790000,'tarif_presentiel'=>860000],
 ];
 
-/* ── Insertion ── */
-$inseres  = 0;
-$ignores  = 0;
-$erreurs  = [];
-
-$stmt_chk = $pdo->prepare("SELECT id FROM formations WHERE slug = ? LIMIT 1");
-$stmt_ins = $pdo->prepare("
-    INSERT INTO formations
-        (titre, slug, domaine, description, objectifs, duree, mode,
-         tarif_en_ligne, tarif_hybride, tarif_presentiel,
-         date_debut, date_fin, mois, annee, statut, created_at, updated_at)
-    VALUES
-        (?, ?, ?, ?, ?, ?, ?,
-         ?, ?, ?,
-         '0000-00-00', '0000-00-00', '', 0, 'active', NOW(), NOW())
-");
-
+$inseres = 0; $ignores = 0; $erreurs = [];
+$chk = $pdo->prepare("SELECT id FROM formations WHERE slug = ? LIMIT 1");
+$ins = $pdo->prepare("INSERT INTO formations (titre,slug,domaine,description,objectifs,duree,mode,tarif_en_ligne,tarif_hybride,tarif_presentiel,date_debut,date_fin,mois,annee,statut,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,'0000-00-00','0000-00-00','',0,'active',NOW(),NOW())");
 foreach ($formations as $f) {
-    $stmt_chk->execute([$f['slug']]);
-    if ($stmt_chk->fetchColumn()) {
-        $ignores++;
-        continue;
-    }
-    try {
-        $stmt_ins->execute([
-            $f['titre'], $f['slug'], $f['domaine'],
-            $f['description'], $f['objectifs'], $f['duree'], $f['mode'],
-            $f['tarif_en_ligne'], $f['tarif_hybride'], $f['tarif_presentiel'],
-        ]);
-        $inseres++;
-    } catch (Throwable $e) {
-        $erreurs[] = $f['slug'] . ' → ' . $e->getMessage();
-    }
+    $chk->execute([$f['slug']]);
+    if ($chk->fetchColumn()) { $ignores++; continue; }
+    try { $ins->execute([$f['titre'],$f['slug'],$f['domaine'],$f['description'],$f['objectifs'],$f['duree'],$f['mode'],$f['tarif_en_ligne'],$f['tarif_hybride'],$f['tarif_presentiel']]); $inseres++; }
+    catch (Throwable $e) { $erreurs[] = $f['slug'].' → '.$e->getMessage(); }
 }
-
-/* ── Rapport ── */
 header('Content-Type: text/html; charset=utf-8');
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="utf-8"><title>Import SAP — IBIG EDUFORM</title>
-<style>body{font-family:sans-serif;max-width:800px;margin:40px auto;padding:20px}
-h1{color:#0a1733}.ok{color:#16a34a}.warn{color:#d97706}.err{color:#dc2626}
-table{width:100%;border-collapse:collapse;margin-top:16px}
-td,th{padding:6px 10px;border:1px solid #e5e7eb;font-size:.85rem}
-th{background:#f8fafc}</style>
-</head>
-<body>
-<h1>🗃️ Import SAP ERP — IBIG EDUFORM</h1>
-<p class="ok">✅ <strong><?= $inseres ?></strong> formation(s) insérée(s).</p>
-<p class="warn">⏭️ <strong><?= $ignores ?></strong> formation(s) ignorée(s) (slug déjà existant).</p>
-<?php if ($erreurs): ?>
-<p class="err">❌ <?= count($erreurs) ?> erreur(s) :</p>
-<ul><?php foreach ($erreurs as $e) echo '<li>' . htmlspecialchars($e) . '</li>'; ?></ul>
-<?php endif; ?>
-<table>
-<thead><tr><th>#</th><th>Titre</th><th>Slug</th><th>Tarif en ligne</th><th>Durée</th></tr></thead>
-<tbody>
-<?php foreach ($formations as $i => $f): ?>
-<tr>
-  <td><?= $i+1 ?></td>
-  <td><?= htmlspecialchars($f['titre']) ?></td>
-  <td><code><?= htmlspecialchars($f['slug']) ?></code></td>
-  <td><?= number_format($f['tarif_en_ligne'], 0, ',', ' ') ?> F CFA</td>
-  <td><?= $f['duree'] ?></td>
-</tr>
-<?php endforeach; ?>
-</tbody>
-</table>
-<p style="margin-top:24px;font-size:.8rem;color:#6b7280">Script exécuté le <?= date('d/m/Y H:i') ?></p>
-</body></html>
+<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Import SAP</title>
+<style>body{font-family:sans-serif;max-width:800px;margin:40px auto;padding:20px}.ok{color:#16a34a}.warn{color:#d97706}.err{color:#dc2626}table{width:100%;border-collapse:collapse;margin-top:16px}td,th{padding:6px 10px;border:1px solid #e5e7eb;font-size:.85rem}th{background:#f8fafc}</style></head>
+<body><h1>Import SAP ERP</h1>
+<p class="ok">✅ <strong><?= $inseres ?></strong> insérée(s).</p>
+<p class="warn">⏭️ <strong><?= $ignores ?></strong> ignorée(s) (slug existant).</p>
+<?php if($erreurs):?><p class="err">❌ <?=count($erreurs)?> erreur(s):</p><ul><?php foreach($erreurs as $e) echo'<li>'.htmlspecialchars($e).'</li>';?></ul><?php endif;?>
+<table><thead><tr><th>#</th><th>Titre</th><th>Slug</th><th>Tarif en ligne</th><th>Durée</th></tr></thead><tbody>
+<?php foreach($formations as $i=>$f):?><tr><td><?=$i+1?></td><td><?=htmlspecialchars($f['titre'])?></td><td><code><?=htmlspecialchars($f['slug'])?></code></td><td><?=number_format($f['tarif_en_ligne'],0,',',' ')?> F CFA</td><td><?=$f['duree']?></td></tr><?php endforeach;?>
+</tbody></table><p style="margin-top:24px;font-size:.8rem;color:#6b7280">Exécuté le <?=date('d/m/Y H:i')?></p></body></html>
