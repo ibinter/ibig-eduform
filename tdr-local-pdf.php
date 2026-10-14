@@ -70,6 +70,9 @@ $domMap = [
     'IA & Digitalisation'      => 'IA & Digitalisation',
     'Digital & IA'             => 'IA & Digitalisation',
     'Intelligence Artificielle'=> 'IA & Digitalisation',
+    'ERP & SAP'                => 'Informatique & Tech',
+    'SAP'                      => 'Informatique & Tech',
+    'ERP'                      => 'Informatique & Tech',
 ];
 $domaine  = (string)($row['domaine'] ?? '');
 $category = $domMap[$domaine] ?? $domaine;
